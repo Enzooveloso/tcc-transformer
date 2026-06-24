@@ -1,0 +1,37 @@
+# LaTeX
+*.aux
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.bbl
+*.blg
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+*.dvi
+
+# PDF compilado (descomentar se não quiser versionar)
+# *.pdf
+
+# Editores
+.vscode/
+.idea/
+*.swp
+
+# Python (futuro código)
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+.pytest_cache/
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Backup
+*.bak
+*~

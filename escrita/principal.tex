@@ -1,0 +1,254 @@
+\documentclass[
+	% -- opções da classe memoir --
+	12pt,				% tamanho da fonte
+	openright,			% capítulos começam em pág ímpar (insere página vazia caso preciso)
+	oneside,			% para impressão em verso e anverso. Oposto a oneside
+	a4paper,			% tamanho do papel. 
+	% -- opções da classe abntex2 --
+	%chapter=TITLE,		% títulos de capítulos convertidos em letras maiúsculas
+	%section=TITLE,		% títulos de seções convertidos em letras maiúsculas
+	%subsection=TITLE,	% títulos de subseções convertidos em letras maiúsculas
+	%subsubsection=TITLE,% títulos de subsubseções convertidos em letras maiúsculas
+	% -- opções do pacote babel --
+	english,			% idioma adicional para hifenização
+	brazil,				% o último idioma é o principal do documento
+    fleqn,
+	]{abntex2}
+
+
+% ---
+% PACOTES
+% ---
+
+% ---
+% Pacotes fundamentais 
+% ---
+\usepackage[T1]{fontenc}		% Selecao de codigos de fonte.
+\usepackage[portuguese,portuguesekw,linesnumbered,ruled,lined,commentsnumbered]{algorithm2e}
+\usepackage{algorithmic}
+\usepackage{enumitem}
+\usepackage{subcaption}
+\usepackage[utf8]{inputenc}		% Codificacao do documento (conversão automática dos acentos)
+\usepackage{lastpage}			% Usado pela Ficha catalográfica
+\usepackage{indentfirst}		% Indenta o primeiro parágrafo de cada seção.
+\usepackage{color}				% Controle das cores
+\usepackage{graphicx}			% Inclusão de gráficos
+
+
+\usepackage{multirow}
+\usepackage{array}
+\usepackage[table,xcdraw]{xcolor}
+\usepackage{longtable}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{mathtools}
+\usepackage{nccmath}
+\usepackage{multicol}
+\usepackage{booktabs}
+\usepackage{subcaption}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, fit, calc}
+\usepackage{listings}
+\usepackage{setspace}
+\usepackage{makecell}
+\usepackage{pdfpages}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=mystyle}
+
+% Tabela
+\renewcommand{\arraystretch}{1.2}
+% ---
+		
+% ---
+% Pacotes adicionais, usados apenas no âmbito do Modelo Canônico do abnteX2
+% ---
+\usepackage{lipsum}				% para geração de dummy text
+% ---
+
+% ---
+% Pacotes de citações
+% ---
+\usepackage[brazilian,hyperpageref]{backref}	 % Paginas com as citações na bibl
+\usepackage[alf]{abntex2cite}	% Citações padrão ABNT
+\usepackage{lscape}
+
+\usepackage{pdfpages}
+\usepackage{amsmath}
+
+
+
+%% Novo estilo
+\makepagestyle{estilo_pretextual} %%% escolha um nome
+  \makeevenhead{estilo_pretextual}{}{}{\ABNTEXfontereduzida \textbf \thepage}
+  \makeoddhead{estilo_pretextual}{}{}{\ABNTEXfontereduzida \textbf \thepage}
+
+%% Customiza comando \pretextual
+\renewcommand{\pretextual}{
+  \pagenumbering{roman} %%% ou \pagenumbering{Roman}
+  \aliaspagestyle{chapter}{estilo_pretextual}% customizing chapter pagestyle
+  \pagestyle{estilo_pretextual}
+  \aliaspagestyle{cleared}{empty}
+  \aliaspagestyle{part}{estilo_pretextual}
+}
+
+% ---
+% Ajusta a marca \textual para que a numeração volte a ser arábica
+% nos elementos textuais
+\let\oldtextual\textual        % copia o comando \textual anterior para \oldtextual
+\newcounter{start}	%Contador para começar arábico considerando numeração romana
+\renewcommand{\textual}{%
+  \oldtextual%
+  \setcounter{start}{\value{page}}
+  \pagenumbering{arabic} % volta à numeração arábica
+  \setcounter{page}{\thestart{}}
+}
+% ---
+
+
+
+% --- 
+% CONFIGURAÇÕES DE PACOTES
+% --- 
+
+% ---
+% Configurações do pacote backref
+% Usado sem a opção hyperpageref de backref
+\renewcommand{\backrefpagesname}{Citado na(s) página(s):~}
+% Texto padrão antes do número das páginas
+\renewcommand{\backref}{}
+% Define os textos da citação
+\renewcommand*{\backrefalt}[4]{
+	\ifcase #1 %
+		Nenhuma citação no texto.%
+	\or
+		Citado na página #2.%
+	\else
+		Citado #1 vezes nas páginas #2.%
+	\fi}%
+% ---
+
+\usepackage[colorinlistoftodos,prependcaption,textsize=tiny]{todonotes}
+\usepackage{soul} 
+\newcommand{\alterar}[2][]{\todo[linecolor=black,backgroundcolor=orange!25,bordercolor=red,#1]{\textbf{Alterar}: #2}}
+\newcommand{\adicionadomarcelo}[1]{#1}
+\newcommand{\removido}[1]{#1}
+
+\newcommand{\mantido}[1]{#1}
+\newcommand{\modificado}[1]{#1}
+
+\newcommand{\dica}[2][]{\todo[linecolor=blue,backgroundcolor=blue!25,bordercolor=blue,#1]{\textbf{Dica}: #2}}
+
+\newcommand{\comentmargin}[2][]{\todo[linecolor=blue,backgroundcolor=green!25,bordercolor=green,#1]{#2}}
+\newcommand{\comentline}[2][]{\todo[inline, linecolor=yellow,backgroundcolor=green!25,bordercolor=green,#1]{\textbf{Comentário}: #2}}
+
+\newenvironment{BlocoRevisadoSemAlteracao}
+{
+	\color{blue}%
+}
+{
+}
+
+\newenvironment{BlocoRevisadoEsperandoAlteracao}
+{
+	\color{orange}%
+}
+{
+}
+
+\makeatother
+% --- 
+
+% --- 
+% Espaçamentos entre linhas e parágrafos 
+% --- 
+
+% O tamanho do parágrafo é dado por:
+\setlength{\parindent}{1.5cm}
+
+% Controle do espaçamento entre um parágrafo e outro:
+\setlength{\parskip}{0.2cm}  % tente também \onelineskip
+
+% ---
+% compila o indice
+% ---
+\makeindex
+% ---
+
+% ----
+% Início do documento
+% ----
+\allowdisplaybreaks
+
+
+\DeclareCaptionType{code}[Código][Lista de Códigos] 
+
+\begin{document}
+
+
+%\include{00_PreTextual/PreTextual}
+
+\textual
+
+%\setcounter{page}{7}
+
+
+\include{01_capitulo/introducao}
+\include{02_capitulo/fundamentacao_teorica}
+\include{03_capitulo/trabalhos_relacionados}
+\include{04_capitulo/metodologia_nova}    % capítulo Metodologia (novo)
+\include{04_capitulo/metodologia}         % capítulo Desenvolvimento (antigo, renomeado)
+\include{05_capitulo/resultados}
+\include{06_capitulo/consideracoes}
+
+
+\bookmarksetup{startatroot}% 
+% ---
+
+\postextual
+
+
+\bibliography{referencias}
+%\bibliographystyle{abnt-num}
+%\bibliographystyle{plainnat}
+
+\chapter{Apêndice}
+
+\begin{apendicesenv}
+
+[TO DO]
+
+\end{apendicesenv}
+
+\begin{comment}
+%\glossary
+%\begin{anexosenv}
+%\end{anexosenv}
+%\printindex
+\end{comment}
+
+\end{document}

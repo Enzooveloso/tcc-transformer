@@ -1,0 +1,551 @@
+% =============================================================
+% Capítulo 4 — Desenvolvimento
+% =============================================================
+
+\chapter{Desenvolvimento}\label{chap:desenvolvimento}
+
+\adicionadomarcelo{Este capítulo descreve, a metodologia adotada para o desenvolvimento experimental deste trabalho. São apresentados o \textit{dataset} e o modelo selecionados, o protocolo de treinamento do \textit{baseline}, o \textit{framework} de implementação, os dois métodos de poda da literatura que serão avaliados, a estratégia otimizada proposta, o \textit{pipeline} experimental, as métricas utilizadas, os critérios de comparação e as principais limitações metodológicas reconhecidas.}
+
+\section{Visão Geral}\label{sec:visao_geral}
+
+Este capítulo descreve o percurso metodológico adotado para investigar em que medida diferentes abordagens de poda neural reduzem o consumo energético de redes convolucionais profundas e qual o \textit{trade-off} correspondente em acurácia. A pergunta de pesquisa que orienta o trabalho é, portanto, de natureza empírica e comparativa: não se busca demonstrar que a poda é eficiente em termos absolutos --- resultado já estabelecido pela literatura \cite{Han2015, Li2017, Blalock2020} --- mas sim quantificar, sob condições controladas e reproduzíveis, como diferentes granularidades de remoção (não estruturada \textit{versus} estruturada) afetam métricas de eficiência energética real, e se uma estratégia de alocação adaptativa de taxas por camada consegue melhorar esse balanço.
+
+A abordagem adotada é estritamente empírica. Partindo de um modelo de referência obtido por \textit{transfer learning} --- uma ResNet-50 pré-treinada em ImageNet-1K e ajustada (\textit{fine-tuned}) no CIFAR-100 --- são aplicados dois métodos de poda consolidados na literatura, avaliados sob um conjunto comum de métricas que inclui acurácia, complexidade computacional (FLOPs), tamanho do modelo, latência de inferência e consumo energético empírico medido com a ferramenta \texttt{CodeCarbon} \cite{CodeCarbon2023}. Em seguida, é desenvolvida uma estratégia otimizada, baseada em análise de sensibilidade por camada, cujos resultados são comparados sistematicamente com os dos métodos anteriores. Toda a implementação utiliza o \textit{framework} PyTorch \cite{Paszke2019}, e cada configuração experimental é repetida com três sementes aleatórias distintas para garantir a estabilidade das estimativas reportadas.
+
+A escolha por um protocolo comparativo --- em vez de otimizar apenas um único método --- reflete a compreensão de que o impacto da poda sobre o consumo energético não é homogêneo entre paradigmas. A poda não estruturada, ao anular pesos individualmente sem alterar a estrutura do modelo, gera esparsidade lógica que, em \textit{hardware} convencional, não se traduz necessariamente em redução do tempo de inferência ou do consumo de energia. A poda estruturada, ao remover filtros inteiros e reduzir as dimensões dos tensores intermediários, produz modelos fisicamente menores e operacionalmente mais eficientes. Colocar ambos os paradigmas sob avaliação comum é essencial para responder à pergunta de pesquisa com evidências concretas.
+
+\subsection{As Quatro Etapas Centrais}\label{subsec:quatro_etapas}
+
+O experimento é organizado em quatro etapas sequenciais, cada uma com papel distinto no desenho do trabalho.
+
+A primeira etapa consiste no treinamento do modelo de referência (\textit{baseline}): uma ResNet-50 inicializada com pesos pré-treinados em ImageNet-1K é submetida a \textit{fine-tuning} no CIFAR-100, com todos os seus parâmetros ajustados à nova tarefa de classificação em 100 classes. Esse modelo denso é avaliado no conjunto de teste e tem todas as suas métricas registradas --- acurácia, tamanho, FLOPs, latência e consumo energético. Ele serve como ponto de referência absoluto contra o qual todos os modelos podados serão comparados; sem um \textit{baseline} sólido e rastreável, qualquer afirmação sobre ganhos de eficiência perde o referencial.
+
+A segunda etapa aplica dois métodos de poda da literatura, em sequência independente a partir do mesmo \textit{baseline}: a poda não estruturada por magnitude \cite{Han2015} e a poda estruturada por norma $L_1$ de filtros \cite{Li2017}. Para cada método, são testadas quatro taxas de poda (20\%, 40\%, 60\% e 80\%), e cada modelo resultante passa por \textit{fine-tuning} com um protocolo de recuperação de acurácia antes de ser avaliado. A seleção desses dois métodos é deliberada: eles representam os dois extremos do espectro de granularidade de poda e têm comportamentos opostos em termos de impacto real sobre o \textit{hardware}. A comparação direta entre eles é, por si só, uma das contribuições empíricas do trabalho.
+
+A terceira etapa introduz a estratégia otimizada proposta neste trabalho: a análise de sensibilidade por camada. Em vez de aplicar uma taxa global uniforme, cada camada convolucional da ResNet-50 é podada individualmente em diferentes taxas, e a queda de acurácia resultante é registrada sem \textit{fine-tuning}. Esse perfil de sensibilidade guia a alocação de taxas por camada, preservando camadas críticas e podando de forma mais agressiva aquelas com maior redundância. A expectativa é que essa alocação adaptativa permita atingir níveis de compressão comparáveis aos dos métodos uniformes com menor sacrifício de acurácia --- hipótese que será testada experimentalmente e discutida no Capítulo~\ref{chap:resultados}.
+
+A quarta etapa é a comparação sistemática. Todos os modelos produzidos --- \textit{baseline}, modelos podados pelos dois métodos da literatura em quatro taxas, e modelos da estratégia otimizada --- são avaliados pelo mesmo conjunto de métricas, no mesmo ambiente de \textit{hardware} e com o mesmo conjunto de teste. Essa simetria de avaliação é condição necessária para que as comparações sejam válidas e interpretáveis. Os resultados são reportados como média e desvio-padrão sobre as três repetições com sementes distintas.
+
+\subsection{Discussão das Decisões Metodológicas}\label{subsec:discussao_decisoes}
+
+Todo desenho experimental implica escolhas que condicionam o escopo e a generalidade dos resultados. A Tabela~\ref{tab:decisoes_metodologicas} sintetiza as principais decisões metodológicas adotadas neste trabalho, as alternativas consideradas e a justificativa de cada escolha. As subseções a seguir desenvolvem em maior profundidade as decisões mais críticas para a interpretação dos resultados.
+
+\begin{table}[htb]
+\centering
+\caption{Síntese das principais decisões metodológicas do trabalho.}
+\label{tab:decisoes_metodologicas}
+\small
+\begin{tabular}{p{3.0cm} p{3.5cm} p{2.8cm} p{4.5cm}}
+\hline
+\textbf{Decisão} & \textbf{Alternativas consideradas} & \textbf{Escolha} & \textbf{Justificativa} \\
+\hline
+
+\textit{Dataset}
+& ImageNet-1K, CIFAR-10, CIFAR-100
+& \textbf{CIFAR-100}
+& Equilíbrio entre complexidade da tarefa e custo computacional. \\
+
+Modelo
+& ResNet-50, VGG-16, MobileNet
+& \textbf{ResNet-50}
+& Padrão da literatura de poda; arquitetura representativa. \\
+
+Pré-treinamento
+& Treinar do zero; \textit{transfer learning}
+& \textbf{\textit{Transfer learning} (ImageNet)}
+& Custo computacional viável; consistente com a prática real. \\
+
+Critério de poda
+& Magnitude, ativação, gradiente, segunda ordem
+& \textbf{Norma $L_1$} (peso e filtro)
+& Simplicidade e ampla cobertura na literatura. \\
+
+Granularidade
+& Não estruturada; estruturada
+& \textbf{Ambas (Métodos 1 e 2)}
+& A comparação entre granularidades é a contribuição empírica do trabalho. \\
+
+Taxas testadas
+& Lineares, logarítmicas, adaptativas
+& \textbf{20\%, 40\%, 60\%, 80\%}
+& Coerente com trabalhos de referência \cite{Han2015,Li2017}. \\
+
+\textit{Fine-tuning} pós-poda
+& Sem retreino; com retreino
+& \textbf{Sim (10 épocas)}
+& Padrão estabelecido na literatura para recuperar acurácia. \\
+
+Estratégia otimizada
+& Mesma taxa por camada; taxas adaptativas
+& \textbf{Taxas por camada} (sensibilidade)
+& Permite alocar a poda onde há mais redundância. \\
+
+Repetições
+& 1, 3, 5, 10 \textit{seeds}
+& \textbf{3 \textit{seeds}}
+& Mínimo viável para média e desvio-padrão. \\
+
+Conjunto de avaliação
+& Validação; teste
+& \textbf{Teste}
+& Avaliação final, sem viés de ajuste de hiperparâmetros. \\
+
+\hline
+\end{tabular}\\
+\textit{Fonte: Elaboração própria.}
+\end{table}
+
+\modificado{A escolha do CIFAR-100 como \textit{dataset} principal merece justificativa detalhada, pois é uma das decisões que mais condiciona o escopo e a generalidade dos resultados. O ImageNet-1K, embora seja o padrão-ouro em benchmarks de classificação visual e a fonte dos pesos pré-treinados utilizados neste trabalho, excede os objetivos deste estudo: o foco aqui não é reproduzir um benchmark de larga escala, mas sim analisar comparativamente o efeito de diferentes métodos de poda sobre acurácia, consumo energético e eficiência computacional --- análise que não exige a escala do ImageNet-1K para ser conclusiva. O CIFAR-10, no extremo oposto, com apenas dez classes, oferece complexidade insuficiente para que as diferenças de acurácia entre modelos podados e não podados sejam estatisticamente expressivas. O CIFAR-100 ocupa um ponto de equilíbrio técnico: 100 classes mutuamente exclusivas e imagens naturais de baixa resolução tornam a tarefa suficientemente desafiadora para que os efeitos da poda se manifestem de forma mensurável, ao mesmo tempo que o tamanho do conjunto (60.000 imagens) permite a realização de múltiplas repetições experimentais, necessárias para a obtenção de estimativas estáveis das métricas de energia. A ampla adoção do CIFAR-100 em trabalhos de poda \cite{Li2017, Frankle2019, Blalock2020} tem a vantagem adicional de facilitar comparações diretas com a literatura.}
+
+A ResNet-50 foi selecionada por reunir três propriedades relevantes para os objetivos do trabalho. Em primeiro lugar, trata-se de uma arquitetura representativa e madura, cujos comportamentos sob poda são amplamente documentados \cite{Li2017, He2016}, o que permite contextualizar os resultados obtidos. Em segundo lugar, a presença de \textit{skip connections} nos blocos residuais introduz restrições de dimensionalidade não triviais durante a poda estruturada, tornando esse modelo um banco de testes realista para avaliar a capacidade das ferramentas de implementação --- em particular, a biblioteca \texttt{Torch-Pruning} \cite{Fang2023}, que gerencia automaticamente a propagação dos cortes pelo grafo de dependências. Em terceiro lugar, com aproximadamente 25,6 milhões de parâmetros e uma profundidade de 50 camadas, a ResNet-50 é suficientemente grande para que as diferenças de consumo energético entre configurações de poda sejam mensuráveis, sem ser tão grande a ponto de tornar os experimentos computacionalmente proibitivos. \modificado{Arquiteturas projetadas explicitamente para eficiência não foram consideradas como modelo principal porque já incorporam, por projeto, mecanismos implícitos de compressão (convoluções separáveis, gargalos invertidos, escalonamento composto), o que confundiria a análise do efeito isolado da poda sobre um modelo denso convencional. Modelos baseados em atenção (\textit{Vision Transformers}), por sua vez, foram descartados por uma razão distinta: os métodos de poda estruturada para \textit{transformers} são ainda recentes e não consolidaram um repertório comparável ao disponível para CNNs clássicas, o que prejudicaria a comparação direta com os trabalhos de referência adotados \cite{Han2015, Li2017}.}
+
+A comparação entre os dois métodos de poda --- não estruturado e estruturado --- é necessária para responder à pergunta de pesquisa de forma completa. Um trabalho que avaliasse apenas a poda estruturada poderia concluir que a poda reduz o consumo energético, mas não saberia se essa redução se deve à granularidade da remoção ou simplesmente ao fato de o modelo ter menos parâmetros. A inclusão da poda não estruturada como controle permite isolar esse efeito: como ambos os métodos removem a mesma proporção de parâmetros (em taxa percentual equivalente), mas apenas o método estruturado reduz efetivamente os FLOPs e as operações executadas em \textit{hardware} convencional, a diferença observada nas métricas de energia e latência pode ser atribuída à granularidade da remoção, e não à redução da magnitude do modelo em si. Essa distinção é central para a interpretação dos resultados e para as recomendações práticas que emergem do trabalho.
+
+A estratégia otimizada proposta --- poda estruturada com taxas por camada determinadas por análise de sensibilidade --- parte da hipótese de que diferentes camadas de uma mesma rede apresentam sensibilidades distintas à remoção de filtros \cite{Han2015, Yang2017}. Camadas nas extremidades da rede (primeiras e últimas) tendem a ser mais sensíveis, enquanto camadas intermediárias frequentemente possuem maior redundância e toleram taxas mais agressivas. Se essa hipótese for confirmada pelos dados de sensibilidade coletados, a alocação adaptativa de taxas deve permitir atingir níveis de compressão global comparáveis aos dos métodos uniformes com menor degradação de acurácia. O processo detalhado de análise de sensibilidade e a formalização da alocação de taxas são apresentados na Seção~\ref{sec:estrategia_otimizada}.
+
+Por fim, a decisão de repetir cada configuração experimental com três sementes aleatórias distintas reflete um balanço entre rigor estatístico e viabilidade computacional. Com $n = 3$ repetições, é possível calcular médias e desvios-padrão para todas as métricas, o que permite identificar se tendências observadas são consistentes ou resultado de variação de execução, especialmente nas medições de consumo energético --- naturalmente mais ruidosas que as de acurácia. Reconhece-se, contudo, que esse número de repetições oferece poder estatístico limitado; comparações com diferenças próximas ao nível de ruído devem ser interpretadas com cautela. Essa limitação é discutida nas Considerações Finais do trabalho.
+
+As seções seguintes deste capítulo detalham individualmente cada componente do desenho experimental: o \textit{dataset} e seus conjuntos de divisão (Seção~\ref{sec:dataset}), o modelo e o protocolo de \textit{transfer learning} (Seção~\ref{sec:modelo}), os dois métodos de poda da literatura com seus protocolos de avaliação (Seção~\ref{sec:metodos_poda}), a estratégia otimizada por sensibilidade por camada (Seção~\ref{sec:estrategia_otimizada}), o \textit{pipeline} experimental completo (Seção~\ref{sec:pipeline}) e o conjunto de métricas de avaliação (Seção~\ref{sec:metricas}).
+
+\section{\textit{Dataset}}\label{sec:dataset}
+
+A escolha do \textit{dataset} condiciona, de maneira fundamental, a complexidade da tarefa de classificação, o tempo de treinamento e a relevância dos resultados perante a literatura. Em experimentos comparativos de poda neural, o conjunto de dados precisa ser suficientemente desafiador para que as diferenças entre métodos se manifestem de forma mensurável, mas operacionalmente viável o suficiente para que múltiplas repetições sejam executáveis no escopo de um trabalho de graduação. Conforme discutido na Seção~\ref{sec:visao_geral}, o CIFAR-100 atende a esse equilíbrio e foi selecionado como \textit{dataset} principal deste trabalho. Esta seção detalha as características técnicas do conjunto, apresenta a justificativa acadêmica de sua escolha, descreve o pré-processamento aplicado e formaliza o protocolo de divisão dos dados.
+
+\subsection{O CIFAR-100}\label{subsec:cifar100}
+
+O CIFAR-100 foi introduzido por \citeonline{Krizhevsky2009} no relatório técnico ``Learning Multiple Layers of Features from Tiny Images'', publicado pelo Departamento de Ciência da Computação da Universidade de Toronto. O conjunto é derivado de um subconjunto anotado do projeto ``80 Million Tiny Images'', uma coleção massiva de imagens de baixa resolução coletadas automaticamente da internet. A proposta de \citeonline{Krizhevsky2009} foi selecionar e revisar manualmente as anotações de uma fração desse projeto, produzindo dois \textit{datasets} com rótulos confiáveis e estrutura padronizada: o CIFAR-10 e o CIFAR-100. Desde sua publicação, ambos tornaram-se referências canônicas em avaliações de arquiteturas de redes neurais convolucionais \cite{He2016, Krizhevsky2012} e, em particular, em estudos de poda neural \cite{Han2015, Li2017, Frankle2019, Blalock2020}.
+
+O CIFAR-100 contém 60.000 imagens coloridas de resolução $32 \times 32$ pixels, codificadas nos três canais RGB. Essas imagens estão distribuídas em 100 classes mutuamente exclusivas, com exatamente 600 imagens por classe. A partição oficial do conjunto reserva 500 imagens por classe para treinamento e 100 para teste, totalizando 50.000 exemplos de treinamento e 10.000 de teste. As classes cobrem uma ampla variedade de categorias de objetos do mundo real: animais (mamíferos, insetos, peixes, répteis), veículos, plantas, cenas externas e objetos domésticos, entre outras.
+
+Um aspecto estrutural relevante do CIFAR-100 é sua organização hierárquica: as 100 classes de granularidade fina estão agrupadas em 20 superclasses de granularidade grossa. Por exemplo, as classes ``leopardo'', ``leão'', ``tigre'' e ``urso'' pertencem à superclasse ``grandes carnívoros''; ``ônibus'', ``caminhão'' e ``trator'' compõem a superclasse ``veículos 2''. Essa estrutura é um diferencial em relação ao CIFAR-10 e permite que experimentos futuros avaliem tanto a classificação fina (100 classes) quanto a grossa (20 superclasses), embora neste trabalho seja adotada exclusivamente a tarefa de classificação nas 100 classes.
+
+Em termos de resolução, as imagens de $32 \times 32$ pixels contrastam fortemente com as $224 \times 224$ pixels tipicamente empregadas em experimentos com ImageNet. Essa diferença de resolução implica que o CIFAR-100 representa uma tarefa de classificação visual em formato compacto, condição distinta das imagens de alta resolução tipicamente empregadas em modelos pré-treinados em ImageNet. Para redes profundas como a ResNet-50 \cite{He2016}, treinadas originalmente para imagens de maior resolução, a adaptação ao formato $32 \times 32$ requer atenção ao pré-processamento --- aspecto tratado na Subseção~\ref{subsec:preprocessamento}.
+
+\subsection{Justificativa da Escolha}\label{subsec:dataset_justificativa}
+
+A seleção do CIFAR-100 como \textit{dataset} principal é uma decisão metodológica de consequências substantivas para o escopo e a generalidade dos resultados. Esta subseção articula a defesa dessa escolha em contraposição às alternativas consideradas.
+
+A alternativa natural de maior escala seria o ImageNet-1K, com 1,28 milhão de imagens de treinamento distribuídas em 1.000 classes e resolução padrão de $224 \times 224$ pixels. O ImageNet-1K constitui o padrão-ouro em \textit{benchmarks} de classificação visual e é, inclusive, a fonte dos pesos pré-treinados utilizados neste trabalho. Contudo, o foco deste estudo não é reproduzir um \textit{benchmark} de larga escala, mas analisar comparativamente o efeito de diferentes paradigmas de poda sobre acurácia e consumo energético. Essa análise exige múltiplas repetições de cada configuração experimental --- quatro taxas de poda por método, dois métodos da literatura mais a estratégia otimizada, e três sementes por configuração --- totalizando dezenas de ciclos completos de poda e \textit{fine-tuning}. O custo computacional de cada ciclo sobre o ImageNet-1K seria proibitivo para o escopo deste trabalho, sem que tal custo adicional trouxesse ganho proporcional para responder à pergunta de pesquisa. Não se trata, portanto, de uma limitação de recursos que impede o uso de ImageNet-1K, mas de uma escolha deliberada de proporcionalidade: o ImageNet-1K excede o que é necessário para as comparações pretendidas.
+
+No extremo oposto do espectro de complexidade situa-se o CIFAR-10, com apenas dez classes. Redes modernas atingem acurácias superiores a 95\% em CIFAR-10, mesmo após poda agressiva, o que produz diferenças de desempenho entre métodos que mal superam o desvio-padrão das medições --- tornando a comparação pouco discriminativa. O CIFAR-100, com 100 classes, opera em uma faixa de acurácia tipicamente entre 60\% e 80\% para modelos como a ResNet-50 após \textit{fine-tuning}, faixa na qual a degradação causada por diferentes taxas e granularidades de poda é claramente mensurável e diferenciada entre métodos.
+
+Uma terceira família de opções inclui \textit{datasets} de escala intermediária, como o Tiny ImageNet (200 classes, resolução $64 \times 64$). Esses conjuntos são menos adotados na literatura específica de poda, o que comprometeria a comparabilidade direta dos resultados com trabalhos de referência. A representatividade do CIFAR-100 na literatura é, por si mesma, um critério de escolha relevante: \citeonline{Li2017} utilizam o CIFAR-10 e o CIFAR-100 como \textit{datasets} de avaliação primários; \citeonline{Frankle2019} empregam o CIFAR-10 para experimentos centrais; \citeonline{Blalock2020}, no amplo levantamento do estado da arte em poda neural, observam que CIFAR-10 e CIFAR-100 são os \textit{datasets} mais frequentemente reportados nos trabalhos da área. Adotar o CIFAR-100 garante que os resultados obtidos possam ser situados diretamente em relação a essa base de comparação consolidada.
+
+Do ponto de vista técnico, o CIFAR-100 reúne as propriedades necessárias para os objetivos do trabalho: complexidade adequada para revelar diferenças entre métodos de poda, tamanho operacional que viabiliza múltiplas repetições, e ampla adoção na literatura de compressão de modelos. É por mérito técnico, portanto, e não por conveniência, que o CIFAR-100 é adotado como \textit{dataset} principal.
+
+Reconhece-se, contudo, que essa escolha implica uma limitação de escopo: os resultados obtidos descrevem o comportamento dos métodos de poda em um regime de baixa resolução com 100 classes, e não podem ser extrapolados diretamente para cenários de larga escala como o ImageNet-1K, onde efeitos de escala podem alterar os padrões de redundância e sensibilidade das camadas. Essa limitação é reconhecida formalmente na discussão das limitações metodológicas do trabalho.
+
+\subsection{Pré-processamento}\label{subsec:preprocessamento}
+
+O pré-processamento das imagens é etapa essencial em experimentos com redes neurais convolucionais. Duas funções principais são desempenhadas pelo conjunto de transformações aplicadas antes do treinamento: a normalização dos dados de entrada, que melhora o condicionamento numérico das operações de \textit{backpropagation} \cite{Goodfellow2016}, e a aumentação de dados (\textit{data augmentation}), que reduz o risco de \textit{overfitting} ao ampliar artificialmente a diversidade do conjunto de treinamento \cite{Goodfellow2016}. O protocolo adotado neste trabalho segue as transformações estabelecidas por \citeonline{He2016} para experimentos com ResNet em CIFAR, posteriormente consolidadas como padrão nos trabalhos de poda que utilizam esse \textit{dataset} \cite{Li2017}.
+
+A normalização é realizada por canal RGB: cada canal de cada imagem tem sua média subtraída e é dividido pelo desvio-padrão correspondente, ambos calculados sobre o conjunto de treinamento do próprio CIFAR-100. Esse procedimento desloca a distribuição dos valores de entrada para uma região centrada em zero com variância unitária, o que torna o gradiente computado pelo \textit{backpropagation} mais bem-comportado e favorece a convergência do otimizador \cite{Goodfellow2016}. A normalização é aplicada tanto no treinamento quanto na avaliação, pois a rede foi treinada sob essa escala de entrada e suas predições pressupõem esse condicionamento.
+
+A aumentação de dados restringe-se à fase de treinamento e compreende duas transformações: \textit{random crop} com \textit{padding} de 4 pixels e \textit{horizontal flip} aleatório. O \textit{random crop} adiciona quatro pixels de borda à imagem (preenchidos com zeros) e recorta uma janela de $32 \times 32$ pixels em posição aleatória, simulando pequenas variações de posição e enquadramento do objeto. O \textit{horizontal flip} espelha horizontalmente a imagem com probabilidade 0,5, introduzindo invariância à orientação lateral. Juntas, essas duas transformações constituem o protocolo canônico de aumentação para CIFAR, adotado em \citeonline{He2016} e em praticamente toda a literatura de poda subsequente \cite{Li2017, Frankle2019}. Durante a avaliação, nenhuma aumentação é aplicada: as imagens são convertidas para \textit{tensor} e normalizadas, refletindo o comportamento do modelo em condições reais de inferência.
+
+A Tabela~\ref{tab:transformacoes} resume as transformações aplicadas a cada fase.
+
+\begin{table}[htb]
+\centering
+\caption{Transformações de pré-processamento aplicadas às imagens do CIFAR-100.}
+\label{tab:transformacoes}
+\begin{tabular}{lcc}
+\hline
+\textbf{Transformação} & \textbf{Treinamento} & \textbf{Avaliação} \\
+\hline
+\textit{Random crop} ($32 \times 32$, \textit{padding} 4) & \checkmark & --- \\
+\textit{Horizontal flip} aleatório (p = 0,5)             & \checkmark & --- \\
+Conversão para \textit{tensor}                           & \checkmark & \checkmark \\
+Normalização (média e desvio-padrão por canal RGB)       & \checkmark & \checkmark \\
+\hline
+\end{tabular}\\
+\textit{Fonte: Elaboração própria, com protocolo baseado em \citeonline{He2016}.}
+\end{table}
+
+\subsection{Conjuntos de Treinamento, Validação e Teste}\label{subsec:divisao_dados}
+
+O protocolo de divisão dos dados segue a partição oficial do CIFAR-100, com uma modificação: dos 50.000 exemplos oficiais de treinamento, 10\% são reservados para compor um conjunto de validação, totalizando 45.000 exemplos efetivos de treinamento e 5.000 de validação. O conjunto de teste oficial, com 10.000 exemplos, é mantido intacto e utilizado exclusivamente para a avaliação final dos modelos. Essa separação é metodologicamente necessária para evitar que decisões de ajuste de hiperparâmetros --- como a seleção da época de melhor desempenho (\textit{early stopping}) --- sejam tomadas com base no mesmo conjunto usado para reportar os resultados finais, o que introduziria viés otimista nas métricas reportadas \cite{Goodfellow2016}.
+
+A divisão entre treinamento e validação é realizada de forma estratificada por classe: para cada uma das 100 classes, retira-se proporcionalmente a mesma fração de exemplos (10\%), garantindo que todas as classes estejam representadas com a mesma densidade relativa nos dois subconjuntos. Sem estratificação, a amostragem aleatória simples pode, por flutuação estatística, sub-representar ou super-representar determinadas classes no conjunto de validação, introduzindo viés na estimativa de acurácia durante o treinamento e distorcendo o critério de \textit{early stopping}. A estratificação mitiga esse risco de forma determinística.
+
+A divisão é fixada por semente aleatória, de modo que exatamente o mesmo subconjunto de validação é usado em todos os experimentos --- independentemente do método de poda, da taxa ou da semente usada no treinamento. Essa fixação isola o efeito do método de poda do efeito da composição do conjunto de validação, garantindo que diferenças de desempenho entre configurações não sejam atribuíveis a variações na divisão dos dados. O princípio de reprodutibilidade que orienta essa escolha é discutido em maior detalhe na seção de reprodutibilidade do trabalho.
+
+\subsection{Carregamento e Acesso}\label{subsec:carregamento_dados}
+
+O acesso ao CIFAR-100 é feito por meio da classe \texttt{torchvision.datasets.CIFAR100}, componente da biblioteca \texttt{torchvision} distribuída com o PyTorch \cite{Paszke2019}. Essa interface padroniza o carregamento, realiza o \textit{download} automático do arquivo comprimido na primeira execução e disponibiliza os dados já em formato compatível com o \textit{pipeline} de treinamento do PyTorch. O uso de uma API oficial evita inconsistências de formato e simplifica a reprodução dos experimentos em ambientes distintos.
+
+O carregamento durante o treinamento e a avaliação é gerenciado pelo componente \texttt{DataLoader} do PyTorch, que percorre o conjunto de dados em lotes (\textit{batches}) de tamanho configurável. Os hiperparâmetros do \texttt{DataLoader} --- tamanho do lote, embaralhamento (\textit{shuffle}) e número de trabalhadores paralelos de leitura (\texttt{num\_workers}) --- são definidos nos arquivos de configuração YAML do projeto, de modo que qualquer alteração fica rastreada no controle de versão. O embaralhamento é habilitado apenas no conjunto de treinamento, garantindo que cada época apresente os exemplos em ordem diferente sem perturbar a avaliação. Uma vantagem prática do CIFAR-100 é seu tamanho reduzido: o conjunto completo ocupa aproximadamente 170 MB descomprimido e pode ser integralmente carregado em memória RAM antes do início do treinamento, eliminando a latência de leitura de disco a cada iteração e acelerando substancialmente os experimentos em comparação com \textit{datasets} de maior escala.
+
+\section{Modelo}\label{sec:modelo}
+
+Em um trabalho experimental de poda neural, a escolha da arquitetura não é um detalhe de implementação --- ela define o ``alvo'' sobre o qual os métodos de compressão atuam. Diferentes arquiteturas apresentam propriedades estruturais distintas: grau de redundância paramétrica, presença de conexões de atalho, densidade dos tensores intermediários, entre outras. Essas propriedades condicionam tanto a efetividade dos métodos de poda quanto os desafios de implementação envolvidos. Conforme discutido na Subseção~\ref{subsec:discussao_decisoes}, a arquitetura selecionada para este trabalho é a ResNet-50 \cite{He2016}, pré-treinada em ImageNet-1K e adaptada ao CIFAR-100 por meio de \textit{transfer learning}. Esta seção detalha a família arquitetural à qual pertence esse modelo, descreve sua estrutura interna, defende a escolha e apresenta o protocolo de adaptação ao domínio-alvo.
+
+\subsection{A Família de Redes Residuais (ResNet)}\label{subsec:familia_resnet}
+
+O desenvolvimento das redes neurais convolucionais profundas foi marcado, ao longo da primeira metade da década de 2010, por uma progressão constante em profundidade e acurácia nos \textit{benchmarks} de visão computacional. O \textit{ImageNet Large Scale Visual Recognition Challenge} (ILSVRC), competição anual que avalia a classificação de 1,28 milhão de imagens em 1.000 categorias, tornou-se o principal termômetro desse progresso. A AlexNet \cite{Krizhevsky2012} inaugurou a era das CNNs profundas em 2012 com oito camadas e erro top-5 de 15,3\%; arquiteturas subsequentes, como VGGNet e GoogLeNet, empurram essa fronteira para 16 a 22 camadas, chegando a erros de 6 a 7\%. Contudo, à medida que a profundidade aumentava, emergiu um obstáculo fundamental: simplesmente empilhar mais camadas deixava de melhorar, e frequentemente degradava, o desempenho do modelo --- fenômeno documentado empiricamente e denominado problema da degradação.
+
+A causa subjacente desse fenômeno é o desvanecimento do gradiente (\textit{vanishing gradient}): em redes muito profundas, o sinal de gradiente propagado pelo \textit{backpropagation} tende a se tornar exponencialmente pequeno à medida que atravessa camadas sucessivas, tornando o aprendizado das camadas iniciais ineficaz \cite{Goodfellow2016}. Mesmo com inicializações cuidadosas e normalização por lotes (\textit{batch normalization}), redes com dezenas de camadas apresentavam dificuldades de otimização que não podiam ser atribuídas ao sobreajuste: o erro de treinamento de redes mais profundas era, contra-intuitivamente, maior do que o de redes mais rasas.
+
+A solução proposta por \citeonline{He2016} foi estrutural: em vez de aprender diretamente a transformação desejada $H(x)$, cada bloco da rede passa a aprender a \emph{função residual} $F(x) = H(x) - x$, de modo que a saída do bloco é $F(x) + x$. Essa identidade aditiva é implementada por uma conexão de atalho (\textit{skip connection}) que soma a entrada do bloco à sua saída, contornando as camadas intermediárias. O efeito prático é que o gradiente pode fluir diretamente pelo atalho durante o \textit{backpropagation}, sem ser atenuado pelas transformações não lineares do bloco. Caso as camadas intermediárias aprendam a função zero, a saída do bloco simplesmente replica a entrada --- comportamento de identidade que é muito mais fácil de aprender do que uma transformação arbitrária.
+
+Os resultados obtidos com essa arquitetura foram expressivos. A ResNet com 152 camadas venceu o ILSVRC 2015 com erro top-5 de 3,57\% --- abaixo do desempenho humano estimado na tarefa \cite{He2016}. Mais relevante para este trabalho, a família ResNet tornou-se rapidamente o modelo de referência da literatura de compressão de redes neurais: \citeonline{Han2015} utilizam variantes da ResNet em seus experimentos de poda por magnitude; \citeonline{Li2017} propõem a poda estruturada por norma $L_1$ de filtros avaliando-a especificamente em ResNets; e \citeonline{Blalock2020}, em amplo levantamento do estado da arte em poda neural, identificam a ResNet como a arquitetura mais frequentemente reportada nos estudos da área.
+
+\subsection{Arquitetura ResNet-50}\label{subsec:arquitetura_resnet50}
+
+A ResNet-50 é a variante de 50 camadas da família ResNet. Sua estrutura é organizada em cinco estágios: uma camada convolucional inicial de $7 \times 7$ com \textit{stride} 2 e 64 filtros, seguida de uma camada de \textit{max pooling} com \textit{stride} 2, e quatro estágios residuais compostos, respectivamente, por 3, 4, 6 e 3 blocos. A saída do último estágio é submetida a uma camada de \textit{average pooling} global, produzindo um vetor de 2.048 dimensões que alimenta a camada totalmente conectada final. No total, a arquitetura possui aproximadamente 25,6 milhões de parâmetros treináveis \cite{He2016}.
+
+O bloco fundamental da ResNet-50 é o \textit{bottleneck block} (bloco gargalo), que difere do bloco residual básico da ResNet-18 e da ResNet-34. Cada bloco gargalo é composto por uma sequência de três camadas convolucionais: uma convolução $1 \times 1$ que reduz a dimensionalidade de canal (por exemplo, de 256 para 64 canais), uma convolução $3 \times 3$ que processa espacialmente a representação comprimida, e uma convolução $1 \times 1$ que restaura a dimensionalidade de canal ao valor original (de volta a 256 canais). Essa estrutura é denominada ``gargalo'' porque a convolução $3 \times 3$ opera sobre um número muito menor de canais do que a representação de entrada, reduzindo o custo computacional do bloco de forma substancial sem comprometer a capacidade expressiva da rede como um todo.
+
+Quando o número de canais muda entre a entrada e a saída de um bloco --- o que ocorre nas transições entre estágios residuais ---, a \textit{skip connection} não pode realizar uma soma direta, pois os tensores têm dimensões incompatíveis. Nesses casos, a ResNet-50 emprega uma \textit{projection shortcut}: uma convolução $1 \times 1$ adicional, com \textit{stride} 2 e o número de filtros correspondente à dimensão de saída, é aplicada sobre a entrada do bloco antes de somá-la à saída das camadas convolucionais. Essa projeção garante a compatibilidade dimensional e preserva o fluxo de gradiente pela conexão de atalho.
+
+Do ponto de vista da poda estruturada, a presença de \textit{skip connections} e \textit{projection shortcuts} introduz restrições de dimensionalidade não triviais. A remoção de filtros de uma camada convolucional interna ao bloco altera o número de canais de saída dessa camada, o que, por sua vez, afeta a dimensão de entrada da camada seguinte. Quando a camada afetada está conectada, direta ou indiretamente, a uma \textit{skip connection}, a poda deve ser propagada de forma consistente por todas as camadas correlacionadas para que as somas residuais permaneçam dimensionalmente compatíveis. Esse desafio de propagação de dependências é a principal razão pela qual a implementação da poda estruturada em ResNets requer ferramentas especializadas, como a biblioteca \texttt{Torch-Pruning} \cite{Fang2023}, descrita na Seção~\ref{sec:framework}.
+
+\subsection{Justificativa da Escolha da ResNet-50}\label{subsec:justificativa_resnet50}
+
+A escolha da ResNet-50 como modelo de referência é sustentada por três argumentos complementares. O primeiro é sua maturidade e representatividade na literatura de poda. Como registrado por \citeonline{Blalock2020} em levantamento abrangente, a ResNet é a arquitetura mais frequentemente empregada em estudos de poda neural publicados até 2020. Trabalhos seminais como os de \citeonline{Han2015} e \citeonline{Li2017} --- que constituem justamente os dois métodos avaliados neste trabalho --- utilizam a ResNet como alvo experimental central. Adotar a mesma arquitetura permite que os resultados obtidos sejam diretamente contextualizados em relação a essa base de comparação consolidada, sem a ambiguidade introduzida por escolhas idiossincráticas de modelo.
+
+O segundo argumento diz respeito ao tamanho intermediário da arquitetura. Com 25,6 milhões de parâmetros e profundidade de 50 camadas, a ResNet-50 é suficientemente grande para que as diferenças de consumo energético entre configurações de poda sejam mensuráveis --- modelos muito pequenos produzem reduções absolutas de energia tão baixas que se confundem com o ruído de medição. Ao mesmo tempo, o tamanho da ResNet-50 é operacionalmente viável: cada ciclo completo de poda e \textit{fine-tuning} no CIFAR-100 pode ser executado em tempo razoável, o que é condição necessária para que as dezenas de configurações experimentais previstas (dois métodos da literatura, quatro taxas de poda, estratégia otimizada, três sementes cada) sejam completadas no escopo deste trabalho. Variantes menores, como a ResNet-18 com aproximadamente 11,7 milhões de parâmetros, foram descartadas precisamente por oferecerem menor margem de compressão e diferenças de consumo energético próximas ao limiar de detecção.
+
+O terceiro argumento é arquitetural: a presença de \textit{skip connections} torna a ResNet-50 um banco de testes realista para a poda estruturada, em contraste com redes sequenciais como a VGG-16, nas quais a propagação dos cortes é trivial. Ao impor restrições de dimensionalidade que devem ser respeitadas em toda a topologia do modelo, a ResNet-50 força uma implementação de poda mais robusta e generaliza melhor para cenários práticos. Arquiteturas projetadas explicitamente para eficiência --- como MobileNet, EfficientNet e SqueezeNet --- foram descartadas como modelo principal porque já incorporam, por projeto, mecanismos implícitos de compressão (convoluções separáveis em profundidade, gargalos invertidos, escalonamento composto), o que confunde a análise do efeito isolado da poda sobre um modelo denso convencional. Modelos baseados em atenção (\textit{Vision Transformers}), por sua vez, foram descartados por uma razão distinta: os métodos de poda estruturada para \textit{transformers} são ainda recentes e não consolidaram um repertório comparável ao disponível para CNNs clássicas, o que prejudicaria a comparação direta com os trabalhos de referência adotados \cite{Han2015, Li2017}.
+
+\subsection{Aprendizado por Transferência}\label{subsec:transfer_learning}
+
+O \textit{transfer learning} (aprendizado por transferência) é uma estratégia de treinamento na qual um modelo desenvolvido para uma tarefa é reutilizado como ponto de partida para uma tarefa diferente \cite{Goodfellow2016}. Em vez de inicializar os pesos da rede aleatoriamente e treiná-la do zero, parte-se de pesos já ajustados em um conjunto de dados de larga escala --- no caso das CNNs de visão computacional, tipicamente o ImageNet-1K --- e o modelo é então \textit{fine-tuned} (ajustado finamente) sobre o conjunto de dados da tarefa-alvo. A ideia subjacente é que as representações visuais aprendidas em ImageNet --- que capturam bordas, texturas, formas e padrões de objetos em grande variedade --- são, em larga medida, transferíveis para outras tarefas de classificação visual, mesmo que as categorias-alvo sejam distintas.
+
+A adoção do \textit{transfer learning} neste trabalho é justificada por três razões complementares. A primeira é o custo computacional: treinar a ResNet-50 do zero em CIFAR-100 até a convergência exigiria um número substancialmente maior de épocas e, consequentemente, tempo de processamento incompatível com as dezenas de repetições experimentais previstas. Partir de pesos pré-treinados permite obter um \textit{baseline} competitivo em um número reduzido de épocas de \textit{fine-tuning}. A segunda razão é a qualidade das representações: pesos pré-treinados em ImageNet-1K codificam características visuais hierárquicas de alta qualidade que, ao serem transferidas, elevam o nível de desempenho inicial do modelo e possibilitam um \textit{baseline} mais forte, tornando os efeitos da poda mais facilmente observáveis sobre uma referência de alta acurácia. A terceira razão é o realismo de cenário: na prática industrial, modelos raramente são treinados do zero; o protocolo mais comum é exatamente a adaptação de modelos pré-treinados a domínios específicos \cite{Han2015, Li2017}. Adotar essa mesma abordagem garante que o protocolo experimental seja representativo do contexto real de aplicação.
+
+A principal tensão introduzida pelo \textit{transfer learning} neste cenário é a diferença de resolução entre o domínio de origem e o domínio-alvo: a ResNet-50 foi treinada com imagens de $224 \times 224$ pixels, enquanto as imagens do CIFAR-100 têm apenas $32 \times 32$ pixels. Essa discrepância afeta as camadas iniciais da rede, que foram otimizadas para extrair características em escala de resolução muito maior. A mitigação adotada para esse problema é descrita na subseção a seguir.
+
+\subsection{Adaptação da Cabeça de Classificação}\label{subsec:adaptacao_cabeca}
+
+A adaptação da ResNet-50 pré-treinada ao CIFAR-100 requer, em primeiro lugar, a substituição da camada de classificação final. Na configuração original do ImageNet-1K, a camada totalmente conectada (\texttt{fc}) projeta o vetor de características de 2.048 dimensões em 1.000 logits, correspondentes às 1.000 classes do ImageNet. Para a tarefa de classificação nas 100 classes do CIFAR-100, essa camada é substituída por uma nova camada totalmente conectada com 2.048 entradas e 100 saídas. Apenas essa camada de saída é reinicializada; todos os demais pesos da rede --- das camadas convolucionais dos quatro estágios residuais à camada de \textit{average pooling} --- são preservados com os valores pré-treinados como ponto de partida para o \textit{fine-tuning}. A nova camada \texttt{fc} é inicializada pelo esquema de \textit{Kaiming He} \cite{He2016}, que escala os pesos de forma proporcional ao número de entradas da camada, preservando a variância das ativações durante a propagação direta e favorecendo a convergência inicial.
+
+O protocolo de adaptação adota \textit{fine-tuning} completo: todos os parâmetros da rede, incluindo os das camadas convolucionais pré-treinadas, são atualizados durante o treinamento no CIFAR-100. A alternativa de \textit{feature extraction} --- na qual os pesos das camadas convolucionais são congelados e apenas a camada de classificação é treinada --- foi descartada porque, na presença da discrepância de resolução entre ImageNet e CIFAR-100, as ativações produzidas pelas camadas intermediárias com pesos fixos seriam menos adequadas à nova escala de entrada; o \textit{fine-tuning} completo permite que as camadas se adaptem progressivamente ao regime de resolução reduzida. Essa decisão é consistente com os protocolos adotados pelos trabalhos de referência em poda \cite{Han2015, Li2017}, que partem igualmente de modelos pré-treinados com todos os parâmetros ajustáveis durante o \textit{fine-tuning} no conjunto-alvo.
+
+% \section{Protocolo de Treinamento do \textit{Baseline}}\label{sec:protocolo_treinamento}
+
+% \adicionadomarcelo{O treinamento do modelo \textit{baseline} segue um protocolo bem definido, descrito a seguir. Os valores de hiperparâmetros foram escolhidos com base nos defaults da literatura para experimentos análogos com ResNet em CIFAR \cite{He2016, Loshchilov2017}, e poderão ser refinados a partir de experimentos preliminares.}
+
+% \subsection{Hiperparâmetros}
+
+% \adicionadomarcelo{A Tabela~\ref{tab:hiperparametros_baseline} resume os principais hiperparâmetros adotados.}
+
+% \begin{table}[htb]
+% \centering
+% \caption{Hiperparâmetros do treinamento do \textit{baseline}.}
+% \label{tab:hiperparametros_baseline}
+% \begin{tabular}{lll}
+% \hline
+% \textbf{Hiperparâmetro} & \textbf{Valor} & \textbf{Referência} \\
+% \hline
+% Otimizador & SGD com \textit{momentum} 0,9 & \cite{He2016} \\
+% \textit{Learning rate} inicial & $0,01$ & \cite{He2016} \\
+% \textit{Schedule} de \textit{learning rate} & \textit{Cosine annealing} & \cite{Loshchilov2017} \\
+% \textit{Weight decay} ($L_2$) & $5 \times 10^{-4}$ & \cite{He2016} \\
+% \textit{Batch size} & 128 & Padrão da literatura \\
+% Épocas & 100 & Padrão da literatura \\
+% Critério de parada & \textit{Early stopping} (paciência 15 ép.) & --- \\
+% Seleção do modelo final & Maior acurácia em validação & --- \\
+% \hline
+% \end{tabular}\\
+% \textit{Fonte: Elaboração própria, com valores baseados na literatura.}
+% \end{table}
+
+% \adicionadomarcelo{Os valores reportados são consistentes com a prática em treinamentos de ResNet em CIFAR. O \textit{schedule} \textit{cosine annealing} reduz a taxa de aprendizado de forma suave ao longo das épocas, partindo do valor inicial e aproximando-se de zero ao final, técnica comprovadamente eficaz em redes profundas \cite{Loshchilov2017}. O critério de \textit{early stopping} é utilizado como salvaguarda: se a acurácia em validação não melhora por 15 épocas consecutivas, o treinamento é interrompido. O modelo final escolhido é aquele que apresentou a maior acurácia no conjunto de validação ao longo do treinamento.}
+
+% \subsection{Função de Custo}
+
+% \adicionadomarcelo{Para o problema de classificação multiclasse com 100 classes, utiliza-se a função de custo de entropia cruzada (\textit{cross-entropy}) categórica, padrão na literatura para esse tipo de tarefa.}
+
+\section{Métodos de Poda da Literatura}\label{sec:metodos_poda}
+
+\modificado{Este trabalho implementa e avalia dois métodos de poda consolidados na literatura, selecionados estrategicamente por sua complementaridade conceitual: um representativo da família de métodos não estruturados e outro da família de métodos estruturados. A comparação sistemática entre ambos permite analisar, para além das métricas de acurácia, o impacto prático de cada paradigma sobre o consumo energético em \textit{hardware} convencional.}
+
+\subsection{Método 1: Poda Não Estruturada por Magnitude}
+
+\modificado{O primeiro método implementado é a poda não estruturada por magnitude, proposta originalmente por Han \textit{et al.} \cite{Han2015} e consolidada como \textit{baseline} de comparação em grande parte da literatura de compressão de modelos.}
+
+\adicionadomarcelo{O método opera de forma granular sobre os pesos individuais das camadas convolucionais e totalmente conectadas. Após o treinamento do modelo denso, calcula-se o valor absoluto de cada peso, e os $k\%$ parâmetros de menor magnitude são fixados em zero. Os pesos remanescentes passam, então, por uma etapa de \textit{fine-tuning} para compensar a perda de capacidade expressiva da rede.}
+
+\adicionadomarcelo{A implementação utiliza a função \texttt{prune.global\_unstructured} do PyTorch, aplicando um critério de norma $L1$. O uso de uma abordagem global — onde um limiar único é aplicado ao conjunto total de pesos podáveis do modelo — permite uma distribuição de esparsidade heterogênea e adaptativa, preservando camadas mais sensíveis e penalizando as mais redundantes, o que tipicamente supera a poda uniforme por camada \cite{Han2015}. A camada de classificação final (\texttt{fc}) é intencionalmente excluída do processo devido à sua alta sensibilidade e importância crítica para o mapeamento das predições.}
+
+\adicionadomarcelo{Do ponto de vista de desempenho de \textit{hardware}, conforme discutido na Seção 2.5, este método gera matrizes esparsas por meio de mascaramento lógico, sem remover as estruturas físicas. Consequentemente, em arquiteturas de processamento convencionais, as operações de multiplicação por zero continuam sendo executadas. A inclusão deste método fundamenta-se exatamente no seu papel de controle: ele permitirá quantificar, de forma precisa, a lacuna existente entre a compressão teórica (esparsidade dos parâmetros) e o ganho real de eficiência energética e temporal.}
+
+\subsection{Método 2: Poda Estruturada por Norma L1 de Filtros}
+
+\modificado{O segundo método avaliado é a poda estruturada baseada na norma $L1$ dos filtros convolucionais, introduzida por Li \textit{et al.} \cite{Li2017}. Esta abordagem é de suma importância para o foco deste trabalho, uma vez que promove a remoção física de filtros inteiros, reduzindo ativamente as dimensões dos mapas de características e, por conseguinte, o número de operações matemáticas executadas.}
+
+\adicionadomarcelo{Para cada camada convolucional, calcula-se a norma $L1$ de cada filtro (a soma dos valores absolutos de seus respectivos pesos). Os filtros com as menores normas são classificados como menos informativos e removidos da arquitetura. Como a eliminação de um filtro altera o formato do \textit{tensor} de saída da referida camada, a dimensão de entrada da camada subsequente exige ajuste correspondente.}
+
+\adicionadomarcelo{Esta adequação arquitetural torna-se um desafio não trivial em redes com fluxo não linear, como a ResNet-50. A presença de \textit{skip connections} impõe restrições rígidas de dimensionalidade: para que os mapas de características sejam somados elemento a elemento nas conexões residuais, suas dimensões de canal devem ser estritamente idênticas. Para solucionar o alinhamento dessas dimensões, a implementação recorre à biblioteca \texttt{Torch-Pruning} \cite{Fang2023}, que abstrai a topologia da rede em um grafo de dependências (\textit{DepGraph}) e propaga automaticamente os cortes estruturais necessários por todas as camadas correlacionadas.}
+
+\adicionadomarcelo{Diferentemente da abordagem não estruturada, este método culmina em um modelo computacionalmente mais enxuto. Com a redução efetiva das Operações de Ponto Flutuante (FLOPs) e da pegada de memória, antecipa-se uma mitigação palpável no consumo energético empírico. Semelhante ao Método 1, o modelo podado é posteriormente submetido a \textit{fine-tuning} para o resgate de sua performance preditiva.}
+
+\subsection{Taxas de Poda Avaliadas}
+
+\adicionadomarcelo{Para ambos os métodos, são avaliadas as seguintes taxas de poda: 20\%, 40\%, 60\% e 80\%. Esses valores cobrem a faixa de interesse prático, desde compressões moderadas até agressivas, e são consistentes com os valores reportados nos trabalhos de referência \cite{Han2015, Li2017, Blalock2020}.}
+
+\subsection{Protocolo de \textit{Fine-tuning} Pós-poda}
+
+\adicionadomarcelo{Após a aplicação de cada método de poda, o modelo é submetido a um procedimento de \textit{fine-tuning} para recuperar parte da acurácia perdida. Os hiperparâmetros utilizados são apresentados na Tabela~\ref{tab:hiperparametros_fine_tuning}.}
+
+\begin{table}[htb]
+\centering
+\caption{Hiperparâmetros do \textit{fine-tuning} pós-poda.}
+\label{tab:hiperparametros_fine_tuning}
+\begin{tabular}{ll}
+\hline
+\textbf{Hiperparâmetro} & \textbf{Valor} \\
+\hline
+Otimizador & SGD com \textit{momentum} 0,9 \\
+\textit{Learning rate} inicial & $1 \times 10^{-4}$ \\
+\textit{Schedule} de \textit{learning rate} & Constante \\
+\textit{Weight decay} ($L_2$) & $5 \times 10^{-4}$ \\
+\textit{Batch size} & 128 \\
+Épocas & 10 \\
+\hline
+\end{tabular}\\
+\textit{Fonte: Elaboração própria, com valores baseados em \citeonline{Han2015}.}
+\end{table}
+
+\adicionadomarcelo{A taxa de aprendizado do \textit{fine-tuning} é, intencionalmente, duas ordens de magnitude menor do que a do treinamento do \textit{baseline}, conforme prática estabelecida \cite{Han2015}. O objetivo é ajustar finamente os pesos remanescentes sem desestabilizar o modelo. O número reduzido de épocas (10) reflete o caráter de recuperação dessa fase, em contraste com o treinamento completo do \textit{baseline}.}
+
+\section{\textit{Framework} de Implementação}\label{sec:framework}
+
+\modificado{A implementação do trabalho é feita em Python, utilizando o \textit{framework} PyTorch \cite{Paszke2019} para a construção, treinamento e manipulação dos modelos. O PyTorch é uma biblioteca de aprendizado de máquina de código aberto, amplamente adotada na comunidade de pesquisa, que conta com um ecossistema maduro de ferramentas auxiliares e uma vasta oferta de modelos pré-treinados por meio do pacote \texttt{torchvision}.}
+
+\adicionadomarcelo{Uma característica do PyTorch que motivou sua escolha é o sistema de diferenciação automática (\textit{autograd}), que constrói dinamicamente o grafo computacional e facilita a implementação do algoritmo de \textit{backpropagation} durante o fine-tuning pós-poda. Além disso, o \textit{framework} provê suporte nativo para aceleração de tensores em hardware gráfico (GPU) via integração com CUDA.}
+
+\adicionadomarcelo{Para a execução métrica e a aplicação das técnicas centrais deste estudo, o trabalho faz uso das seguintes bibliotecas especializadas:}
+
+\begin{itemize}
+    \item \adicionadomarcelo{\texttt{torch.nn.utils.prune}: API nativa do PyTorch utilizada para a implementação da poda não estruturada por magnitude.}
+    \item \adicionadomarcelo{\texttt{Torch-Pruning} \cite{Fang2023}: biblioteca externa dedicada à poda estruturada. Diferentemente da abordagem por máscaras, esta ferramenta realiza a remoção física de filtros e canais, propagando automaticamente as dependências estruturais entre as camadas adjacentes por meio de um grafo de dependências (DepGraph).}
+    \item \adicionadomarcelo{\texttt{thop}: biblioteca empregada para a contagem rigorosa de operações de ponto flutuante (FLOPs), permitindo mensurar a complexidade computacional teórica do modelo a partir de um tensor de entrada representativo.}
+    \item \adicionadomarcelo{\texttt{CodeCarbon} \cite{CodeCarbon2023}: ferramenta de telemetria utilizada para a medição empírica do consumo de energia e estimativa das emissões de $CO_2$ durante a execução dos algoritmos. A estimativa baseia-se no monitoramento direto da infraestrutura de hardware (CPU/GPU) combinada à intensidade de carbono da rede elétrica correspondente à localização geográfica da execução.}
+\end{itemize}
+
+\section{Estratégia Otimizada: Sensibilidade por Camada}\label{sec:estrategia_otimizada}
+
+\adicionadomarcelo{Os métodos descritos na Seção~\ref{sec:metodos_poda} aplicam uma taxa de poda global, isto é, uniforme entre camadas. No entanto, camadas diferentes de uma mesma rede podem tolerar diferentes graus de compressão: algumas podem ser podadas agressivamente sem comprometer a acurácia, enquanto outras são críticas e uma pequena poda já degrada o desempenho \cite{Han2015, Yang2017}.}
+
+\adicionadomarcelo{Com base nessa observação, este trabalho propõe como estratégia otimizada uma poda estruturada por filtros na qual a taxa de poda aplicada a cada camada é determinada a partir de uma análise prévia de sensibilidade. O processo é composto por duas etapas principais.}
+
+\subsection{Etapa 1 -- Análise de Sensibilidade por Camada}
+
+\adicionadomarcelo{Partindo do modelo \textit{baseline} já treinado, cada camada convolucional é podada individualmente, em isolamento, em diferentes taxas (10\%, 20\%, $\ldots$, 90\%). Para cada combinação (camada, taxa), a acurácia do modelo é medida \textit{sem} realizar \textit{fine-tuning}, a fim de capturar a sensibilidade intrínseca daquela camada à remoção de filtros. O resultado é um perfil de sensibilidade por camada, que pode ser representado, para cada camada $\ell$, como uma função $s_\ell(p) = \text{acurácia}(\text{modelo com camada } \ell \text{ podada em taxa } p)$.}
+
+\subsection{Etapa 2 -- Alocação Adaptativa de Taxas}
+
+\adicionadomarcelo{A partir do perfil de sensibilidade obtido na Etapa 1, define-se, para cada camada, uma taxa específica de poda, respeitando um orçamento global de compressão (por exemplo, redução total de 50\% dos filtros). Camadas mais robustas, isto é, que sofreram menor queda de acurácia ao serem podadas isoladamente, recebem taxas maiores; camadas mais sensíveis recebem taxas menores. A formalização exata da alocação será apresentada e validada experimentalmente.}
+
+\adicionadomarcelo{Em seguida, aplica-se a poda estruturada $L_1$ com essas taxas individuais, e o modelo resultante é submetido a \textit{fine-tuning} com os mesmos hiperparâmetros descritos na Tabela~\ref{tab:hiperparametros_fine_tuning}.}
+
+\adicionadomarcelo{A expectativa é que essa estratégia otimizada permita atingir taxas globais de compressão próximas às dos métodos uniformes, porém com menor perda de acurácia, em razão da alocação não-uniforme do ``orçamento'' de poda.}
+
+\section{\textit{Pipeline} Experimental}\label{sec:pipeline}
+
+\adicionadomarcelo{Para cada combinação (método de poda, taxa de poda, repetição), o procedimento experimental adotado é o seguinte:}
+
+\begin{enumerate}
+    \item \adicionadomarcelo{\textbf{Carregamento do \textit{baseline}:} o modelo ResNet-50 previamente treinado no CIFAR-100 é carregado a partir de um \textit{checkpoint} salvo em disco.}
+    \item \adicionadomarcelo{\textbf{Aplicação da poda:} o método selecionado é aplicado com a taxa configurada.}
+    \item \adicionadomarcelo{\textbf{\textit{Fine-tuning}:} o modelo podado é retreinado conforme o protocolo da Tabela~\ref{tab:hiperparametros_fine_tuning}.}
+    \item \adicionadomarcelo{\textbf{Finalização do modelo:} a máscara de poda é fundida aos pesos (no caso da poda não estruturada) ou a arquitetura é consolidada (no caso da poda estruturada), e o modelo final é salvo em disco.}
+    \item \adicionadomarcelo{\textbf{Avaliação completa:} calculam-se todas as métricas definidas na Seção~\ref{sec:metricas}, incluindo a medição de consumo energético via \texttt{CodeCarbon} ao longo da inferência sobre o conjunto de teste.}
+    \item \adicionadomarcelo{\textbf{Registro dos resultados:} métricas e metadados do experimento são salvos em arquivos CSV e JSON, permitindo análise posterior.}
+\end{enumerate}
+
+\adicionadomarcelo{Cada combinação (método, taxa) é executada \textbf{três vezes}, com sementes aleatórias distintas, para permitir o cálculo de médias e desvios-padrão das medidas, sobretudo as de consumo energético, mais suscetíveis a variações de execução.}
+
+\adicionadomarcelo{O fluxo geral dos experimentos é apresentado na Figura~\ref{fig:pipeline_experimental}. A partir do \textit{dataset} CIFAR-100 e da ResNet-50 pré-treinada, é obtido o modelo \textit{baseline}, sobre o qual são aplicados, em paralelo, os dois métodos de poda da literatura e a estratégia otimizada. Cada um dos modelos resultantes passa por \textit{fine-tuning} e é avaliado segundo o mesmo conjunto de métricas, permitindo comparação direta dos três caminhos.}
+
+\begin{figure}[htb]
+\centering
+\caption{Pipeline experimental do trabalho.}
+\label{fig:pipeline_experimental}
+
+\begin{tikzpicture}[
+    node distance=0.7cm and 0.5cm,
+    every node/.style={font=\small},
+    data/.style={
+        rectangle, rounded corners=3pt,
+        draw=black, thick,
+        fill=gray!15,
+        minimum width=6cm, minimum height=0.9cm,
+        align=center
+    },
+    process/.style={
+        rectangle, rounded corners=3pt,
+        draw=black, thick,
+        fill=white,
+        minimum width=6cm, minimum height=0.9cm,
+        align=center
+    },
+    method/.style={
+        rectangle, rounded corners=3pt,
+        draw=black, thick,
+        fill=gray!8,
+        minimum width=4cm, minimum height=1.4cm,
+        align=center,
+        font=\footnotesize
+    },
+    eval/.style={
+        rectangle, rounded corners=3pt,
+        draw=black, thick,
+        fill=gray!20,
+        minimum width=8cm, minimum height=1.6cm,
+        align=center,
+        font=\footnotesize
+    },
+    arrow/.style={-{Latex[length=2mm,width=1.5mm]}, thick},
+]
+
+% Camada 1: dataset
+\node[data] (cifar) {Dataset CIFAR-100\\(50.000 treino + 10.000 teste)};
+
+% Camada 2: modelo pré-treinado
+\node[data, below=of cifar] (resnet) {ResNet-50 pré-treinada\\em ImageNet-1K (\textit{torchvision})};
+
+% Camada 3: fine-tuning baseline
+\node[process, below=of resnet] (finetune_base) {\textit{Fine-tuning} no CIFAR-100\\(SGD, 100 épocas, \textit{cosine schedule})};
+
+% Camada 4: baseline
+\node[data, below=of finetune_base, fill=gray!25] (baseline) {\textbf{Modelo \textit{Baseline}}\\(referência para todas as comparações)};
+
+% Camada 5: três métodos em paralelo
+\node[method, below left=1.2cm and -0.2cm of baseline] (m1) {\textbf{Método 1}\\Poda não estruturada\\por magnitude\\\cite{Han2015}};
+
+\node[method, below=1.2cm of baseline] (m2) {\textbf{Método 2}\\Poda estruturada\\por norma $L_1$\\\cite{Li2017}};
+
+\node[method, below right=1.2cm and -0.2cm of baseline] (mopt) {\textbf{Estratégia otimizada}\\Sensibilidade\\por camada};
+
+% Camada 6: fine-tuning pós-poda
+\node[process, below=1.0cm of m2, minimum width=8cm] (finetune_poda) {\textit{Fine-tuning} pós-poda\\(10 épocas, \textit{lr} reduzido em $10^{-2}$)};
+
+% Camada 7: avaliação
+\node[eval, below=of finetune_poda] (avaliacao) {\textbf{Avaliação no conjunto de teste}\\Acurácia (\textit{top-1}, \textit{top-5}) $\bullet$ Tamanho $\bullet$ Parâmetros\\FLOPs $\bullet$ Latência $\bullet$ Energia (kWh) $\bullet$ Emissões $CO_2$};
+
+% Camada 8: análise comparativa
+\node[data, below=of avaliacao, fill=gray!25] (analise) {\textbf{Análise comparativa entre os três caminhos}};
+
+% Setas principais
+\draw[arrow] (cifar) -- (resnet);
+\draw[arrow] (resnet) -- (finetune_base);
+\draw[arrow] (finetune_base) -- (baseline);
+
+\draw[arrow] (baseline.south) -- ++(0,-0.3) -| (m1.north);
+\draw[arrow] (baseline.south) -- (m2.north);
+\draw[arrow] (baseline.south) -- ++(0,-0.3) -| (mopt.north);
+
+\draw[arrow] (m1.south) |- ++(0,-0.4) -| ($(finetune_poda.north west)+(0.4,0)$);
+\draw[arrow] (m2.south) -- (finetune_poda.north);
+\draw[arrow] (mopt.south) |- ++(0,-0.4) -| ($(finetune_poda.north east)+(-0.4,0)$);
+
+\draw[arrow] (finetune_poda) -- (avaliacao);
+\draw[arrow] (avaliacao) -- (analise);
+
+% Anotações laterais
+\node[right=0.3cm of baseline, font=\scriptsize\itshape, text width=3cm, align=left] {3 \textit{seeds} distintas};
+\node[right=0.3cm of avaliacao, font=\scriptsize\itshape, text width=3cm, align=left] {Por taxa de poda: 20\%, 40\%, 60\%, 80\%};
+
+\end{tikzpicture}
+
+\vspace{0.3cm}
+\textit{Fonte: Elaboração própria.}
+
+\end{figure}
+
+\section{Métricas de Avaliação}\label{sec:metricas}
+
+\adicionadomarcelo{Cada modelo --- \textit{baseline}, podado pelos métodos da literatura e podado pela estratégia otimizada --- é avaliado por meio de um conjunto de métricas que cobrem três dimensões: desempenho preditivo, custo computacional e impacto ambiental. A Tabela~\ref{tab:metricas} resume todas as métricas, suas unidades e ferramentas.}
+
+\begin{table}[htb]
+\centering
+\caption{Métricas de avaliação adotadas.}
+\label{tab:metricas}
+\small
+\begin{tabular}{p{3.5cm}p{4.5cm}p{2cm}p{2.5cm}}
+\hline
+\textbf{Métrica} & \textbf{O que mede} & \textbf{Unidade} & \textbf{Ferramenta} \\
+\hline
+Acurácia (\textit{top-1}, \textit{top-5}) & Proporção de predições corretas & \% & PyTorch \\
+Tamanho do modelo & Espaço em disco do \texttt{state\_dict} & MB & PyTorch \\
+Parâmetros totais & Pesos treináveis & unidades & PyTorch \\
+Parâmetros não-zero & Pesos efetivamente não nulos & unidades & PyTorch \\
+Esparsidade & Proporção de pesos iguais a zero & \% & PyTorch \\
+FLOPs & Operações de ponto flutuante por inferência & FLOPs & \texttt{thop} \\
+Latência & Tempo médio de uma inferência & ms & \texttt{time.perf\_counter} \\
+Energia consumida & Energia total durante a inferência & kWh & \texttt{CodeCarbon} \\
+Emissões de $CO_2$ & Emissões equivalentes ao consumo & kg & \texttt{CodeCarbon} \\
+\hline
+\end{tabular}\\
+\textit{Fonte: Elaboração própria.}
+\end{table}
+
+% \subsection{Acurácia}
+% \modificado{A acurácia é a métrica de desempenho principal, medindo a proporção de predições corretas do modelo em relação ao total de amostras avaliadas. No presente contexto, o objetivo é \textit{preservá-la ao máximo} durante o processo de poda.} \adicionadomarcelo{São computadas as acurácias \textit{top-1} (predição mais provável correta) e \textit{top-5} (a classe correta está entre as cinco mais prováveis), conforme a prática usual em \textit{datasets} com muitas classes.}
+
+% \subsection{Tamanho do Modelo}
+% \adicionadomarcelo{O tamanho do modelo é medido como o espaço ocupado em disco, em megabytes (MB), pelo arquivo contendo o \texttt{state\_dict} serializado do PyTorch. Trata-se de uma medida prática e honesta, pois inclui o \textit{overhead} de serialização e reflete o tamanho real que o modelo ocuparia em um sistema embarcado ou servidor.}
+
+% \subsection{Número de Parâmetros e Esparsidade}
+% \adicionadomarcelo{Reporta-se o número total de parâmetros treináveis do modelo e, para o caso da poda não estruturada, também o número de parâmetros \textit{não-zero}. A esparsidade é definida como a proporção de pesos iguais a zero. Essas métricas, em conjunto, evidenciam a diferença entre compressão teórica (pesos zerados) e compressão física (parâmetros removidos), aspecto central da comparação entre os dois métodos da literatura.}
+
+% \subsection{FLOPs}
+% \adicionadomarcelo{FLOPs (\textit{Floating Point Operations}) é a métrica \textit{proxy} mais utilizada para custo computacional. A contagem é feita com a biblioteca \texttt{thop}, a partir de um \textit{tensor} de entrada representativo. FLOPs menores tendem a implicar menor latência e menor consumo de energia em \textit{hardware} convencional.}
+
+% \adicionadomarcelo{Ressalta-se, conforme discutido na Seção~\ref{sec:pruning}, que contadores de FLOPs não detectam pesos zerados na poda não estruturada: todas as operações continuam contabilizadas, refletindo corretamente o comportamento de \textit{hardware} convencional, que executa multiplicações por zero. Na poda estruturada, ao contrário, a redução de FLOPs é efetiva, pois os filtros são fisicamente removidos.}
+
+% \subsection{Tempo de Inferência (Latência)}
+% \modificado{Corresponde ao tempo de relógio que o modelo leva para processar uma entrada. Trata-se de uma medida prática da velocidade do modelo, crítica em aplicações em tempo real, como sistemas de recomendação, reconhecimento de voz e veículos autônomos.} \adicionadomarcelo{A medição é feita em múltiplas execuções (100, por padrão), precedidas por execuções de aquecimento (\textit{warm-up}) para mitigar efeitos de \textit{caching} e compilação \textit{just-in-time}. Reporta-se a média, a mediana e o desvio-padrão das medidas, em milissegundos.}
+
+% \subsection{Consumo de Energia e Emissões de $CO_2$}
+% \modificado{O consumo de energia é medido utilizando a biblioteca \texttt{CodeCarbon} \cite{CodeCarbon2023}, que monitora o \textit{hardware} (CPU, GPU e memória) durante a execução de um bloco de código e estima a energia consumida em quilowatts-hora (kWh), bem como as emissões equivalentes de $CO_2$ em quilogramas, considerando a matriz energética da localização geográfica em que o código é executado.}
+
+% \adicionadomarcelo{Como essas medições são sensíveis a ruído (outros processos em execução, oscilações de \textit{clock} do processador etc.), cada experimento é repetido três vezes, com sementes distintas, e os resultados são reportados como média e desvio-padrão. Durante as medições, procura-se manter o ambiente de execução estável, sem outros processos concorrentes significativos.}
+
+% \section{Critérios de Comparação e Análise Estatística}\label{sec:comparacao}
+
+% \adicionadomarcelo{A comparação entre o \textit{baseline}, os dois métodos da literatura e a estratégia otimizada é estruturada em três planos.}
+
+% \subsection{Comparação de Trade-offs}
+
+% \adicionadomarcelo{Para cada par de métricas relevantes (e.g., acurácia $\times$ energia, acurácia $\times$ FLOPs), são produzidos gráficos que permitam visualizar simultaneamente o ganho em eficiência e a eventual perda de desempenho. Espera-se construir, para cada método, uma curva acurácia-esparsidade (ou acurácia-energia), permitindo a identificação de regiões de \textit{Pareto}-eficiência.}
+
+% \subsection{Comparação Estatística}
+
+% \adicionadomarcelo{Como cada combinação (método, taxa) é executada três vezes, são reportadas média e desvio-padrão para todas as métricas. Nas comparações em que a sobreposição dos desvios-padrão for ambígua, podem ser aplicados testes estatísticos (e.g., teste $t$ de \textit{Student} ou Mann-Whitney) para verificar se as diferenças são significativas.}
+
+% \adicionadomarcelo{Reconhece-se, contudo, que com $n=3$ repetições o poder estatístico é limitado. As repetições têm caráter principalmente confirmatório: pretendem garantir que as medidas reportadas não sejam pontuais e que tendências observadas sejam consistentes.}
+
+% \subsection{Critério de Sucesso da Estratégia Otimizada}
+
+% \adicionadomarcelo{A estratégia otimizada (Seção~\ref{sec:estrategia_otimizada}) é considerada bem-sucedida se, para um mesmo nível de compressão global (taxa de poda equivalente), apresentar acurácia maior do que a poda estruturada com taxa uniforme, ao mesmo tempo em que mantém ou supera a redução de consumo energético. O ganho mínimo esperado é o de uma diferença de acurácia que ultrapasse a soma dos desvios-padrão das duas medidas comparadas.}
+
+% \section{Ambiente de Execução e Reprodutibilidade}\label{sec:ambiente}
+
+% \adicionadomarcelo{Para garantir reprodutibilidade dos experimentos:}
+% \begin{itemize}
+%     \item \adicionadomarcelo{As sementes aleatórias do Python, NumPy e PyTorch são fixadas no início de cada execução.}
+%     \item \adicionadomarcelo{As configurações de cada experimento (taxas de poda, épocas de \textit{fine-tuning}, hiperparâmetros etc.) são armazenadas em arquivos YAML versionados, de forma que cada resultado obtido possa ser rastreado até sua configuração exata.}
+%     \item \adicionadomarcelo{O código-fonte é organizado de maneira modular, separando \textit{dataset}, modelo, métodos de poda, métricas e \textit{scripts} de execução, e é disponibilizado em repositório público, junto com a documentação de instalação e uso.}
+%     \item \adicionadomarcelo{Os \textit{checkpoints} dos modelos treinados, bem como os arquivos de métricas brutas, são preservados, permitindo auditar e reproduzir cada figura e tabela apresentada no Capítulo~\ref{chap:resultados}.}
+% \end{itemize}
+
+% \adicionadomarcelo{%
+% \todo[inline]{\textbf{A fazer:} preencher, ao final dos experimentos, as especificações do \textit{hardware} utilizado (CPU, GPU, RAM, sistema operacional), as versões das principais bibliotecas (PyTorch, torchvision, Torch-Pruning, CodeCarbon, thop) e o endereço do repositório público.}}
+
+% \section{Limitações Metodológicas}\label{sec:limitacoes}
+
+% \adicionadomarcelo{Reconhecem-se, desde o desenho metodológico, algumas limitações que afetam o escopo e a generalidade dos resultados deste trabalho:}
+
+% \begin{itemize}
+%     \item \adicionadomarcelo{\textbf{Único modelo e \textit{dataset}:} os experimentos utilizam exclusivamente a ResNet-50 em CIFAR-100. Os resultados podem não generalizar diretamente para outras arquiteturas (e.g., \textit{Vision Transformers}) ou para \textit{datasets} de natureza distinta. Trabalhos futuros podem expandir essa avaliação.}
+%     \item \adicionadomarcelo{\textbf{Número limitado de repetições:} cada configuração é executada três vezes, o que é suficiente para estimativas de média e desvio-padrão, mas insuficiente para análises estatísticas robustas. Mais repetições seriam desejáveis e poderão ser feitas em trabalhos futuros, condicionadas à disponibilidade de \textit{hardware}.}
+%     \item \adicionadomarcelo{\textbf{Sensibilidade ao \textit{hardware}:} medições de consumo energético e latência são intrinsecamente dependentes do \textit{hardware} utilizado. Os resultados absolutos não devem ser comparados entre máquinas distintas; o foco da análise é a \textit{comparação relativa} entre métodos executados no mesmo ambiente.}
+%     \item \adicionadomarcelo{\textbf{Hiperparâmetros não otimizados via busca exaustiva:} os hiperparâmetros adotados foram baseados na literatura e em experimentos preliminares, e não em uma busca sistemática (\textit{grid search} ou bayesiana). É possível que valores melhores existam, mas a busca exaustiva está fora do escopo deste trabalho.}
+%     \item \adicionadomarcelo{\textbf{Estimativa de emissões de $CO_2$:} a estimativa do \texttt{CodeCarbon} depende de tabelas de intensidade carbônica regional, que carregam incerteza. As emissões reportadas devem ser interpretadas como aproximações de ordem de magnitude.}
+% \end{itemize}
+
+% \adicionadomarcelo{Apesar dessas limitações, o desenho experimental aqui descrito é suficiente para responder à pergunta central do trabalho: \textit{em que medida diferentes métodos de poda neural reduzem o consumo energético, e qual é o trade-off correspondente em acurácia, em um cenário representativo da literatura?}}

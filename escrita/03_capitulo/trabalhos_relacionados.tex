@@ -1,0 +1,17 @@
+% % =============================================================
+% % Capítulo 3 — Trabalhos Relacionados
+% % =============================================================
+
+% \chapter{Trabalhos Relacionados}\label{chap:trabalhos_relacionados}
+
+% \adicionadomarcelo{Este capítulo apresenta trabalhos da literatura diretamente relacionados ao tema desta pesquisa, com foco em estratégias de poda neural e, em especial, naquelas que visam a redução do consumo energético de modelos de \textit{Deep Learning}. Para cada trabalho, são descritos os objetivos principais, a metodologia adotada e os principais resultados obtidos.}
+
+% \section{Designing Energy-Efficient Convolutional Neural Networks using Energy-Aware Pruning}\label{sec:yang2017}
+
+% \modificado{\citeonline{Yang2017} propõem um algoritmo de poda para redes neurais convolucionais (CNNs) cujo foco é minimizar o consumo real de energia, e não apenas o número de parâmetros ou de operações, preservando a acurácia. Os autores consideram especialmente o custo computacional associado a operações de multiplicação e acumulação (MAC) e o custo de acesso à memória em dispositivos periféricos, como \textit{smartphones}.}
+
+% \modificado{O método proposto aplica poda camada por camada, priorizando aquelas cujo consumo energético estimado é maior. Para isso, os autores desenvolvem um \textit{framework} de estimativa que ordena as camadas pela combinação de custo computacional (número de MACs) e custo de acesso à memória. Em cada camada podada, parte dos pesos é removida; em seguida, alguns pesos são restaurados para minimizar o erro no mapa de características de saída; por fim, os pesos remanescentes são ajustados localmente por meio de uma solução de mínimos quadrados. Após o processamento de todas as camadas, a rede passa por um \textit{fine-tuning} global utilizando \textit{backpropagation}.}
+
+% \modificado{Os autores reportam redução de 3,7$\times$ no consumo de energia da AlexNet e 1,6$\times$ no da GoogLeNet, com perda de acurácia inferior a 1\%. O trabalho também demonstra empiricamente que as camadas convolucionais são as que mais consomem energia, principalmente devido ao volume de acessos à memória, e que a simples redução do número de classes tem impacto limitado na redução do consumo energético, uma vez que as camadas convolucionais não são significativamente afetadas.}
+
+% \adicionadomarcelo{\todo[inline]{\textbf{A fazer:} adicionar resenhas de outros trabalhos fundamentais para esta pesquisa. Sugestões: \citeonline{Han2015} (poda por magnitude não estruturada -- seminal); \citeonline{Li2017} (poda estruturada L1 em filtros -- seminal); \citeonline{Frankle2019} (Lottery Ticket Hypothesis); \citeonline{Blalock2020} (revisão crítica de métodos de poda); \citeonline{Liu2019} (\textit{Rethinking the Value of Network Pruning}). Para cada um, seguir o mesmo padrão de resenha: objetivo, método, resultados principais.}}

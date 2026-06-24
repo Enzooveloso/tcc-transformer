@@ -1,0 +1,252 @@
+% =============================================================
+% Capítulo 4 — Metodologia
+% =============================================================
+
+\chapter{Metodologia}\label{chap:metodologia}
+
+Este capítulo apresenta o percurso metodológico adotado no trabalho, organizado em cinco etapas.
+As decisões concretas decorrentes desses critérios --- incluindo o modelo selecionado, os
+\textit{datasets} empregados e as configurações de poda --- são descritas no
+Capítulo~\ref{chap:desenvolvimento}.
+
+% -------------------------------------------------------
+\section{Seleção e Implementação do Modelo de Referência}\label{sec:metodologia_modelo}
+% -------------------------------------------------------
+
+
+
+O modelo de referência (\textit{baseline}) corresponde à versão original do modelo de linguagem
+de grande escala (\textit{Large Language Model} --- LLM) antes de qualquer processo de poda.
+Ele serve como padrão para mensurar a perda de desempenho introduzida pela compressão: todas as
+métricas dos modelos podados são comparadas às métricas desse modelo original.
+
+Para a seleção do modelo de referência, foram adotados os seguintes critérios:
+
+\begin{itemize}
+    \item ser um LLM representativo, amplamente utilizado na literatura de compressão de modelos;
+    \item dispor de pesos pré-treinados publicamente disponíveis;
+    \item apresentar tamanho compatível com as restrições de \textit{hardware} disponível;
+    \item possuir ampla documentação em trabalhos de poda neural;
+    \item \modificado{contar com implementação acessível em \textit{frameworks} consolidados,
+          como PyTorch.}
+\end{itemize}
+
+% AJUSTE: reunião 13/05 — Hugging Face como plataforma, não biblioteca
+\adicionadomarcelo{A implementação do modelo de referência utiliza a biblioteca PyTorch \cite{Paszke2019}.
+Como repositório de modelos pré-treinados, é empregada a plataforma Hugging Face, um
+ambiente colaborativo que disponibiliza ampla variedade de modelos de linguagem de grande
+escala publicamente acessíveis --- como, por exemplo, variantes do GPT-2.
+O modelo selecionado a partir dos critérios estabelecidos --- incluindo a versão específica
+obtida via Hugging Face --- é apresentado e detalhado no
+Capítulo~\ref{chap:desenvolvimento}.}
+
+% -------------------------------------------------------
+\section{Implementação das Estratégias de Poda sem Otimização}\label{sec:metodologia_poda_sem}
+% -------------------------------------------------------
+
+
+% AJUSTE: reunião 13/05 — duas estratégias (magnitude + estruturada), "avaliadas" em vez de "consideradas"
+\adicionadomarcelo{As estratégias de poda sem otimização têm por objetivo reduzir o número de parâmetros de um
+modelo pré-treinado, eliminando pesos ou estruturas avaliadas como menos relevantes para o
+desempenho preditivo. Serão avaliadas duas estratégias de poda clássicas, escolhidas por
+representarem os dois extremos do espectro de granularidade da poda neural:
+
+\begin{itemize}
+    \item poda baseada em magnitude dos pesos \cite{Han2015}, que remove parâmetros
+          individuais cujos valores absolutos são inferiores a um limiar; representa a
+          granularidade mais fina possível e gera modelos esparsos sem alteração da
+          estrutura física do modelo;
+    \item poda estruturada \cite{Li2017}, que elimina unidades arquiteturais inteiras
+          --- como filtros convolucionais ou cabeças de atenção --- reduzindo fisicamente
+          as dimensões dos tensores e gerando modelos computacionalmente mais enxutos.
+\end{itemize}}
+
+% AJUSTE: reunião 13/05 — reforçar que estratégias são consolidadas na literatura
+\adicionadomarcelo{Ambas as estratégias são amplamente consolidadas na literatura de compressão de modelos
+neurais, com mais de uma década de aplicação e extensa validação experimental. Sua inclusão
+neste trabalho não constitui contribuição metodológica original; pelo contrário, sua
+aplicação fornece uma base de comparação estabelecida, sobre a qual serão avaliadas as
+estratégias otimizadas propostas na
+Seção~\ref{sec:metodologia_poda_com}.}
+
+Os critérios que orientaram a escolha das estratégias a implementar foram:
+
+\begin{itemize}
+    \item representatividade na literatura de compressão de modelos;
+    \item complementaridade entre granularidades distintas de remoção;
+    \item viabilidade de implementação com as ferramentas disponíveis.
+\end{itemize}
+
+
+\modificado{Em ambas as estratégias, são aplicadas funções de avaliação de importância de parâmetros,
+que orientam o processo de remoção: a poda por magnitude utiliza o valor absoluto dos pesos
+como critério, enquanto a poda estruturada utiliza a norma $L_1$ dos filtros (ou unidades
+arquiteturais equivalentes).}
+
+
+
+As estratégias selecionadas com base nesses critérios, bem como os detalhes de sua
+implementação, são apresentados no Capítulo~\ref{chap:desenvolvimento}.
+
+% -------------------------------------------------------
+\section{Implementação das Estratégias de Poda com Otimização}\label{sec:metodologia_poda_com}
+% -------------------------------------------------------
+
+Esta é a etapa central do trabalho. O objetivo é investigar se a combinação das estratégias de
+poda com técnicas de otimização resulta em modelos mais eficientes do que a poda aplicada de
+forma direta, sem qualquer refinamento adicional.
+
+As estratégias de otimização a investigar incluem:
+
+\begin{itemize}
+    \item Comparação entre taxas de poda fixas e dinâmicas;
+    \item Variação do momento de aplicação da poda --- antes do treinamento, durante ou após
+          o \textit{fine-tuning};
+    \item Análise de sensibilidade por camada, para alocação não uniforme do orçamento de poda;
+    \item \textit{Knowledge Distillation}, na qual um modelo menor (\textit{student}) é treinado
+          para reproduzir o comportamento de um modelo maior (\textit{teacher}).
+\end{itemize}
+
+A comparação entre os modelos obtidos com e sem otimização visa identificar combinações que
+melhorem o balanço entre desempenho preditivo e eficiência computacional em relação às
+estratégias aplicadas sem otimização.
+
+% -------------------------------------------------------
+% AJUSTE: reunião 13/05 — reescrita completa da Seção 3.4 (métricas explicadas em detalhe)
+\section{Métricas de Avaliação}\label{sec:metodologia_metricas}
+% -------------------------------------------------------
+
+\adicionadomarcelo{As métricas de avaliação são organizadas em três dimensões: desempenho preditivo, custo
+computacional e impacto ambiental. Para cada métrica, descreve-se o que ela representa e
+como é obtida operacionalmente.
+
+\subsection*{Desempenho preditivo}
+
+A métrica de desempenho preditivo adotada depende da natureza da tarefa do modelo
+selecionado. Em tarefas de classificação, a métrica usual é a acurácia --- definida como
+a proporção de predições corretas sobre o total de amostras avaliadas --- ou medidas
+derivadas, como precisão, revocação e F1 \cite{Goodfellow2016}. Em modelos de linguagem
+voltados à geração de texto, a métrica padrão é a \textit{perplexity}, que quantifica o
+grau de ``surpresa'' do modelo diante de cada \textit{token} do conjunto de validação,
+constituindo uma medida da qualidade da modelagem probabilística da linguagem. Valores
+mais baixos de \textit{perplexity} indicam melhor capacidade preditiva.
+
+A métrica específica adotada neste trabalho será apresentada no
+Capítulo~\ref{chap:desenvolvimento}, em coerência com a tarefa do modelo selecionado.
+
+\subsection*{Custo computacional}
+
+O custo computacional é avaliado por meio de quatro indicadores complementares:
+
+\begin{itemize}
+    \item \textbf{Número de parâmetros remanescentes:} contagem direta dos tensores de pesos
+          não-zerados (no caso de poda não estruturada) ou existentes (no caso de poda
+          estruturada) no modelo após a aplicação da técnica;
+
+    \item \textbf{Operações de ponto flutuante (FLOPs):} contagem das operações matemáticas
+          necessárias para uma inferência completa, obtida por análise estática do grafo
+          computacional do modelo. Bibliotecas específicas --- como \texttt{thop}, em
+          ambiente PyTorch --- automatizam essa contagem percorrendo cada camada do modelo
+          e acumulando as operações correspondentes;
+
+    \item \textbf{Tempo de inferência:} medido empiricamente, registrando o tempo decorrido
+          durante o processamento de uma entrada representativa em condições controladas de
+          \textit{hardware}. Múltiplas medições são agregadas por meio de média e
+          desvio-padrão para mitigar a variância natural de execução;
+
+    \item \textbf{Tamanho do modelo:} avaliado em duas dimensões --- espaço ocupado em disco
+          após serialização do estado do modelo e consumo de memória durante a inferência,
+          este último registrado por ferramentas de \textit{profiling} do PyTorch.
+\end{itemize}
+
+\subsection*{Impacto ambiental}
+
+O impacto ambiental é mensurado por meio de dois indicadores:
+
+\begin{itemize}
+    \item \textbf{Consumo energético:} estimado por meio de ferramentas de monitoramento do
+          uso de \textit{hardware} (CPU e GPU) durante a execução dos experimentos. A
+          biblioteca CodeCarbon \cite{CodeCarbon2023} integra leituras periódicas de consumo
+          elétrico dos componentes, registrando a energia total consumida (em kWh) durante
+          o intervalo de inferência;
+
+    \item \textbf{Emissões equivalentes de CO\textsubscript{2}:} calculadas a partir do
+          consumo energético registrado, multiplicado por um fator de intensidade carbônica
+          da matriz energética da região onde os experimentos são executados. A biblioteca
+          CodeCarbon mantém base atualizada desses fatores e realiza essa conversão
+          automaticamente.
+\end{itemize}
+
+% Todas as métricas são calculadas tanto para o modelo de referência quanto para cada
+% configuração de modelo podado, de modo que os resultados expressem ganhos ou perdas
+% proporcionais à compressão introduzida, conforme detalhado a seguir.
+}
+
+% -------------------------------------------------------
+% AJUSTE: reunião 13/05 — reescrita completa da Seção 3.5 (como medir e analisar energia)
+% \section{Análise de Consumo Energético}\label{sec:metodologia_energia}
+% % -------------------------------------------------------
+
+% \adicionadomarcelo{Esta seção detalha o procedimento de coleta e análise das métricas de consumo energético,
+% complementando as definições apresentadas na seção anterior.
+
+% \subsection*{Mensuração do consumo energético absoluto}
+
+% A medição do consumo energético é realizada por meio de ferramentas de \textit{software}
+% que monitoram o uso de \textit{hardware} durante a execução dos experimentos. Em
+% particular, a biblioteca CodeCarbon \cite{CodeCarbon2023} integra leituras periódicas de
+% consumo elétrico de CPU e GPU, registrando a energia total consumida ao longo de cada
+% sessão de inferência sobre o conjunto de teste. O resultado é uma medida de energia em
+% kWh, acompanhada de uma estimativa de emissões equivalentes de
+% CO\textsubscript{2}.
+
+% Para mitigar a variância natural das medições de energia --- que tendem a ser mais ruidosas
+% do que medições de desempenho preditivo ---, cada configuração de modelo é avaliada em
+% múltiplas execuções com sementes aleatórias distintas. Os resultados são reportados como
+% média e desvio-padrão.
+
+% \subsection*{Cálculo da redução relativa}
+
+% Para cada configuração de modelo podado, a redução relativa de consumo energético é
+% calculada por comparação direta com o consumo do modelo de referência, conforme a
+% expressão:
+
+% \[
+%     \text{Redução relativa} = \frac{E_{\text{baseline}} - E_{\text{podado}}}{E_{\text{baseline}}} \times 100\%
+% \]
+
+% \noindent em que $E_{\text{baseline}}$ e $E_{\text{podado}}$ representam, respectivamente,
+% a energia consumida pelo modelo de referência e pelo modelo podado durante a inferência
+% sobre o mesmo conjunto de teste. Todas as comparações são realizadas em iguais condições
+% de \textit{hardware}, mesmo conjunto de teste e mesmo número de iterações de inferência,
+% de modo a garantir a validade das comparações.
+
+% \subsection*{Relação entre FLOPs, parâmetros e consumo energético}
+
+% A redução teórica de FLOPs, calculada por análise estática do grafo computacional,
+% constitui um indicador \textit{proxy} da redução de custo computacional, mas não se
+% traduz linearmente em redução de energia. \textit{Hardware} moderno apresenta componentes
+% de consumo basal --- como memória RAM, controladores e sistemas de refrigeração --- cujo
+% consumo não escala proporcionalmente com o número de operações realizadas.
+
+% A redução de parâmetros impacta o tamanho do modelo em memória, o que pode diminuir as
+% transferências entre memória e processador --- fonte significativa de consumo energético
+% em arquiteturas de \textit{hardware} contemporâneas. A poda estruturada tende a apresentar
+% redução de energia proporcional à redução de FLOPs, pois o \textit{hardware} efetivamente
+% executa menos operações. A poda não estruturada, em contrapartida, pode reduzir os FLOPs
+% teóricos sem reduzir proporcionalmente o consumo energético real, uma vez que, em
+% \textit{hardware} sem suporte nativo a esparsidade, multiplicações por zero ainda consomem
+% ciclos de processamento.
+
+% Essa análise sustenta a comparação central deste trabalho: validar empiricamente se
+% diferentes paradigmas de poda traduzem-se ou não em ganhos energéticos reais, e em que
+% proporção.
+
+% \subsection*{Significado prático em larga escala}
+
+% Modelos de linguagem de grande escala em produção servem milhões de requisições diárias.
+% Nessa escala, mesmo reduções modestas no consumo energético por inferência podem resultar
+% em economia significativa de energia e redução de emissões de carbono ao longo do tempo
+% \cite{Strubell2019}. A análise conduzida neste trabalho, embora realizada em escala
+% experimental, busca fornecer evidências quantitativas que permitam estimar o impacto
+% potencial dessas técnicas quando aplicadas em cenários de produção.}
