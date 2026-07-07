@@ -1,3 +1,7 @@
+# Ferramentas de desenvolvimento (uso local, fora do repositório)
+CLAUDE.md
+.claude/
+
 # LaTeX
 *.aux
 *.log
@@ -11,6 +15,9 @@
 *.fls
 *.fdb_latexmk
 *.dvi
+*.idx
+*.ilg
+*.ind
 
 # PDF compilado (descomentar se não quiser versionar)
 # *.pdf

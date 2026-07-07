@@ -78,6 +78,8 @@ Há diversas funções de ativação, cada uma com suas próprias característic
 
 \modificado{Cada componente do vetor de gradiente é uma derivada parcial, calculada assumindo que as demais variáveis são mantidas constantes. A magnitude da derivada indica o quanto a função está variando; o seu sinal, a direção dessa variação: positivo, a função está aumentando; negativo, diminuindo.}
 
+\adicionadomarcelo{Uma analogia comum é a de um caminhante que desce uma encosta em meio à neblina, enxergando apenas o solo ao seu redor: a cada passo, ele sente para qual lado o terreno mais desce (o oposto do gradiente) e avança nessa direção. Na descida do gradiente, a ``encosta'' é a função de perda e os ``passos'' são os ajustes nos pesos, repetidos até alcançar um ponto de mínimo.}
+
 \subsection{Backpropagation}
 \modificado{A retropropagação (\textit{backpropagation}) é o algoritmo que permite o aprendizado das redes neurais, por possibilitar o cálculo da contribuição de cada parâmetro (peso ou \textit{bias}) para o erro da predição \cite{Rumelhart1986}. Uma vez que o erro é calculado na camada de saída, o algoritmo executa um fluxo invertido: da saída em direção à entrada, propagando o erro para as camadas anteriores.}
 
@@ -124,6 +126,10 @@ Há diversas funções de ativação, cada uma com suas próprias característic
     \item \textbf{Passo 6 -- Repetição:} os passos 2 a 5 são repetidos para cada lote e ao longo de um número definido de épocas.
 \end{itemize}
 \modificado{O treinamento é interrompido quando o modelo atinge uma precisão satisfatória ou quando a função de perda deixa de diminuir significativamente.}
+
+% Seção "Arquitetura Transformer" mantida em arquivo próprio para revisão isolada.
+% Integrada aqui, antes de "Consumo Energético", conforme planejado.
+\input{02_capitulo/fundamentacao_transformer}
 
 \section{Consumo Energético em Redes Neurais}\label{sec:consumo_energetico}
 \modificado{O avanço de técnicas e \textit{hardware} voltados ao treinamento de redes neurais, motivado pela busca por maior precisão, trouxe consigo um consumo de energia considerável e, consequentemente, uma significativa emissão de dióxido de carbono. \adicionadomarcelo{\citeonline{Strubell2019}} relatam, por exemplo, que o treinamento de um modelo \textit{transformer} com busca de arquitetura neural pode emitir cerca de 626.155 libras de $CO_2$, enquanto a emissão média de um automóvel ao longo de toda a sua vida útil é de aproximadamente 126.000 libras --- cerca de cinco vezes menos.}

@@ -25,68 +25,66 @@ finalmente, o modelo GPT-2, que é o objeto central dos experimentos de poda.
 
 \subsection{Limitações das Arquiteturas Recorrentes}\label{subsec:limitacoes_rnn}
 
-Antes do \textit{Transformer}, o processamento de texto em redes neurais era realizado
-pelas redes neurais recorrentes (\textit{Recurrent Neural Networks}, RNNs). A ideia
-central de uma RNN é simples: ela processa uma sequência da mesma forma que uma pessoa
-lê uma frase palavra por palavra, mantendo um ``resumo mental'' do que já foi lido. Em
-termos técnicos, esse resumo é chamado de estado oculto (\textit{hidden state}): ao
-processar cada nova palavra, a rede atualiza esse estado com base na palavra atual e no
-estado anterior. Ao final da frase, o estado oculto deve conter, de alguma forma, as
-informações mais relevantes de todo o texto.
+Até a chegada do \textit{Transformer}, o processamento de texto era dominado pelas redes
+neurais recorrentes (\textit{Recurrent Neural Networks}, RNNs), popularizadas ao longo da
+década de 1990. Diferentemente de arquiteturas puramente diretas, as RNNs processam a
+sequência palavra por palavra e reaproveitam a saída de cada passo como entrada do passo
+seguinte, criando uma forma de ``memória'': a cada nova palavra, um estado oculto
+(\textit{hidden state}) é atualizado com base na palavra atual e no estado anterior, de
+modo que, ao final, ele deve resumir as informações relevantes de todo o texto.
 
-O problema surge quando as frases são longas. Considere a seguinte frase: ``O professor
-que deu aula de cálculo na segunda-feira pela manhã no auditório do bloco 3 esqueceu o
-apagador.'' O sujeito da frase é ``professor'', mas o verbo ``esqueceu'' só aparece
-depois de 15 palavras intermediárias. Para que a RNN acerte o que foi esquecido, ela
-precisa manter a informação sobre quem é o sujeito enquanto processa todas essas
-palavras do meio --- e o estado oculto fica cada vez mais ``diluído'' à medida que novas
-informações chegam. 
-% Variantes mais sofisticadas das RNNs, como as redes LSTM
-% (\textit{Long Short-Term Memory}) e GRU (\textit{Gated Recurrent Unit}), foram
-% desenvolvidas para atenuar esse esquecimento por meio de mecanismos de portas que
-% controlam o fluxo de informação, mas não eliminam o problema fundamental.
+Essa memória, porém, falha em sequências longas. Considere o trecho ``A Inglaterra é minha
+terra natal. Passei toda a minha vida lá. Mudei-me para a Espanha há dois dias. Eu falo
+apenas uma língua, que é o \_\_\_''. Para completar a lacuna corretamente com ``inglês'', o
+modelo precisa recuperar a palavra ``Inglaterra'', que aparece no início do trecho. O
+obstáculo é o chamado gradiente desaparecente (\textit{vanishing gradient}): durante o
+treinamento via \textit{backpropagation}, os gradientes são multiplicados repetidamente
+pelas matrizes de peso da rede e, quando esses valores são pequenos, encolhem até se
+aproximarem de zero \cite{Bengio1994}. Com isso, a influência de ``Inglaterra'' torna-se
+insignificante ao chegar à lacuna, e o modelo perde o contexto necessário --- limitação
+que se manifesta como incapacidade de lidar com \textbf{dependências de longo alcance}.
 
-Há ainda uma segunda limitação, de ordem computacional. Como o estado oculto no instante
-$t$ só pode ser calculado após o estado do instante $t-1$, o processamento é
-estritamente sequencial: não é possível processar duas palavras ao mesmo tempo.
-Isso torna o treinamento em textos longos lento e difícil de aproveitar o paralelismo das
-unidades de processamento gráfico (GPUs) modernas, que executam melhor quando muitas
-operações ocorrem simultaneamente. Essas duas limitações --- dificuldade com dependências
-de longo alcance e impossibilidade de paralelizar o processamento --- motivaram a busca
-por uma arquitetura bem diferente.
+Há ainda uma segunda limitação, de ordem computacional: como o estado oculto no instante
+$t$ só pode ser calculado após o do instante $t-1$, o processamento é estritamente
+sequencial e mal aproveita o paralelismo das unidades de processamento gráfico (GPUs)
+modernas. Essas duas dificuldades impulsionaram uma evolução cronológica de arquiteturas.
+As redes LSTM (\textit{Long Short-Term Memory}), propostas em 1997, atacaram o gradiente
+desaparecente por meio de portas (\textit{gates}) que regulam o que deve ser mantido ou
+esquecido, permitindo reter por mais tempo informações como ``Inglaterra''
+\cite{Hochreiter1997}. Ainda assim, as LSTMs continuam processando a frase de forma
+sequencial, o que as mantém lentas e difíceis de paralelizar em grandes volumes de dados
+--- gargalo que só seria superado pelo mecanismo de atenção.
 
 % SUGESTÃO DE FIGURA: diagrama mostrando uma RNN processando a frase de exemplo,
 % com setas indicando o fluxo do estado oculto e destacando a "distância" entre
-% "professor" e "esqueceu". Elaboração própria.
+% "Inglaterra" e a lacuna final. Elaboração própria.
 
 \subsection{Mecanismo de Atenção}\label{subsec:atencao}
 
-A solução proposta pelo \textit{Transformer} é o mecanismo de atenção (\textit{attention
-mechanism}). Para entender a intuição por trás dele, é útil comparar dois tipos de
-leitor. O primeiro lê um livro página por página e tenta guardar tudo na memória,
-essa é a RNN. O segundo pode, a qualquer momento, voltar a qualquer página do livro e
-consultá-la diretamente, esse é o mecanismo de atenção. Em vez de depender de um
-estado oculto que carrega informações de forma comprimida, o mecanismo de atenção
-consulta diretamente qualquer posição da sequência quando precisa de informação.
+O passo seguinte dessa evolução foi o mecanismo de atenção (\textit{attention
+mechanism}), introduzido por \citeonline{Bahdanau2015} no contexto da tradução automática.
+Em vez de comprimir toda a frase em um único estado oculto, a atenção permite que o modelo
+``olhe'' de volta e foque seletivamente em partes específicas da entrada. No exemplo
+anterior, ela pode consultar diretamente o termo ``Inglaterra'', independentemente de quão
+distante ele esteja da lacuna, eliminando o risco de o gradiente desaparecer pelo caminho.
 
-Para operacionalizar essa ideia, o mecanismo de atenção utiliza três conceitos: a
-consulta (\textit{query}), a chave (\textit{key}) e o valor (\textit{value}). Uma analogia
-útil é a de uma biblioteca. Cada livro da biblioteca possui uma etiqueta na lombada
-(a \textit{chave}) que descreve seu conteúdo. Quando um leitor chega com uma pergunta
-(a \textit{consulta}), o bibliotecário compara a pergunta com cada etiqueta e decide
-quais livros são mais relevantes. O conteúdo desses livros (os \textit{valores}) é então
-combinado, logo, os mais relevantes contribuem mais para produzir a resposta. No
-\textit{Transformer}, esse processo ocorre com números: a relevância entre uma consulta
-e cada chave é calculada matematicamente, e os valores correspondentes são somados
-com pesos proporcionais a essa relevância.
+Para operacionalizar essa ideia, o mecanismo utiliza três conceitos: a consulta
+(\textit{query}), a chave (\textit{key}) e o valor (\textit{value}). Uma analogia útil é a
+de uma biblioteca: cada livro tem uma etiqueta na lombada (a \textit{chave}) que descreve
+seu conteúdo; quando um leitor chega com uma pergunta (a \textit{consulta}), ela é comparada
+com cada etiqueta para decidir quais livros são mais relevantes; o conteúdo desses livros
+(os \textit{valores}) é então combinado, com os mais relevantes contribuindo mais para a
+resposta. No \textit{Transformer}, esse processo ocorre com números: a relevância entre uma
+consulta e cada chave é calculada matematicamente, e os valores são somados com pesos
+proporcionais a essa relevância.
 
-A inovação central de \citeonline{Vaswani2017} foi construir uma arquitetura inteira
-baseada exclusivamente nesse mecanismo, dispensando completamente a recorrência e a
-convolução. Com isso, todas as posições de uma sequência podem se comunicar diretamente
-em uma única operação, sem precisar ``passar'' por palavras intermediárias. Isso resolve
-as duas limitações das RNNs ao mesmo tempo: as dependências de longo alcance tornam-se
-tão fáceis de capturar quanto as de curto alcance, e o cálculo torna-se paralelizável,
-aproveitando ao máximo o poder das GPUs modernas.
+A inovação central de \citeonline{Vaswani2017}, em 2017, foi construir uma arquitetura
+inteira baseada exclusivamente nesse mecanismo, dispensando por completo a recorrência.
+Com isso, todas as posições de uma sequência se comunicam diretamente em uma única
+operação, sem precisar ``passar'' por palavras intermediárias. Isso resolve as duas
+limitações das RNNs de uma só vez: as dependências de longo alcance tornam-se tão fáceis
+de capturar quanto as de curto alcance, e o cálculo passa a ser paralelizável, tornando
+as arquiteturas baseadas em RNN e LSTM obsoletas para muitas tarefas modernas.
 
 \subsection{Autoatenção e Atenção Multi-Cabeça}\label{subsec:autoatencao}
 
@@ -117,18 +115,11 @@ produto escalar escalado) e é definida formalmente por \cite{Vaswani2017}:
     \text{Attention}(Q, K, V) = \text{softmax}\!\left(\frac{QK^\top}{\sqrt{d_k}}\right) V
 \]
 
-Cada símbolo da equação tem um papel preciso. $Q$ é a matriz de consultas: cada linha
-corresponde a uma posição da sequência perguntando ``o que preciso?''. $K$ é a matriz
-de chaves: cada linha corresponde a uma posição anunciando ``o que tenho a oferecer''.
-$QK^\top$ realiza o produto escalar entre todas as consultas e todas as chaves de uma só
-vez, produzindo uma matriz de \textit{scores} (pontuações) que indica o quanto cada par de
-posições é compatível. $d_k$ é a dimensão dos vetores de chave; a divisão por $\sqrt{d_k}$
-é um fator de escala que evita que os valores do produto escalar cresçam em magnitude
-quando $d_k$ é grande, uma veez quee magnitudes muito altas causam gradientes muito pequenos após a
-\textit{softmax}, dificultando o treinamento \cite{Vaswani2017}. A \textit{softmax}
-normaliza esses \textit{scores} em probabilidades. Por fim, a multiplicação por $V$
-combina os vetores de valor com esses pesos, produzindo a representação contextualizada
-de cada posição.
+Em termos intuitivos, o produto $QK^\top$ mede a compatibilidade entre todas as consultas e
+todas as chaves de uma só vez; a divisão por $\sqrt{d_k}$ (a dimensão das chaves) é um fator
+de escala que estabiliza o treinamento; a \textit{softmax} converte essas pontuações em
+pesos que somam 1; e a multiplicação por $V$ produz, para cada posição, uma média ponderada
+dos valores, isto é, sua representação já contextualizada pelo restante da sequência.
 
 Uma única operação de atenção, porém, captura apenas um tipo de relação entre as palavras
 de cada vez. Para superar essa limitação, \citeonline{Vaswani2017} propõem a atenção
@@ -177,17 +168,10 @@ integrar informação contextual de toda a sequência. O segundo é uma rede
 aplicado de forma idêntica e independente a cada posição. Esse MLP é composto por duas
 transformações lineares com uma função de ativação não linear entre elas: \modificado{a função GELU
 (\textit{Gaussian Error Linear Unit}) \cite{Hendrycks2016} nos modelos GPT, ou ReLU em outras variantes.
-\adicionadomarcelo{A GELU pertence à classe das ativações suaves (\textit{smooth activations}): em vez
-de simplesmente suprimir valores negativos como a ReLU \cite{Nair2010}, ela pondera cada entrada $x$
-pela probabilidade de que $x$ seja positivo sob uma distribuição gaussiana padrão, resultando na
-expressão $\mathrm{GELU}(x) = x \cdot \Phi(x)$, onde $\Phi(x)$ é a função de distribuição
-acumulada da distribuição normal.
-Na prática, essa ponderação produz uma transição contínua e diferenciável em torno da origem, evitando
-o chamado problema de ``neurônios mortos'' (\textit{dying ReLU}), no qual unidades com ativação ReLU
-podem permanecer permanentemente inativas durante o treinamento por receberem gradiente nulo.
-A transição suave da GELU foi apontada como especialmente benéfica em modelos de linguagem de grande
-escala, razão pela qual \citeonline{Radford2019} a adotaram como ativação padrão nos modelos da família
-GPT.}} A
+\adicionadomarcelo{Diferentemente da ReLU \cite{Nair2010}, que simplesmente zera valores negativos, a
+GELU faz uma transição suave em torno da origem. Na prática, essa suavidade evita o problema dos
+``neurônios mortos'' (\textit{dying ReLU}), em que unidades deixam de aprender por receberem gradiente
+nulo, e por isso \citeonline{Radford2019} a adotaram como ativação padrão na família GPT.}} A
 dimensão intermediária desse MLP é tipicamente quatro vezes maior do que a dimensão
 do modelo --- no GPT-2 \textit{small}, a dimensão do modelo é 768 e a dimensão
 intermediária é 3.072 --- o que confere ao bloco grande capacidade de representação antes

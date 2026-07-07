@@ -1,0 +1,14 @@
+# Pipeline de poda neural — GPT-2 small
+# Alvo: Kaggle Notebooks (GPU Tesla T4); roda também local em CPU.
+#
+# No Kaggle, torch/transformers/datasets já vêm pré-instalados;
+# este arquivo serve para reprodutibilidade local e registro de versões.
+
+torch>=2.0
+transformers>=4.30
+datasets>=2.10
+numpy>=1.23
+
+# Métricas de custo/energia (opcionais — a pipeline degrada com elegância se ausentes)
+thop>=0.1.1            # contagem de FLOPs por análise do grafo
+codecarbon>=2.3       # medição de energia (kWh) e emissões de CO2
