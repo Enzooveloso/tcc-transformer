@@ -1,0 +1,67 @@
+{
+  "codigo/config.py": {
+    "mtime": 1783438060.4499636,
+    "ast_hash": "21566c7ffdfb2c6db11e250632b330b2",
+    "semantic_hash": "21566c7ffdfb2c6db11e250632b330b2"
+  },
+  "codigo/data.py": {
+    "mtime": 1783438077.8408685,
+    "ast_hash": "811a000f69b154193edbeb71e6b9204e",
+    "semantic_hash": "811a000f69b154193edbeb71e6b9204e"
+  },
+  "codigo/energy.py": {
+    "mtime": 1783438118.7786825,
+    "ast_hash": "6bebd46f98417383b885084088466a65",
+    "semantic_hash": "6bebd46f98417383b885084088466a65"
+  },
+  "codigo/eval.py": {
+    "mtime": 1783438107.7969196,
+    "ast_hash": "538895466078f8ccdd7fe2c187b1ada3",
+    "semantic_hash": "538895466078f8ccdd7fe2c187b1ada3"
+  },
+  "codigo/model.py": {
+    "mtime": 1783438083.4836946,
+    "ast_hash": "6f0f118e9ec913e72d3ae3ad7f70dd01",
+    "semantic_hash": "6f0f118e9ec913e72d3ae3ad7f70dd01"
+  },
+  "codigo/prune_magnitude.py": {
+    "mtime": 1783518949.6547403,
+    "ast_hash": "c4231a3af4719774b4d13300c851bd89",
+    "semantic_hash": "c4231a3af4719774b4d13300c851bd89"
+  },
+  "codigo/run.py": {
+    "mtime": 1783438139.5114007,
+    "ast_hash": "3e08b41807896cf6ca093954be8b543c",
+    "semantic_hash": "3e08b41807896cf6ca093954be8b543c"
+  },
+  "codigo/utils.py": {
+    "mtime": 1783438068.5666435,
+    "ast_hash": "1899379767bacf61c3c9663587b388a3",
+    "semantic_hash": "1899379767bacf61c3c9663587b388a3"
+  },
+  "README.md": {
+    "mtime": 1782323757.2978473,
+    "ast_hash": "8498f9aca6500a37aa132a145a33c97d",
+    "semantic_hash": "8498f9aca6500a37aa132a145a33c97d"
+  },
+  "codigo/README.md": {
+    "mtime": 1783438169.422311,
+    "ast_hash": "4c35d65dcb9fb3956a26455ecc9b1ab9",
+    "semantic_hash": "4c35d65dcb9fb3956a26455ecc9b1ab9"
+  },
+  "codigo/requirements.txt": {
+    "mtime": 1783438045.5613744,
+    "ast_hash": "85d0718e6cfbc34eb9f3e0a2c4a417cc",
+    "semantic_hash": "85d0718e6cfbc34eb9f3e0a2c4a417cc"
+  },
+  "escrita/figuras/capa-final-ufvjm.png": {
+    "mtime": 1782323698.2046535,
+    "ast_hash": "3a5fb28878d2b24ccb3c78f07d430a61",
+    "semantic_hash": "3a5fb28878d2b24ccb3c78f07d430a61"
+  },
+  "escrita/figuras/capa-ufvjm.png": {
+    "mtime": 1782323698.2046535,
+    "ast_hash": "59db951f54fe4ef81de1ca356a5887e0",
+    "semantic_hash": "59db951f54fe4ef81de1ca356a5887e0"
+  }
+}
