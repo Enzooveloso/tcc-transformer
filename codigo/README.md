@@ -26,8 +26,8 @@ Ver o relatório de tese no capítulo de Metodologia.
 | `run.py` | Orquestrador — **Estágio 0: baseline** | ✅ |
 | `prune_magnitude.py` | Poda por magnitude (Han, 2015) | ✅ |
 | `prune_structured.py` | Poda estruturada de cabeças/MLP (Li, 2017) | ✅ |
-| `sensitivity.py` | Análise de sensibilidade por camada | ⏳ próximo |
-| `finetune.py` | Fine-tuning pós-poda (one-shot fica preparado) | ⏳ |
+| `sensitivity.py` | Análise de sensibilidade por camada | ✅ |
+| `finetune.py` | Fine-tuning pós-poda (one-shot fica preparado) | ⏳ próximo |
 
 ## Como rodar (Estágio 0 — baseline)
 
@@ -58,6 +58,23 @@ python prune_structured.py --alvo mlp        # só neurônios MLP
 Cada nível de esparsidade recarrega um modelo limpo (sem poda cumulativa).
 Na estruturada, `--sparsities` é a fração de **estruturas** removidas por alvo;
 a fração de parâmetros correspondente sai na coluna `esparsidade_real`.
+
+## Como rodar a análise de sensibilidade (contribuição central)
+
+```bash
+# Fase 1 (perfil por camada) + Fase 2 (varredura com alocação otimizada)
+python sensitivity.py                          # as duas estratégias
+
+# Fases separadas / opções
+python sensitivity.py --fase perfil            # só o perfil (sensibilidade_perfil.csv)
+python sensitivity.py --fase varredura         # só a varredura (lê o perfil do CSV)
+python sensitivity.py --estrategias estruturada --taxa-sonda 0.3
+```
+
+O perfil poda **uma camada por vez** à taxa-sonda e mede a degradação de
+perplexity; a varredura converte o perfil em taxas por camada (robustas cedem
+mais) e grava em `resultados/sensibilidade.csv` — o competidor "otimizado"
+contra os escopos `global` e `uniforme` das varreduras ingênuas.
 
 ## Ordem de desenvolvimento
 

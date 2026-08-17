@@ -106,11 +106,25 @@ def inference_time_ms(model, cfg: Config) -> dict:
     }
 
 
+def _conv1d_macs(module, inputs, output):
+    """Regra de contagem de MACs para a ``Conv1D`` do GPT-2 (hook do thop).
+
+    O thop só contabiliza módulos que reconhece (``nn.Linear`` etc.); as
+    projeções do GPT-2 são ``Conv1D`` e ficariam de fora — a coluna de FLOPs
+    sairia constante mesmo com as matrizes fisicamente encolhidas pela poda
+    estruturada. A conta é a de uma linear: x @ W soma ``nx`` produtos por
+    elemento de saída.
+    """
+    nx = module.weight.size(0)
+    module.total_ops += torch.DoubleTensor([output.numel() * nx])
+
+
 def compute_flops(model, cfg: Config) -> float:
     """Estima os FLOPs de uma inferência (forward pass).
 
-    Tenta a contagem exata via ``thop`` (análise do grafo); se a biblioteca não
-    estiver disponível ou falhar em algum operador do Transformer, recai sobre a
+    Tenta a contagem exata via ``thop`` (análise do grafo, com regra
+    customizada para as ``Conv1D`` do GPT-2); se a biblioteca não estiver
+    disponível ou falhar em algum operador do Transformer, recai sobre a
     estimativa analítica clássica: ~2 x (parâmetros não-embedding) por token.
     """
     seq_len = cfg.inference_seq_len
@@ -121,8 +135,10 @@ def compute_flops(model, cfg: Config) -> float:
 
     try:
         from thop import profile
+        from transformers.pytorch_utils import Conv1D
 
-        macs, _ = profile(model, inputs=(dummy,), verbose=False)
+        macs, _ = profile(model, inputs=(dummy,), verbose=False,
+                          custom_ops={Conv1D: _conv1d_macs})
         return float(2 * macs)  # 1 MAC = 2 FLOPs
     except Exception:
         # Fallback analítico: exclui a matriz de embeddings da contagem.
