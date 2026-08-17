@@ -26,6 +26,12 @@ Uso como script:
     python sensitivity.py --fase perfil          # só o perfil
     python sensitivity.py --fase varredura       # só a varredura (lê o perfil do CSV)
     python sensitivity.py --estrategias magnitude --sparsities 0 0.3 0.5
+    python sensitivity.py --fase varredura --beta 0.5   # ablação da alocação
+
+O quanto o perfil é levado a sério na fase 2 é controlado por ``--beta``: 0
+recai na poda uniforme, 1 (padrão) usa o inverso puro da degradação medida.
+Rodar a varredura com dois betas, sobre o MESMO perfil, dá a ablação da função
+de alocação sem refazer a fase 1 (que é a cara).
 """
 
 from __future__ import annotations
@@ -59,6 +65,11 @@ VARREDURA_CSV = "sensibilidade.csv"
 
 # Teto de taxa por camada: mesmo a camada mais robusta nunca é (quase) zerada.
 TAXA_MAX = 0.95
+
+# Expoente da alocação: taxa ~ robustez^BETA. Com 1.0 a taxa é o inverso puro
+# do delta de log-perplexity; com 0.0 a alocação degenera na poda uniforme.
+# Valores intermediários amortecem a razão entre camadas (ver ``allocate_rates``).
+BETA = 1.0
 
 
 # ---------------------------------------------------------------------------
@@ -174,11 +185,19 @@ def run_profile(cfg: Config, input_ids, estrategias: list[str],
             append_result(cfg.results_dir, PERFIL_CSV, row)
 
 
-def load_profile(cfg: Config, estrategia: str) -> list[float]:
+def load_profile(cfg: Config, estrategia: str) -> tuple[list[float], str]:
     """Lê os scores de sensibilidade (delta_log_ppl) por camada do perfil.
 
-    Havendo mais de uma taxa-sonda por camada, os deltas são promediados —
-    o que importa para a alocação é a ordem relativa entre camadas.
+    Só entram as linhas do mesmo modelo E do mesmo dataset da ``cfg`` — o
+    ``dataset_config`` é plugável (WikiText-2 / WikiText-103) e perfis de
+    corpora diferentes não podem ser promediados.
+
+    Havendo mais de uma taxa-sonda por camada, os deltas são promediados (o que
+    importa para a alocação é a ordem relativa entre camadas), mas isso é
+    avisado no log: normalmente indica um perfil rerodado com outra sonda sobre
+    o CSV antigo, e não uma decisão deliberada.
+
+    Devolve os deltas por camada e o rótulo das taxas-sonda que os geraram.
     """
     path = os.path.join(cfg.results_dir, PERFIL_CSV)
     if not os.path.exists(path):
@@ -187,19 +206,32 @@ def load_profile(cfg: Config, estrategia: str) -> list[float]:
         )
     somas: dict[int, float] = {}
     contagens: dict[int, int] = {}
+    sondas: set[str] = set()
     with open(path, newline="", encoding="utf-8") as f:
         for row in csv.DictReader(f):
-            if row["estrategia"] != estrategia or row["modelo"] != cfg.model_name:
+            if (row["estrategia"] != estrategia
+                    or row["modelo"] != cfg.model_name
+                    or row["dataset"] != cfg.dataset_config):
                 continue
             layer = int(row["camada"])
             somas[layer] = somas.get(layer, 0.0) + float(row["delta_log_ppl"])
             contagens[layer] = contagens.get(layer, 0) + 1
+            sondas.add(row["taxa_sonda"])
     if not somas:
-        raise ValueError(f"perfil sem linhas para a estratégia {estrategia!r}")
+        raise ValueError(
+            f"perfil sem linhas para a estratégia {estrategia!r} "
+            f"em {cfg.model_name}/{cfg.dataset_config}"
+        )
     layers = sorted(somas)
     if layers != list(range(len(layers))):
         raise ValueError(f"perfil incompleto: camadas presentes = {layers}")
-    return [somas[l] / contagens[l] for l in layers]
+
+    rotulo = ";".join(sorted(sondas, key=float))
+    if len(sondas) > 1:
+        print(f"  [aviso] o perfil de {estrategia} mistura {len(sondas)} "
+              f"taxas-sonda ({rotulo}); os deltas serão promediados. "
+              f"Se não foi intencional, limpe o {PERFIL_CSV} e refaça o perfil.")
+    return [somas[l] / contagens[l] for l in layers], rotulo
 
 
 # ---------------------------------------------------------------------------
@@ -207,22 +239,32 @@ def load_profile(cfg: Config, estrategia: str) -> list[float]:
 # ---------------------------------------------------------------------------
 
 def allocate_rates(deltas: list[float], weights: list[float], target: float,
-                   rate_max: float = TAXA_MAX, eps: float = 1e-4) -> list[float]:
+                   beta: float = BETA, rate_max: float = TAXA_MAX,
+                   eps: float = 1e-4) -> list[float]:
     """Converte o perfil de sensibilidade em taxas de poda por camada.
 
-    A taxa de cada camada é proporcional à sua robustez (o inverso do delta de
-    log-perplexity da sonda), escalada por um fator único ``alpha`` tal que a
-    média das taxas, ponderada pelos parâmetros de cada camada, atinja o
-    orçamento ``target``. Como taxas são limitadas a ``rate_max``, ``alpha`` é
-    encontrado por bisseção (a fração podada é monótona em ``alpha``).
+    A taxa de cada camada é proporcional à sua robustez elevada a ``beta`` — a
+    robustez sendo o inverso do delta de log-perplexity medido pela sonda —,
+    escalada por um fator único ``alpha`` tal que a média das taxas, ponderada
+    pelos parâmetros de cada camada, atinja o orçamento ``target``. Como as
+    taxas são limitadas a ``rate_max``, ``alpha`` é encontrado por bisseção (a
+    fração podada é monótona em ``alpha``).
+
+    ``beta`` controla o quanto o perfil é levado a sério: com ``0.0`` a
+    alocação vira a poda uniforme (todas as camadas com a mesma taxa), com
+    ``1.0`` é o inverso puro do delta, e valores intermediários amortecem a
+    razão entre camadas. O amortecimento importa porque a razão de robustez é
+    ilimitada: uma camada com delta 0.001 receberia taxa 1000x maior que uma
+    com delta 1.0, concentrando o orçamento inteiro em uma ou duas camadas.
 
     Deltas negativos (a poda da sonda *melhorou* a perplexity — acontece com
-    cabeças de atenção) são tratados como robustez máxima.
+    cabeças de atenção, cf. Michel et al., 2019) são tratados como robustez
+    máxima pelo piso ``eps``.
     """
     if target <= 0:
         return [0.0] * len(deltas)
 
-    robustez = [1.0 / max(d, eps) for d in deltas]
+    robustez = [(1.0 / max(d, eps)) ** beta for d in deltas]
     total = sum(weights)
 
     def fracao_podada(alpha: float) -> float:
@@ -251,8 +293,8 @@ def _layer_param_weights(model) -> list[float]:
             for block in model.transformer.h]
 
 
-def evaluate_allocation(cfg: Config, input_ids, estrategia: str,
-                        target: float, rates: list[float]) -> dict:
+def evaluate_allocation(cfg: Config, input_ids, estrategia: str, target: float,
+                        rates: list[float], taxa_sonda: str, beta: float) -> dict:
     """Modelo limpo + poda com as taxas alocadas + vetor completo de métricas."""
     model, _ = load_model_and_tokenizer(cfg)
     params_before = prunable_param_count(model)
@@ -274,6 +316,10 @@ def evaluate_allocation(cfg: Config, input_ids, estrategia: str,
         "esparsidade_real": esparsidade_real,
         "cabecas_removidas": heads_removed,
         "neuronios_removidos": neurons_removed,
+        # Hiperparâmetros que geraram esta alocação: sem eles a linha não é
+        # reproduzível (o perfil e o expoente definem as taxas por camada).
+        "taxa_sonda": taxa_sonda,
+        "beta": beta,
         "taxas_por_camada": ";".join(f"{r:.4f}" for r in rates),
     }
     with track_energy(cfg, metrics):
@@ -282,38 +328,58 @@ def evaluate_allocation(cfg: Config, input_ids, estrategia: str,
 
 
 def run_sweep(cfg: Config, input_ids, estrategias: list[str],
-              sparsities: list[float]) -> None:
+              sparsities: list[float], beta: float = BETA,
+              eps: float = 1e-4) -> None:
     model, _ = load_model_and_tokenizer(cfg)
     weights = _layer_param_weights(model)
     n_layers = len(weights)
     del model
 
+    path = None
     for estrategia in estrategias:
-        deltas = load_profile(cfg, estrategia)
+        deltas, taxa_sonda = load_profile(cfg, estrategia)
         if len(deltas) != n_layers:
             raise ValueError(
                 f"perfil de {estrategia} tem {len(deltas)} camadas; modelo tem {n_layers}"
             )
-        print(f"\n[sensibilidade] varredura — {estrategia}")
+        print(f"\n[sensibilidade] varredura — {estrategia} (beta {beta})")
         print(f"  deltas do perfil: {['%.3f' % d for d in deltas]}")
 
+        # Camadas cujo delta caiu no piso: a sonda não as degradou (ou até as
+        # melhorou), então entram na alocação com robustez máxima. Muitas
+        # camadas no piso = perfil pouco informativo, e a alocação tende a
+        # concentrar o orçamento nelas.
+        no_piso = [i for i, d in enumerate(deltas) if d <= eps]
+        if no_piso:
+            print(f"  [aviso] {len(no_piso)}/{n_layers} camadas com delta <= {eps} "
+                  f"(robustez máxima, saturam primeiro): {no_piso}")
+
         for target in sparsities:
-            rates = allocate_rates(deltas, weights, target)
-            metrics = evaluate_allocation(cfg, input_ids, estrategia, target, rates)
+            rates = allocate_rates(deltas, weights, target, beta=beta, eps=eps)
+            metrics = evaluate_allocation(cfg, input_ids, estrategia, target,
+                                          rates, taxa_sonda, beta)
+            saturadas = [i for i, r in enumerate(rates) if r >= TAXA_MAX - 1e-9]
             print(f"\n--- {estrategia} | orçamento {target:.0%} "
                   f"(real {metrics['esparsidade_real']:.2%}) ---")
             print(f"  taxas: {['%.2f' % r for r in rates]}")
+            # Alocação degenerada (poucas camadas no teto absorvendo o
+            # orçamento) fica visível aqui, no log, e não só depois no CSV.
+            print(f"  camadas no teto ({TAXA_MAX:.0%}): {len(saturadas)}/{n_layers}"
+                  + (f" -> {saturadas}" if saturadas else ""))
             print(f"  perplexity: {metrics['perplexity']:.4f}")
             path = append_result(cfg.results_dir, VARREDURA_CSV, metrics)
 
-    print(f"\n[sensibilidade] varredura anexada em: {path}")
+    if path is None:
+        print("\n[sensibilidade] nada a varrer (sem estratégias ou sem orçamentos)")
+    else:
+        print(f"\n[sensibilidade] varredura anexada em: {path}")
 
 
 # ---------------------------------------------------------------------------
 # Script
 # ---------------------------------------------------------------------------
 
-def parse_args() -> tuple[Config, str, list[str], float, list[float]]:
+def parse_args() -> tuple[Config, str, list[str], float, list[float], float]:
     cfg = Config()
     parser = argparse.ArgumentParser(
         description="Análise de sensibilidade por camada (GPT-2)."
@@ -328,6 +394,9 @@ def parse_args() -> tuple[Config, str, list[str], float, list[float]]:
                         choices=list(ESTRATEGIAS))
     parser.add_argument("--taxa-sonda", type=float, default=0.5,
                         help="taxa aplicada a cada camada isolada no perfil")
+    parser.add_argument("--beta", type=float, default=BETA,
+                        help="expoente da alocação (0 = uniforme, 1 = inverso "
+                             "puro do delta); amortece a razão entre camadas")
     parser.add_argument("--sparsities", type=float, nargs="+",
                         default=[0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
                         help="orçamentos globais de esparsidade da varredura")
@@ -343,16 +412,17 @@ def parse_args() -> tuple[Config, str, list[str], float, list[float]]:
         seed=args.seed,
         energy_enabled=not args.no_energy,
     )
-    return cfg, args.fase, args.estrategias, args.taxa_sonda, args.sparsities
+    return (cfg, args.fase, args.estrategias, args.taxa_sonda, args.sparsities,
+            args.beta)
 
 
 def main() -> None:
-    cfg, fase, estrategias, taxa, sparsities = parse_args()
+    cfg, fase, estrategias, taxa, sparsities, beta = parse_args()
     set_seed(cfg.seed)
 
     print(f"[sensibilidade] dispositivo: {cfg.device}")
     print(f"[sensibilidade] modelo: {cfg.model_name} | dataset: {cfg.dataset_config}")
-    print(f"[sensibilidade] fase: {fase} | estrategias: {estrategias}")
+    print(f"[sensibilidade] fase: {fase} | estrategias: {estrategias} | beta: {beta}")
 
     _, tokenizer = load_model_and_tokenizer(cfg)
     input_ids = load_encodings(cfg, tokenizer)
@@ -361,7 +431,7 @@ def main() -> None:
     if fase in ("perfil", "completa"):
         run_profile(cfg, input_ids, estrategias, taxa)
     if fase in ("varredura", "completa"):
-        run_sweep(cfg, input_ids, estrategias, sparsities)
+        run_sweep(cfg, input_ids, estrategias, sparsities, beta=beta)
 
 
 if __name__ == "__main__":
