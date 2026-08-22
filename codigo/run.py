@@ -84,8 +84,9 @@ def main() -> None:
     #   Estágio 1 — poda sem otimização:
     #     from prune_magnitude import prune_magnitude
     #     model = prune_magnitude(model, sparsity=0.5)
-    #     # (opcional) fine-tuning one-shot -> depois:
-    #     # from finetune import finetune; model = finetune(model, ...)
+    #     # recuperação pós-poda (ver finetune.py, que já orquestra
+    #     # poda + treino + avaliação por conta própria):
+    #     #   python finetune.py --estrategia magnitude --sparsities 0.5
     #     metrics = evaluate_all(model, input_ids, cfg)
     #
     #   Estágio 2 — poda com otimização:

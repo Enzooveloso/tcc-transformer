@@ -1,0 +1,120 @@
+\backcite {Goodfellow2016}{{2}{2.1.1}{subsection.2.1.1}}
+\backcite {Goodfellow2016}{{2}{2.1.2}{subsection.2.1.2}}
+\backcite {Goodfellow2016}{{4}{2.1.4}{subsection.2.1.4}}
+\backcite {Nair2010}{{4}{2.1.4}{figure.caption.2}}
+\backcite {Krizhevsky2012}{{4}{2.1.4}{figure.caption.2}}
+\backcite {Goodfellow2016}{{5}{2.2.1}{subsection.2.2.1}}
+\backcite {Rumelhart1986}{{6}{2.2.2}{subsection.2.2.2}}
+\backcite {Goodfellow2016}{{7}{2.2.4}{subsection.2.2.4}}
+\backcite {Vaswani2017}{{8}{2.3}{section.2.3}}
+\backcite {Bengio1994}{{9}{2.3.1}{subsection.2.3.1}}
+\backcite {Hochreiter1997}{{9}{2.3.1}{subsection.2.3.1}}
+\backcite {Bahdanau2015}{{9}{2.3.2}{subsection.2.3.2}}
+\backcite {Vaswani2017}{{9}{2.3.2}{subsection.2.3.2}}
+\backcite {Vaswani2017}{{10}{2.3.3}{subsection.2.3.3}}
+\backcite {Vaswani2017}{{10}{2.3.3}{subsection.2.3.3}}
+\backcite {Michel2019}{{11}{2.3.3}{subsection.2.3.3}}
+\backcite {Hendrycks2016}{{11}{2.3.4}{subsection.2.3.4}}
+\backcite {Nair2010}{{11}{2.3.4}{subsection.2.3.4}}
+\backcite {Radford2019}{{11}{2.3.4}{subsection.2.3.4}}
+\backcite {Radford2019}{{12}{2.3.5}{subsection.2.3.5}}
+\backcite {Radford2019}{{12}{2.3.5}{subsection.2.3.5}}
+\backcite {Patterson2021}{{13}{2.3.5}{subsection.2.3.5}}
+\backcite {Strubell2019}{{13}{2.4}{section.2.4}}
+\backcite {Luccioni2022}{{13}{2.4}{section.2.4}}
+\backcite {Sevilla2022}{{13}{2.5}{section.2.5}}
+\backcite {Denil2013}{{14}{2.5}{section.2.5}}
+\backcite {Jacob2018}{{14}{2.5}{section.2.5}}
+\backcite {Hinton2015}{{14}{2.5}{section.2.5}}
+\backcite {Blalock2020}{{15}{2.6.1}{subsection.2.6.1}}
+\backcite {NVIDIA2020Ampere}{{15}{2.6.1}{subsection.2.6.1}}
+\backcite {Han2015}{{15}{2.6.2}{subsection.2.6.2}}
+\backcite {Frankle2019}{{17}{2.6.4}{subsection.2.6.4}}
+\backcite {Paszke2019}{{18}{3.1}{section.3.1}}
+\backcite {Han2015}{{19}{3.2}{section.3.2}}
+\backcite {Li2017}{{19}{3.2}{section.3.2}}
+\backcite {Goodfellow2016}{{20}{3.4}{section*.7}}
+\backcite {CodeCarbon2023}{{21}{3.4}{section*.9}}
+\backcite {Han2015, Li2017, Blalock2020}{{22}{4.1}{section.4.1}}
+\backcite {Han2015, Li2017, Blalock2020}{{22}{4.1}{section.4.1}}
+\backcite {Han2015, Li2017, Blalock2020}{{22}{4.1}{section.4.1}}
+\backcite {CodeCarbon2023}{{22}{4.1}{section.4.1}}
+\backcite {Paszke2019}{{22}{4.1}{section.4.1}}
+\backcite {Han2015}{{23}{4.1.1}{subsection.4.1.1}}
+\backcite {Li2017}{{23}{4.1.1}{subsection.4.1.1}}
+\backcite {Han2015,Li2017}{{24}{1}{table.caption.10}}
+\backcite {Han2015,Li2017}{{24}{1}{table.caption.10}}
+\backcite {Li2017, Frankle2019, Blalock2020}{{25}{4.1.2}{table.caption.10}}
+\backcite {Li2017, Frankle2019, Blalock2020}{{25}{4.1.2}{table.caption.10}}
+\backcite {Li2017, Frankle2019, Blalock2020}{{25}{4.1.2}{table.caption.10}}
+\backcite {Li2017, He2016}{{25}{4.1.2}{table.caption.10}}
+\backcite {Li2017, He2016}{{25}{4.1.2}{table.caption.10}}
+\backcite {Fang2023}{{25}{4.1.2}{table.caption.10}}
+\backcite {Han2015, Li2017}{{25}{4.1.2}{table.caption.10}}
+\backcite {Han2015, Li2017}{{25}{4.1.2}{table.caption.10}}
+\backcite {Han2015, Yang2017}{{26}{4.1.2}{table.caption.10}}
+\backcite {Han2015, Yang2017}{{26}{4.1.2}{table.caption.10}}
+\backcite {Krizhevsky2009}{{27}{4.2.1}{subsection.4.2.1}}
+\backcite {Krizhevsky2009}{{27}{4.2.1}{subsection.4.2.1}}
+\backcite {He2016, Krizhevsky2012}{{27}{4.2.1}{subsection.4.2.1}}
+\backcite {He2016, Krizhevsky2012}{{27}{4.2.1}{subsection.4.2.1}}
+\backcite {Han2015, Li2017, Frankle2019, Blalock2020}{{27}{4.2.1}{subsection.4.2.1}}
+\backcite {Han2015, Li2017, Frankle2019, Blalock2020}{{27}{4.2.1}{subsection.4.2.1}}
+\backcite {Han2015, Li2017, Frankle2019, Blalock2020}{{27}{4.2.1}{subsection.4.2.1}}
+\backcite {Han2015, Li2017, Frankle2019, Blalock2020}{{27}{4.2.1}{subsection.4.2.1}}
+\backcite {He2016}{{28}{4.2.1}{subsection.4.2.1}}
+\backcite {Li2017}{{29}{4.2.2}{subsection.4.2.2}}
+\backcite {Frankle2019}{{29}{4.2.2}{subsection.4.2.2}}
+\backcite {Blalock2020}{{29}{4.2.2}{subsection.4.2.2}}
+\backcite {Goodfellow2016}{{29}{4.2.3}{subsection.4.2.3}}
+\backcite {Goodfellow2016}{{29}{4.2.3}{subsection.4.2.3}}
+\backcite {He2016}{{29}{4.2.3}{subsection.4.2.3}}
+\backcite {Li2017}{{29}{4.2.3}{subsection.4.2.3}}
+\backcite {Goodfellow2016}{{30}{4.2.3}{subsection.4.2.3}}
+\backcite {He2016}{{30}{4.2.3}{subsection.4.2.3}}
+\backcite {Li2017, Frankle2019}{{30}{4.2.3}{subsection.4.2.3}}
+\backcite {Li2017, Frankle2019}{{30}{4.2.3}{subsection.4.2.3}}
+\backcite {He2016}{{30}{2}{table.caption.11}}
+\backcite {Goodfellow2016}{{30}{4.2.4}{subsection.4.2.4}}
+\backcite {Paszke2019}{{31}{4.2.5}{subsection.4.2.5}}
+\backcite {He2016}{{32}{4.3}{section.4.3}}
+\backcite {Krizhevsky2012}{{32}{4.3.1}{subsection.4.3.1}}
+\backcite {Goodfellow2016}{{32}{4.3.1}{subsection.4.3.1}}
+\backcite {He2016}{{32}{4.3.1}{subsection.4.3.1}}
+\backcite {He2016}{{33}{4.3.1}{subsection.4.3.1}}
+\backcite {Han2015}{{33}{4.3.1}{subsection.4.3.1}}
+\backcite {Li2017}{{33}{4.3.1}{subsection.4.3.1}}
+\backcite {Blalock2020}{{33}{4.3.1}{subsection.4.3.1}}
+\backcite {He2016}{{33}{4.3.2}{subsection.4.3.2}}
+\backcite {Fang2023}{{34}{4.3.2}{subsection.4.3.2}}
+\backcite {Blalock2020}{{34}{4.3.3}{subsection.4.3.3}}
+\backcite {Han2015}{{34}{4.3.3}{subsection.4.3.3}}
+\backcite {Li2017}{{34}{4.3.3}{subsection.4.3.3}}
+\backcite {Han2015, Li2017}{{35}{4.3.3}{subsection.4.3.3}}
+\backcite {Han2015, Li2017}{{35}{4.3.3}{subsection.4.3.3}}
+\backcite {Goodfellow2016}{{35}{4.3.4}{subsection.4.3.4}}
+\backcite {Han2015, Li2017}{{35}{4.3.4}{subsection.4.3.4}}
+\backcite {Han2015, Li2017}{{35}{4.3.4}{subsection.4.3.4}}
+\backcite {He2016}{{36}{4.3.5}{subsection.4.3.5}}
+\backcite {Han2015, Li2017}{{36}{4.3.5}{subsection.4.3.5}}
+\backcite {Han2015, Li2017}{{36}{4.3.5}{subsection.4.3.5}}
+\backcite {Han2015}{{36}{4.4.1}{subsection.4.4.1}}
+\backcite {Han2015}{{37}{4.4.1}{subsection.4.4.1}}
+\backcite {Li2017}{{37}{4.4.2}{subsection.4.4.2}}
+\backcite {Fang2023}{{38}{4.4.2}{subsection.4.4.2}}
+\backcite {Han2015, Li2017, Blalock2020}{{38}{4.4.3}{subsection.4.4.3}}
+\backcite {Han2015, Li2017, Blalock2020}{{38}{4.4.3}{subsection.4.4.3}}
+\backcite {Han2015, Li2017, Blalock2020}{{38}{4.4.3}{subsection.4.4.3}}
+\backcite {Han2015}{{38}{3}{table.caption.12}}
+\backcite {Han2015}{{38}{4.4.4}{table.caption.12}}
+\backcite {Paszke2019}{{39}{4.5}{section.4.5}}
+\backcite {Fang2023}{{39}{4.5}{section.4.5}}
+\backcite {CodeCarbon2023}{{39}{4.5}{section.4.5}}
+\backcite {Han2015, Yang2017}{{39}{4.6}{section.4.6}}
+\backcite {Han2015, Yang2017}{{39}{4.6}{section.4.6}}
+\backcite {Han2015}{{42}{7}{figure.caption.13}}
+\backcite {Li2017}{{42}{7}{figure.caption.13}}
+\backcite {Han2015}{{45}{5.2}{section.5.2}}
+\backcite {Li2017}{{46}{5.3}{section.5.3}}
+\backcite {Li2017}{{47}{5.3}{table.caption.16}}
+\backcite {Michel2019}{{47}{5.3}{table.caption.16}}
