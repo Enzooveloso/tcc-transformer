@@ -23,37 +23,43 @@ finalmente, o modelo GPT-2, que é o objeto central dos experimentos de poda.
 % processamento paralelo do Transformer (todas as palavras conectadas entre si
 % simultaneamente). Elaboração própria.
 
-\subsection{Limitações das Arquiteturas Recorrentes}\label{subsec:limitacoes_rnn}
+\subsection{O Problema que o Transformer Resolve}\label{subsec:limitacoes_rnn}
 
-Até a chegada do \textit{Transformer}, o processamento de texto era dominado pelas redes
-neurais recorrentes (\textit{Recurrent Neural Networks}, RNNs), popularizadas ao longo da
-década de 1990. Diferentemente de arquiteturas puramente diretas, as RNNs processam a
-sequência palavra por palavra e reaproveitam a saída de cada passo como entrada do passo
-seguinte, criando uma forma de ``memória'': a cada nova palavra, um estado oculto
-(\textit{hidden state}) é atualizado com base na palavra atual e no estado anterior, de
-modo que, ao final, ele deve resumir as informações relevantes de todo o texto.
+Toda arquitetura nasce como resposta a uma limitação da anterior, e o \textit{Transformer}
+não é exceção. Compreender qual era essa limitação é o que transforma o mecanismo de
+atenção --- apresentado a seguir --- em uma solução, e não em uma escolha arbitrária.
 
-Essa memória, porém, falha em sequências longas. Considere o trecho ``A Inglaterra é minha
-terra natal. Passei toda a minha vida lá. Mudei-me para a Espanha há dois dias. Eu falo
-apenas uma língua, que é o \_\_\_''. Para completar a lacuna corretamente com ``inglês'', o
-modelo precisa recuperar a palavra ``Inglaterra'', que aparece no início do trecho. O
-obstáculo é o chamado gradiente desaparecente (\textit{vanishing gradient}): durante o
-treinamento via \textit{backpropagation}, os gradientes são multiplicados repetidamente
-pelas matrizes de peso da rede e, quando esses valores são pequenos, encolhem até se
-aproximarem de zero \cite{Bengio1994}. Com isso, a influência de ``Inglaterra'' torna-se
-insignificante ao chegar à lacuna, e o modelo perde o contexto necessário --- limitação
-que se manifesta como incapacidade de lidar com \textbf{dependências de longo alcance}.
+Até 2017, o processamento de texto era dominado pelas redes neurais recorrentes
+(\textit{Recurrent Neural Networks}, RNNs). Elas leem a frase palavra por palavra, na
+ordem em que aparece, carregando consigo um resumo do que já foi lido: a cada nova
+palavra, esse resumo é atualizado. É, em essência, o modo como uma pessoa lê um texto em
+voz alta, guardando na memória o que veio antes. Dessa mecânica decorrem os dois
+problemas que motivaram o \textit{Transformer}.
 
-Há ainda uma segunda limitação, de ordem computacional: como o estado oculto no instante
-$t$ só pode ser calculado após o do instante $t-1$, o processamento é estritamente
-sequencial e mal aproveita o paralelismo das unidades de processamento gráfico (GPUs)
-modernas. Essas duas dificuldades impulsionaram uma evolução cronológica de arquiteturas.
-As redes LSTM (\textit{Long Short-Term Memory}), propostas em 1997, atacaram o gradiente
-desaparecente por meio de portas (\textit{gates}) que regulam o que deve ser mantido ou
-esquecido, permitindo reter por mais tempo informações como ``Inglaterra''
-\cite{Hochreiter1997}. Ainda assim, as LSTMs continuam processando a frase de forma
-sequencial, o que as mantém lentas e difíceis de paralelizar em grandes volumes de dados
---- gargalo que só seria superado pelo mecanismo de atenção.
+O primeiro é o \textbf{esquecimento}. Considere o trecho ``A Inglaterra é minha terra
+natal. Passei toda a minha vida lá. Mudei-me para a Espanha há dois dias. Eu falo apenas
+uma língua, que é o \_\_\_''. Preencher a lacuna com ``inglês'' exige recuperar uma
+palavra que apareceu muito antes. Como o resumo é reescrito a cada passo, a informação
+antiga vai se diluindo, e a influência de ``Inglaterra'' chega enfraquecida ao final.
+Tecnicamente, o fenômeno se manifesta durante o treinamento como gradiente desaparecente
+(\textit{vanishing gradient}): os gradientes são multiplicados repetidamente pelas
+matrizes de peso e, quando esses valores são pequenos, encolhem até se aproximarem de zero
+\cite{Bengio1994}. É a limitação conhecida como incapacidade de lidar com
+\textbf{dependências de longo alcance}. Arquiteturas posteriores, como as redes LSTM
+(\textit{Long Short-Term Memory}), atenuaram o esquecimento por meio de mecanismos que
+regulam o que deve ser mantido ou descartado \cite{Hochreiter1997}, mas não resolveram o
+segundo problema.
+
+O segundo é a \textbf{lentidão}, e é o que mais interessa a este trabalho. Como cada
+palavra só pode ser processada depois da anterior, a leitura é obrigatoriamente
+sequencial: não há como dividir o trabalho entre vários processadores. Isso desperdiça
+justamente a principal característica das unidades de processamento gráfico (GPUs)
+modernas, que é executar milhares de operações ao mesmo tempo. A analogia é a de um
+supermercado com vinte caixas abertos, mas com uma regra que obrigue os clientes a passar
+por um de cada vez: os outros dezenove ficam ociosos, e a fila anda no ritmo de um só.
+
+Foi para atacar essas duas limitações simultaneamente que se desenvolveu o mecanismo de
+atenção.
 
 % SUGESTÃO DE FIGURA: diagrama mostrando uma RNN processando a frase de exemplo,
 % com setas indicando o fluxo do estado oculto e destacando a "distância" entre
@@ -242,8 +248,10 @@ abrangendo uma grande diversidade de domínios e estilos. A variante GPT-2 \text
 utilizada neste trabalho, possui 12 blocos \textit{Transformer} empilhados, 12 cabeças de
 atenção por bloco, dimensão de modelo igual a 768 e aproximadamente 124 milhões de
 parâmetros treináveis. Apesar de ser a menor variante da família GPT-2, esse número de
-parâmetros é cerca de 70 vezes maior do que o de uma ResNet-50 (25 milhões de
-parâmetros), o que ilustra a escala característica dos modelos baseados em \textit{Transformer}.
+parâmetros é cerca de cinco vezes maior do que o de uma ResNet-50 (25 milhões de
+parâmetros), arquitetura de referência nos estudos clássicos de poda --- e as variantes
+maiores da própria família GPT-2 chegam a 1,5 bilhão de parâmetros, o que ilustra a escala
+característica dos modelos baseados em \textit{Transformer}.
 
 O crescimento em escala dos LLMs ao longo dos anos seguintes foi vertiginoso: o GPT-3,
 publicado em 2020, possui 175 bilhões de parâmetros; o PaLM, do Google, chega a 540

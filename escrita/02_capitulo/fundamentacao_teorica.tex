@@ -11,6 +11,11 @@
 
 \adicionadomarcelo{Este capítulo apresenta os conceitos necessários para a compreensão do trabalho. Inicialmente, são introduzidos fundamentos de aprendizado profundo e redes neurais artificiais, seguidos pelo processo de treinamento dessas redes. Em seguida, discute-se o problema do consumo energético em modelos de \textit{Deep Learning} e, por fim, são apresentadas as técnicas de compressão de modelos, com destaque para a poda neural (\textit{pruning}), que é o foco deste trabalho.}
 
+A exposição é deliberadamente progressiva e não pressupõe familiaridade prévia com
+aprendizado de máquina. Cada conceito é introduzido primeiro por meio de uma analogia com
+situações cotidianas e só então formalizado, de modo que o leitor possa acompanhar o
+raciocínio antes de encontrar a notação matemática que o descreve.
+
 \section{Aprendizado Profundo e Redes Neurais}
 
 \subsection{Aprendizado Profundo (Deep Learning)}
@@ -18,6 +23,16 @@ O Aprendizado Profundo é um campo especializado de aprendizado de máquina \adi
 
 \subsection{Redes Neurais Artificiais}
 \modificado{A rede neural artificial é um modelo computacional inspirado na estrutura do cérebro humano, que busca imitar a forma como neurônios se conectam e processam sinais para aprender a partir de dados, identificando padrões e tomando decisões. Um exemplo clássico é o perceptron multicamadas (MLP), um modelo composto por funções matemáticas que mapeiam valores de entrada em valores de saída \cite{Goodfellow2016}. Em tarefas de visão computacional, por exemplo, milhões de imagens de um objeto podem ser processadas para que a rede aprenda suas características visuais e seja capaz de reconhecê-lo posteriormente.}
+
+Uma analogia ajuda a fixar a ideia antes da definição formal. Imagine uma comissão
+encarregada de decidir se um pedido de empréstimo deve ser aprovado. Nenhum membro decide
+sozinho: cada um examina um aspecto diferente --- a renda declarada, o histórico de
+pagamentos, o tempo de emprego --- e emite um parecer. Esses pareceres não têm todos o
+mesmo valor, pois a comissão confia mais em uns avaliadores do que em outros, e a decisão
+final combina todos eles, ponderados por essa confiança. Em uma rede neural, cada nó é um
+desses avaliadores e o peso de cada conexão é exatamente a confiança depositada naquele
+parecer. A diferença essencial é que a rede não recebe essas confianças prontas: ela as
+descobre sozinha, por tentativa e erro, ao longo do treinamento.
 
 Uma rede neural profunda é composta por unidades (nós) interconectadas, organizadas em camadas.
 
@@ -43,8 +58,24 @@ Uma rede neural profunda é composta por unidades (nós) interconectadas, organi
 
 A principal função do \textit{bias} é deslocar a função de ativação, permitindo que o modelo se ajuste melhor aos dados. Sem ele, a soma ponderada precisaria ser alta para que o neurônio fosse ativado; com o \textit{bias}, um neurônio pode ser ativado mesmo com uma soma ponderada baixa, caso seu \textit{bias} seja suficientemente alto. Inversamente, um \textit{bias} muito negativo dificulta a ativação do neurônio. \modificado{O \textit{bias} é um parâmetro aprendível: inicialmente é inicializado com zero ou valores próximos de zero e, durante o treinamento, é atualizado pelo mesmo processo de retropropagação e descida de gradiente utilizado para os pesos.}
 
+Retomando a comissão de crédito: se os pesos representam o quanto se confia em cada
+avaliador, o \textit{bias} representa o quanto o avaliador é exigente. Um membro
+benevolente aprova o pedido mesmo diante de evidências modestas; um membro rigoroso só
+aprova quando as evidências são fortes. São duas coisas independentes --- confiar muito em
+alguém não diz nada sobre o quanto essa pessoa é exigente --- e é por isso que a rede
+precisa aprender os dois conjuntos de valores separadamente.
+
 \subsection{Função de Ativação}
 \modificado{A função de ativação é uma função matemática aplicada ao resultado da soma ponderada das entradas de um neurônio (já acrescido do \textit{bias}), determinando a saída do neurônio. Sua principal função é introduzir não linearidade no modelo: sem ela, a composição de diversas camadas resultaria em uma transformação puramente linear, equivalente a uma rede com uma única camada, o que limitaria drasticamente a capacidade expressiva do modelo \cite{Goodfellow2016}.}
+
+A razão de existir dessa função merece um exemplo concreto, pois é ela que justifica o
+próprio empilhamento de camadas. Aplicar dois descontos sucessivos em um preço --- um de
+10\% e outro de 20\% --- produz exatamente o mesmo efeito que aplicar um único desconto de
+28\%: encadear operações lineares nunca gera nada além de outra operação linear. Com redes
+neurais acontece o mesmo. Sem a função de ativação, uma rede de cem camadas calcularia
+exatamente aquilo que uma única camada já calcularia, e toda a profundidade seria
+desperdiçada. A não linearidade é o que quebra esse encadeamento e permite que cada camada
+acrescente algo que a anterior não conseguia representar.
 
 A ativação de um neurônio ocorre em três etapas:
 \begin{itemize}
@@ -57,8 +88,32 @@ A ativação de um neurônio ocorre em três etapas:
 \centering
 \caption{\adicionadomarcelo{Representação matricial da propagação de um neurônio, da soma ponderada à função de ativação (Sigmoide).}}
 \label{fig:matrizes_sigmoid}
-\includegraphics[scale=0.55]{02_capitulo/imageMatrizes_sigmoid.png}
-% \\ \adicionadomarcelo{Fonte: \citeonline{NielsenNNDL2015}.}
+\begin{tikzpicture}[font=\small]
+  \node at (0,0) {$
+    \underbrace{\begin{bmatrix} a_1 \\ a_2 \\ \vdots \\ a_m \end{bmatrix}}_{\substack{\text{ativações}\\\text{de saída}}}
+    \;=\; \sigma\!\left(
+    \underbrace{\begin{bmatrix}
+      w_{11} & w_{12} & \cdots & w_{1n} \\
+      w_{21} & w_{22} & \cdots & w_{2n} \\
+      \vdots & \vdots & \ddots & \vdots \\
+      w_{m1} & w_{m2} & \cdots & w_{mn}
+    \end{bmatrix}}_{\text{pesos } W}
+    \underbrace{\begin{bmatrix} x_1 \\ x_2 \\ \vdots \\ x_n \end{bmatrix}}_{\substack{\text{entradas da}\\\text{camada anterior}}}
+    \;+\;
+    \underbrace{\begin{bmatrix} b_1 \\ b_2 \\ \vdots \\ b_m \end{bmatrix}}_{\textit{bias}}
+    \right)$};
+  \begin{scope}[shift={(0,-3.5)}, scale=0.8]
+    \draw[->] (-3.4,0) -- (3.6,0) node[right,font=\scriptsize] {$z$};
+    \draw[->] (0,-0.3) -- (0,1.6) node[above,font=\scriptsize] {$\sigma(z)$};
+    \draw[dashed,gray!70] (-3.4,1) -- (3.4,1);
+    \node[font=\scriptsize,left] at (-0.1,1.05) {1};
+    \node[font=\scriptsize,below left] at (0,0) {0};
+    \draw[very thick] plot[domain=-3.4:3.4,samples=90] (\x,{1/(1+exp(-2*\x))});
+    \node[font=\scriptsize,align=center] at (0,-1.0)
+      {a função de ativação comprime qualquer valor de $z$ no intervalo $(0,1)$};
+  \end{scope}
+\end{tikzpicture}
+\fonte{Adaptado de \citeonline{NielsenNNDL2015}.}
 \end{figure}
 
 Há diversas funções de ativação, cada uma com suas próprias características e aplicações.
@@ -66,7 +121,7 @@ Há diversas funções de ativação, cada uma com suas próprias característic
     \item \textbf{ReLU (Rectified Linear Unit):} \modificado{Função de ativação mais utilizada em redes neurais modernas, proposta para redes profundas por \citeonline{Nair2010} e popularizada por \citeonline{Krizhevsky2012}. É uma função linear por partes, com inclinação 1 para valores positivos e 0 para valores negativos. É computacionalmente muito eficiente e não sofre do problema do desaparecimento do gradiente para entradas positivas. Em contrapartida, pode sofrer do problema conhecido como \textit{Dying ReLU}, no qual neurônios cujas entradas se tornam persistentemente negativas deixam de ser ativados e param de aprender.}
     \item \textbf{Sigmoide:} \modificado{Função que mapeia qualquer valor real para o intervalo $(0,1)$, sendo útil em classificação binária, já que a saída pode ser interpretada como uma probabilidade. Caiu em desuso em camadas ocultas porque, para entradas com magnitude muito alta ou muito baixa, sua derivada se aproxima de zero, fenômeno conhecido como desaparecimento do gradiente.}
     \item \textbf{Tanh (Tangente Hiperbólica):} \modificado{Semelhante à Sigmoide, porém mapeando os valores para o intervalo $(-1,1)$, o que a torna centrada em zero e costuma favorecer a convergência. Também sofre do problema do desaparecimento do gradiente.}
-    \item \textbf{Softmax:} \modificado{Diferentemente das demais, não é aplicada a neurônios individuais de camadas ocultas, mas sim ao conjunto dos neurônios da camada de saída em tarefas de classificação multiclasse. Transforma as saídas brutas da última camada em uma distribuição de probabilidades, com valores no intervalo $(0,1)$ que somam 1.}
+    \item \textbf{Softmax:} \modificado{Diferentemente das demais, não é aplicada a neurônios individuais de camadas ocultas, mas sim ao conjunto dos neurônios da camada de saída em tarefas de classificação multiclasse. Transforma as saídas brutas da última camada em uma distribuição de probabilidades, com valores no intervalo $(0,1)$ que somam 1. Na prática, converte pontuações sem escala definida em porcentagens comparáveis: o modelo deixa de responder ``7,2 para gato e 3,1 para cachorro'' e passa a responder ``85\% de chance de ser gato, 15\% de ser cachorro''.}
 \end{itemize}
 
 \modificado{Em cada camada, as ativações produzidas determinam as ativações da camada seguinte. De camada em camada, esses padrões tornam-se progressivamente mais complexos e abstratos, até que a camada de saída produz o resultado final. Assim, camadas iniciais aprendem características simples, enquanto camadas mais profundas combinam essas características para representar conceitos de alto nível.}
@@ -83,12 +138,33 @@ Há diversas funções de ativação, cada uma com suas próprias característic
 \subsection{Backpropagation}
 \modificado{A retropropagação (\textit{backpropagation}) é o algoritmo que permite o aprendizado das redes neurais, por possibilitar o cálculo da contribuição de cada parâmetro (peso ou \textit{bias}) para o erro da predição \cite{Rumelhart1986}. Uma vez que o erro é calculado na camada de saída, o algoritmo executa um fluxo invertido: da saída em direção à entrada, propagando o erro para as camadas anteriores.}
 
+A lógica é a mesma de uma apuração de responsabilidades em uma linha de produção. Sabe-se
+apenas que o produto final saiu defeituoso; para corrigir o processo, é preciso percorrer a
+linha de trás para frente e estimar o quanto cada etapa contribuiu para o defeito. Uma
+etapa que respondeu por boa parte do problema precisa de um ajuste grande; outra que quase
+não influiu, de um ajuste pequeno. O \textit{backpropagation} faz esse rastreamento de
+forma matemática, atribuindo a cada peso da rede uma parcela de responsabilidade pelo erro.
+
 \modificado{Para saber como cada peso individual se correlaciona com o erro, o algoritmo calcula a derivada parcial da função de perda em relação a esse peso, utilizando a regra da cadeia multivariada para decompor o cálculo em derivadas intermediárias. Com todas as derivadas obtidas, um algoritmo de otimização atualiza cada peso na direção oposta ao gradiente:}
 \adicionadomarcelo{\[ w_{novo} = w_{antigo} - \eta \cdot \frac{\partial L}{\partial w} \]}
 \modificado{em que $\eta$ é a taxa de aprendizado, hiperparâmetro que controla o tamanho do ajuste aplicado a cada iteração.}
 
+Voltando ao caminhante na neblina, a taxa de aprendizado é o tamanho do passo que ele dá.
+Passos curtos demais tornam a descida segura, porém lenta a ponto de o treinamento não
+terminar em tempo viável. Passos longos demais fazem o caminhante saltar por cima do fundo
+do vale e subir a encosta oposta, oscilando indefinidamente sem nunca chegar ao ponto mais
+baixo. Encontrar um valor adequado é uma das decisões mais sensíveis do treinamento.
+
 \subsection{Hiperparâmetros}
 \modificado{Hiperparâmetros são variáveis externas que definem tanto o algoritmo de aprendizado quanto a arquitetura da rede neural. Diferentemente dos parâmetros do modelo (pesos e \textit{biases}), que são ajustados automaticamente pelo \textit{backpropagation}, os hiperparâmetros são definidos antes do início do treinamento e controlam como a rede aprende a partir dos dados. Existem técnicas automatizadas para sua busca, como \textit{grid search} e otimização bayesiana, mas o ajuste manual baseado em experiência ainda é amplamente empregado.}
+
+A distinção entre parâmetros e hiperparâmetros é a mesma que separa, em uma cozinha, as
+escolhas do cozinheiro do resultado do cozimento. A temperatura do forno e o tempo de
+preparo são definidos antes de o prato ir ao fogo e não se alteram sozinhos: são os
+hiperparâmetros. O ponto da massa e a cor da crosta, por outro lado, são produzidos pelo
+processo: são os parâmetros. Errar a temperatura não impede o prato de assar, mas
+compromete o resultado --- e, do mesmo modo, hiperparâmetros mal escolhidos não impedem o
+treinamento de ocorrer, apenas fazem com que ele chegue a um modelo pior.
 
 \modificado{Em geral, os hiperparâmetros podem ser agrupados em duas categorias:}
 \begin{itemize}
@@ -106,14 +182,45 @@ Há diversas funções de ativação, cada uma com suas próprias característic
 
 \modificado{Além disso, é necessário definir a arquitetura da rede (camadas, neurônios, funções de ativação) e os hiperparâmetros de treinamento. O treinamento ocorre ao longo de diversas iterações, nas quais cada passagem completa pelo conjunto de treinamento é chamada de época (\textit{epoch}); em cada época, os dados são processados em pequenos lotes (\textit{batches}).}
 
-\modificado{Como exemplo, considere uma rede neural que classifica imagens de 28$\times$28 pixels. A camada de entrada terá 784 nós, cada um recebendo o valor de intensidade de um pixel --- ou seja, uma característica do dado de entrada.}
+A analogia mais direta é a de um estudante diante de um livro. Uma época equivale a
+percorrer o livro inteiro uma vez; os lotes são os trechos em que essa leitura é dividida,
+com uma pausa para revisão ao fim de cada um. E, assim como raramente basta uma única
+leitura para fixar o conteúdo, a rede precisa percorrer o conjunto de treinamento diversas
+vezes até que os ajustes se estabilizem.
+
+\modificado{Como exemplo, considere um modelo de linguagem que recebe a frase ``O gato subiu no''. Antes de qualquer cálculo, o texto precisa virar número: ele é fragmentado em unidades menores, chamadas \textit{tokens}, e cada \textit{token} é convertido em um vetor de valores numéricos. São esses vetores que alimentam a camada de entrada --- cada posição do vetor corresponde a um nó, exatamente como, em uma rede que classifica imagens de 28$\times$28 pixels, cada um dos 784 nós de entrada receberia a intensidade de um pixel. Em ambos os casos vale a mesma regra: um nó de entrada para cada característica do dado.}
 
 \begin{figure}[htb]
 \centering
-\caption{\adicionadomarcelo{Mapeamento entre pixels de uma imagem 28$\times$28 e os nós da camada de entrada de uma rede neural.}}
-\label{fig:pixel_nos}
-\includegraphics[scale=0.8]{02_capitulo/pixel-nos.png}
-% \\ \adicionadomarcelo{Fonte: \citeonline{NielsenNNDL2015}.}
+\caption{\adicionadomarcelo{Da frase aos nós da camada de entrada: o texto é fragmentado em \textit{tokens} e cada \textit{token} é convertido em um vetor numérico.}}
+\label{fig:texto_nos}
+\begin{tikzpicture}[font=\scriptsize]
+  % ---- a frase ----
+  \node[font=\small] at (0,1.5) {\textit{``O gato subiu no''}};
+  \node[font=\scriptsize,gray!70!black,align=center] at (-4.3,1.5) {texto\\ original};
+
+  % ---- os tokens ----
+  \foreach \i/\t in {0/O, 1/gato, 2/subiu, 3/no} {
+    \node[draw,thick,rounded corners=2pt,fill=gray!12,
+          minimum width=1.15cm,minimum height=0.55cm] (tk\i) at ({\i*1.5-2.25},0.4) {\t};
+    \draw[-{Stealth},gray!70] ({\i*0.62-0.95},1.25) -- (tk\i.north);
+  }
+  \node[font=\scriptsize,gray!70!black,align=center] at (-4.3,0.4) {\textit{tokens}};
+
+  % ---- os vetores ----
+  \foreach \i in {0,...,3} {
+    \node[font=\tiny] (em\i) at ({\i*1.5-2.25},-1.5)
+      {$\begin{bmatrix} 0{,}12 \\ -0{,}31 \\ \vdots \\ 0{,}05 \end{bmatrix}$};
+    \draw[-{Stealth},gray!70] (tk\i.south) -- (em\i.north);
+  }
+  \node[font=\scriptsize,gray!70!black,align=center] at (-4.3,-1.5) {vetores\\ numéricos};
+
+  % ---- a camada de entrada ----
+  \draw[decorate,decoration={brace,mirror,amplitude=5pt}] (-3.0,-2.55) -- (3.0,-2.55)
+    node[midway,below=6pt,font=\scriptsize,align=center]
+    {cada valor desses vetores entra em um nó da camada de entrada};
+\end{tikzpicture}
+\fonte{Elaborada pelo autor.}
 \end{figure}
 
 \modificado{O ciclo de treinamento pode ser resumido nos seguintes passos:}
@@ -140,14 +247,28 @@ Há diversas funções de ativação, cada uma com suas próprias característic
 
 \modificado{Na \textbf{inferência}, o modelo já treinado é utilizado para gerar predições. O custo de uma única predição é relativamente baixo; contudo, em contextos de larga escala --- como os modelos de IA generativa servindo milhões de requisições diárias --- o custo energético agregado é expressivo \cite{Luccioni2022}.}
 
+A diferença entre as duas etapas é de natureza, não apenas de grandeza. O treinamento é um
+gasto concentrado e único, comparável ao custo de construir uma ponte; a inferência é um
+gasto pequeno, porém perpétuo, comparável ao custo de mantê-la aberta ao tráfego. Uma ponte
+muito usada acaba custando, ao longo de décadas, mais em manutenção do que custou para ser
+erguida --- e o mesmo ocorre com um modelo consultado milhões de vezes por dia. É por essa
+razão que este trabalho concentra-se na eficiência da inferência.
+
 \section{Compressão de Modelos}
 \modificado{Com o crescimento do \textit{Deep Learning}, os modelos de IA vêm dobrando em tamanho a cada poucos anos \cite{Sevilla2022}. Modelos de alta performance costumam ser otimizados exclusivamente para acurácia, resultando em redes com grande quantidade de parâmetros, que ocupam muito espaço de armazenamento e demandam um elevado número de operações em ponto flutuante (FLOPs) para serem executadas. Isso é particularmente problemático em dispositivos com capacidade limitada, como \textit{smartphones} e sistemas embarcados, e também em contextos de uso em larga escala, nos quais o custo energético se torna significativo.}
 
 \modificado{A compressão de modelos é um campo que reúne técnicas voltadas a atenuar esses problemas, reduzindo o tamanho dos modelos e/ou a quantidade de operações necessárias para sua execução, preservando, tanto quanto possível, a acurácia. As redes neurais modernas possuem alta redundância de parâmetros \cite{Denil2013}, o que torna viável remover ou simplificar aqueles com baixa contribuição ao resultado final.}
 
+Essa redundância não é um defeito, mas uma consequência do modo como esses modelos são
+construídos. Como não se sabe de antemão quantos parâmetros a tarefa exige, projeta-se a
+rede com folga generosa, do mesmo modo que se dimensiona uma instalação elétrica para uma
+carga muito acima da que será efetivamente usada. A folga facilita o treinamento, mas
+permanece no modelo depois que ele já aprendeu --- e é justamente essa sobra que as
+técnicas de compressão procuram eliminar.
+
 \modificado{As quatro principais famílias de técnicas de compressão são:}
 \begin{itemize}
-    \item \textbf{Quantização (Quantization):} \modificado{reduz o número de \textit{bits} utilizados para representar cada peso do modelo. Em vez de pontos flutuantes de 32 bits, os parâmetros passam a ser representados com precisão reduzida (16 ou 8 bits, por exemplo), o que diminui o tamanho do modelo e pode acelerar operações em \textit{hardware} que suporta aritmética de menor precisão \cite{Jacob2018}.}
+    \item \textbf{Quantização (Quantization):} \modificado{reduz o número de \textit{bits} utilizados para representar cada peso do modelo. Em vez de pontos flutuantes de 32 bits, os parâmetros passam a ser representados com precisão reduzida (16 ou 8 bits, por exemplo), o que diminui o tamanho do modelo e pode acelerar operações em \textit{hardware} que suporta aritmética de menor precisão \cite{Jacob2018}. O equivalente cotidiano é anotar preços arredondados: registrar R\$ 20 em vez de R\$ 19,99 ocupa menos espaço e agiliza as contas, e na maioria das situações a diferença é irrelevante.}
     \item \textbf{Destilação de Conhecimento (Knowledge Distillation):} \modificado{proposta por \citeonline{Hinton2015}, é uma metodologia de treinamento em que um modelo menor (\textit{aluno}) aprende a partir de um modelo maior e mais preciso (\textit{professor}). O aluno é treinado não apenas para acertar os rótulos verdadeiros, mas também para imitar a distribuição de saída do professor, resultando em um modelo compacto que, frequentemente, alcança acurácia superior à que teria se fosse treinado do zero.}
     \item \textbf{Fatoração de Matrizes (Matrix Factorization):} \modificado{matrizes de pesos de grandes dimensões são decompostas em produto de matrizes menores cuja multiplicação aproxima a matriz original, reduzindo o custo computacional.}
     \item \textbf{Poda Neural (Neural Pruning):} \modificado{processo de remoção de pesos --- ou de estruturas maiores, como filtros --- que contribuem pouco para a saída do modelo. É a técnica central deste trabalho e será detalhada na Seção~\ref{sec:pruning}.}
@@ -157,12 +278,57 @@ Há diversas funções de ativação, cada uma com suas próprias característic
 \centering
 \caption{\adicionadomarcelo{Ilustração do processo de poda: a rede original (densa) tem conexões e/ou neurônios removidos, tornando-se esparsa.}}
 \label{fig:poda_ilustracao}
-\includegraphics[scale=0.6]{02_capitulo/imagepoda.png}
-% \\ \adicionadomarcelo{Fonte: \citeonline{Han2015}.}
+\begin{tikzpicture}[font=\scriptsize,
+    neuronio/.style={circle,draw,thick,minimum size=5.5mm,inner sep=0,fill=gray!25},
+    removido/.style={circle,draw,dashed,gray!55,minimum size=5.5mm,inner sep=0,fill=white}]
+
+  % A espessura de cada conexão representa a magnitude do peso |w|: linhas
+  % finas são pesos pequenos, os primeiros candidatos à remoção.
+  \begin{scope}
+    \foreach \i in {1,2,3} \node[neuronio] (a\i) at (0,{-\i*0.8}) {};
+    \foreach \j in {1,2,3,4} \node[neuronio] (b\j) at (1.7,{-\j*0.8+0.4}) {};
+    \foreach \k in {1,2} \node[neuronio] (c\k) at (3.4,{-\k*0.8-0.4}) {};
+    % conexões fortes (peso alto)
+    \foreach \i/\j in {1/1,1/4,2/1,2/2,2/4,3/2,3/4}
+      \draw[gray!80,line width=0.9pt] (a\i) -- (b\j);
+    \foreach \j/\k in {1/1,1/2,2/1,4/2}
+      \draw[gray!80,line width=0.9pt] (b\j) -- (c\k);
+    % conexões fracas (peso próximo de zero)
+    \foreach \i/\j in {1/2,1/3,2/3,3/1,3/3}
+      \draw[gray!45,line width=0.25pt] (a\i) -- (b\j);
+    \foreach \j/\k in {1/1,2/2,3/1,3/2,4/1}
+      \draw[gray!45,line width=0.25pt] (b\j) -- (c\k);
+    \node[align=center] at (1.7,-3.8)
+      {\textbf{rede densa}\\ a espessura representa $|w|$:\\ linhas finas são pesos pequenos};
+  \end{scope}
+
+  \draw[-{Stealth},very thick] (4.05,-1.7) -- (5.35,-1.7)
+    node[midway,above,align=center] {\textbf{poda}};
+
+  \begin{scope}[shift={(6.0,0)}]
+    \foreach \i in {1,2,3} \node[neuronio] (d\i) at (0,{-\i*0.8}) {};
+    \foreach \j in {1,2,4} \node[neuronio] (e\j) at (1.7,{-\j*0.8+0.4}) {};
+    \node[removido] (e3) at (1.7,{-3*0.8+0.4}) {};
+    \foreach \k in {1,2} \node[neuronio] (f\k) at (3.4,{-\k*0.8-0.4}) {};
+    \foreach \i/\j in {1/1,1/4,2/1,2/2,2/4,3/2,3/4}
+      \draw[gray!80,line width=0.9pt] (d\i) -- (e\j);
+    \foreach \j/\k in {1/1,1/2,2/1,4/2}
+      \draw[gray!80,line width=0.9pt] (e\j) -- (f\k);
+    \node[align=center] at (1.7,-3.8)
+      {\textbf{rede esparsa}\\ restam as conexões fortes; o neurônio\\ tracejado ficou sem entradas relevantes};
+  \end{scope}
+\end{tikzpicture}
+\fonte{Adaptado de \citeonline{Han2015}.}
 \end{figure}
 
 \section{Poda Neural (Pruning)}\label{sec:pruning}
 \modificado{A poda neural é uma técnica de compressão que visa reduzir o tamanho do modelo e o custo computacional da inferência por meio da remoção de parâmetros que pouco contribuem para o resultado final. O processo mais comum parte de um modelo previamente treinado, cujo foco inicial foi exclusivamente a acurácia, e aplica a poda como uma etapa posterior.}
+
+O termo é emprestado da jardinagem, e a metáfora é precisa: podar uma árvore consiste em
+cortar os galhos que consomem seiva sem produzir frutos, de modo que a planta fique mais
+leve e continue rendendo o mesmo. A dificuldade, tanto no jardim quanto na rede neural,
+está em identificar com segurança quais galhos são realmente dispensáveis --- e é essa
+pergunta que separa as diferentes estratégias de poda apresentadas a seguir.
 
 \subsection{Tipos de Poda}
 \modificado{Na literatura, duas categorias principais de poda são consideradas \cite{Blalock2020}:}
@@ -170,6 +336,60 @@ Há diversas funções de ativação, cada uma com suas próprias característic
     \item \textbf{Poda não estruturada:} remoção de pesos individuais, independentemente da sua posição na matriz de pesos. Esta abordagem oferece maior flexibilidade e, geralmente, taxas de compressão elevadas com perda reduzida de acurácia. Entretanto, \adicionadomarcelo{do ponto de vista do custo de inferência, a poda não estruturada apresenta uma limitação importante: processadores e GPUs convencionais não são eficientes em pular multiplicações por zero espalhadas de forma aleatória na matriz de pesos. Assim, embora o modelo tenha muitos zeros, as operações ainda são executadas, e o ganho prático de velocidade e energia tende a ser marginal, a menos que se utilize \textit{hardware} especializado ou formatos de armazenamento esparso.}
     \item \textbf{Poda estruturada:} remoção de estruturas inteiras, como neurônios, filtros ou canais convolucionais, o que implica a remoção completa de detectores de características. Como o resultado é uma matriz menor e ainda densa, há um ganho direto de velocidade e eficiência em \textit{hardware} convencional. O custo dessa abordagem é uma potencial perda maior de acurácia para uma mesma taxa de compressão.
 \end{itemize}
+
+\begin{figure}[htb]
+\centering
+\caption{\adicionadomarcelo{As duas categorias de poda aplicadas à mesma matriz de pesos. Na poda não estruturada os pesos removidos são apenas zerados e a matriz conserva suas dimensões; na poda estruturada, colunas inteiras são eliminadas e a matriz encolhe de fato.}}
+\label{fig:nao_estruturada_vs_estruturada}
+\begin{tikzpicture}[font=\scriptsize]
+  % ---------- matriz original ----------
+  \node (orig) at (0,0) {$\begin{bmatrix}
+     0{,}82 & -0{,}03 &  0{,}61 &  0{,}04 \\
+    -0{,}07 &  0{,}75 & -0{,}02 & -0{,}58 \\
+     0{,}49 &  0{,}06 & -0{,}01 &  0{,}67 \\
+     0{,}05 & -0{,}71 &  0{,}53 & -0{,}08
+  \end{bmatrix}$};
+  \node[below=5pt of orig,align=center] {\textbf{matriz original}\\ $4\times4$ --- 16 pesos};
+
+  % ---------- poda não estruturada ----------
+  \node (ne) at (6.6,2.15) {$\begin{bmatrix}
+     0{,}82 & \mathbf{0} &  0{,}61 & \mathbf{0} \\
+    \mathbf{0} &  0{,}75 & \mathbf{0} & -0{,}58 \\
+     0{,}49 & \mathbf{0} & \mathbf{0} &  0{,}67 \\
+    \mathbf{0} & -0{,}71 &  0{,}53 & \mathbf{0}
+  \end{bmatrix}$};
+  \node[below=1pt of ne,align=center]
+    {\textbf{não estruturada} --- continua $4\times4$\\
+     os zeros ficam espalhados e o \textit{hardware}\\ convencional segue multiplicando por eles};
+
+  % ---------- poda estruturada ----------
+  \node (es) at (6.6,-2.6) {$\begin{bmatrix}
+     0{,}82 &  0{,}61 \\
+    -0{,}07 & -0{,}02 \\
+     0{,}49 & -0{,}01 \\
+     0{,}05 &  0{,}53
+  \end{bmatrix}$};
+  \node[below=1pt of es,align=center]
+    {\textbf{estruturada} --- vira $4\times2$\\
+     duas colunas inteiras saem da matriz,\\ e o custo de multiplicá-la cai de verdade};
+
+  % saem dos cantos (e não do centro) para não cruzar o rótulo da matriz
+  \draw[-{Stealth},thick] (orig.north east) to[out=35,in=180] (ne.west);
+  \draw[-{Stealth},thick] (orig.south east) to[out=-35,in=180] (es.west);
+\end{tikzpicture}
+\fonte{Elaborada pelo autor.}
+\end{figure}
+
+A distinção entre as duas categorias é o que separa um ganho real de um ganho apenas
+contábil, e uma analogia com um livro a torna evidente. A poda não estruturada equivale a
+apagar palavras espalhadas por todas as páginas: o texto fica mais enxuto, mas o livro
+continua com o mesmo número de páginas, e quem for lê-lo ainda terá de folhear todas elas
+--- inclusive as partes apagadas. A poda estruturada equivale a arrancar capítulos
+inteiros: o livro encolhe de fato, pesa menos e é percorrido em menos tempo. Como o
+\textit{hardware} convencional não sabe pular um espaço em branco no meio de uma
+multiplicação, apenas a segunda forma se converte em redução efetiva de tempo e de energia.
+Essa diferença é retomada no Capítulo~\ref{chap:resultados}, onde é verificada
+experimentalmente.
 
 \adicionadomarcelo{Cabe mencionar também a chamada \textbf{esparsidade estruturada} (por exemplo, padrões 2:4), em que o algoritmo é forçado a zerar, a cada bloco de quatro pesos, exatamente dois. Como o \textit{hardware} sabe previamente quantos e em que formato os zeros aparecem, a matriz pode ser comprimida de maneira determinística, permitindo acelerações reais em GPUs modernas que suportam esse padrão \cite{NVIDIA2020Ampere}.}
 
@@ -182,17 +402,29 @@ Há diversas funções de ativação, cada uma com suas próprias característic
 \centering
 \caption{\adicionadomarcelo{Pipeline clássico de poda por magnitude: treinamento do modelo denso, remoção dos pesos de menor magnitude e retreinamento (\textit{fine-tuning}) dos pesos remanescentes.}}
 \label{fig:poda_magnitude}
-\includegraphics[width=0.85\textwidth]{02_capitulo/imagepodamagnitude.png}
-% \\ \adicionadomarcelo{Fonte: \citeonline{Han2015}.}
+\begin{tikzpicture}[font=\small,
+    etapa/.style={rectangle,rounded corners=3pt,draw,thick,fill=gray!12,
+                  minimum width=3.2cm,minimum height=1.5cm,align=center}]
+  \node[etapa] (t) at (0,0) {\textbf{1. Treinar}\\[2pt]
+        \scriptsize modelo denso,\\[-1pt]\scriptsize otimizado só para acurácia};
+  \node[etapa] (p) at (4.4,0) {\textbf{2. Podar}\\[2pt]
+        \scriptsize zerar os pesos de\\[-1pt]\scriptsize menor magnitude $|w|$};
+  \node[etapa] (f) at (8.8,0) {\textbf{3. \textit{Fine-tuning}}\\[2pt]
+        \scriptsize retreinar os pesos\\[-1pt]\scriptsize remanescentes};
+
+  \draw[-{Stealth},thick] (t) -- (p);
+  \draw[-{Stealth},thick] (p) -- (f);
+
+  % laço de iteração: desce do bloco 3, atravessa por baixo e sobe no bloco 1
+  \draw[-{Stealth},thick,dashed,gray!70]
+       (8.8,-0.75) -- (8.8,-1.75)
+       -- node[below,font=\scriptsize,black]
+          {repetir em etapas graduais preserva melhor a acurácia} (0,-1.75)
+       -- (0,-0.75);
+\end{tikzpicture}
+\fonte{Adaptado de \citeonline{Han2015}.}
 \end{figure}
 
-\begin{figure}[htb]
-\centering
-\caption{\adicionadomarcelo{Comparação esquemática entre uma rede densa e uma rede podada, em que conexões de menor importância são removidas.}}
-\label{fig:pruning_denso_esparso}
-\includegraphics[scale=0.5]{02_capitulo/imagepruning.png}
-% \\ \adicionadomarcelo{Fonte: \citeonline{Han2015}.}
-\end{figure}
 
 \subsection{Pipeline Geral da Poda}
 \modificado{De forma geral, a poda pode ser dividida nos seguintes passos:}
