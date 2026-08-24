@@ -1,0 +1,3 @@
+# Resultados experimentais vêm do Kaggle (ambiente Windows) com terminações CRLF.
+# Forçar LF mantém os diffs limpos: cada commit mostra só as linhas novas.
+*.csv text eol=lf
