@@ -42,3 +42,7 @@ Thumbs.db
 # Backup
 *.bak
 *~
+
+# Ferramentas e artefatos locais
+escrita/ROADMAP.md
+graphify-out/

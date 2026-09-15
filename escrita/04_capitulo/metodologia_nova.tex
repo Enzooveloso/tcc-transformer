@@ -4,10 +4,13 @@
 
 \chapter{Metodologia}\label{chap:metodologia}
 
-Este capítulo apresenta o percurso metodológico adotado no trabalho, organizado em cinco etapas.
-As decisões concretas decorrentes desses critérios --- incluindo o modelo selecionado, os
-\textit{datasets} empregados e as configurações de poda --- são descritas no
-Capítulo~\ref{chap:desenvolvimento}.
+Este capítulo apresenta o percurso metodológico adotado no trabalho, organizado em cinco
+etapas: a seleção do modelo de referência, a implementação das estratégias de poda sem
+otimização, a implementação da estratégia de poda com otimização, o \textit{fine-tuning} de
+recuperação e a definição das métricas de avaliação. Para cada etapa, estabelecem-se os
+critérios que orientaram as decisões tomadas. As decisões concretas decorrentes desses
+critérios --- incluindo o modelo selecionado, o \textit{dataset} empregado e as
+configurações de poda --- são descritas no Capítulo~\ref{chap:desenvolvimento}.
 
 % -------------------------------------------------------
 \section{Seleção e Implementação do Modelo de Referência}\label{sec:metodologia_modelo}
@@ -57,16 +60,18 @@ representarem os dois extremos do espectro de granularidade da poda neural:
           granularidade mais fina possível e gera modelos esparsos sem alteração da
           estrutura física do modelo;
     \item poda estruturada \cite{Li2017}, que elimina unidades arquiteturais inteiras
-          --- como filtros convolucionais ou cabeças de atenção --- reduzindo fisicamente
-          as dimensões dos tensores e gerando modelos computacionalmente mais enxutos.
+          --- filtros convolucionais, no trabalho original; em uma arquitetura
+          \textit{Transformer}, cabeças de atenção ou neurônios da camada intermediária do
+          MLP --- reduzindo fisicamente as dimensões dos tensores e gerando modelos
+          computacionalmente mais enxutos.
 \end{itemize}}
 
 % AJUSTE: reunião 13/05 — reforçar que estratégias são consolidadas na literatura
 \adicionadomarcelo{Ambas as estratégias são amplamente consolidadas na literatura de compressão de modelos
 neurais, com mais de uma década de aplicação e extensa validação experimental. Sua inclusão
 neste trabalho não constitui contribuição metodológica original; pelo contrário, sua
-aplicação fornece uma base de comparação estabelecida, sobre a qual serão avaliadas as
-estratégias otimizadas propostas na
+aplicação fornece uma base de comparação estabelecida, sobre a qual é avaliada a
+estratégia otimizada proposta na
 Seção~\ref{sec:metodologia_poda_com}.}
 
 Os critérios que orientaram a escolha das estratégias a implementar foram:
@@ -78,10 +83,10 @@ Os critérios que orientaram a escolha das estratégias a implementar foram:
 \end{itemize}
 
 
-\modificado{Em ambas as estratégias, são aplicadas funções de avaliação de importância de parâmetros,
-que orientam o processo de remoção: a poda por magnitude utiliza o valor absoluto dos pesos
-como critério, enquanto a poda estruturada utiliza a norma $L_1$ dos filtros (ou unidades
-arquiteturais equivalentes).}
+Em ambas as estratégias, são aplicadas funções de avaliação de importância de parâmetros,
+que orientam o processo de remoção: a poda por magnitude utiliza como critério o valor
+absoluto de cada peso individual, enquanto a poda estruturada utiliza a norma $L_1$ do
+conjunto de pesos associado a cada unidade arquitetural removível.
 
 
 
@@ -89,27 +94,103 @@ As estratégias selecionadas com base nesses critérios, bem como os detalhes de
 implementação, são apresentados no Capítulo~\ref{chap:desenvolvimento}.
 
 % -------------------------------------------------------
-\section{Implementação das Estratégias de Poda com Otimização}\label{sec:metodologia_poda_com}
+% AJUSTE: reescrita da Seção 4.3 — a estratégia otimizada passa a ser declarada
+% (sensibilidade por camada); taxas dinâmicas, momento de aplicação e Knowledge
+% Distillation descem para alternativas descartadas, como no Cap. 5.
+\section{Implementação da Estratégia de Poda com Otimização}\label{sec:metodologia_poda_com}
 % -------------------------------------------------------
 
-Esta é a etapa central do trabalho. O objetivo é investigar se a combinação das estratégias de
-poda com técnicas de otimização resulta em modelos mais eficientes do que a poda aplicada de
-forma direta, sem qualquer refinamento adicional.
+Esta é a etapa central do trabalho. O objetivo é investigar se a combinação de uma
+estratégia clássica de poda com uma técnica de otimização resulta em modelos mais
+eficientes do que a poda aplicada de forma direta, sem qualquer refinamento adicional.
 
-As estratégias de otimização a investigar incluem:
+A técnica de otimização adotada é a \textbf{análise de sensibilidade por camada}, que
+orienta uma alocação não uniforme do orçamento de poda entre as camadas do modelo. A
+hipótese que ela investiga é a de que as camadas não são igualmente importantes: se
+algumas toleram a remoção de parâmetros muito mais do que outras, distribuir o orçamento
+de poda em proporção a essa tolerância deve produzir, para um mesmo grau de compressão,
+perda menor de desempenho preditivo do que as alocações ingênuas adotadas pelas
+estratégias da Seção~\ref{sec:metodologia_poda_sem}.
+
+O procedimento organiza-se em duas fases. Na primeira, levanta-se um perfil de
+sensibilidade do modelo: poda-se uma camada de cada vez, a uma taxa fixa e mantendo todas
+as demais intactas, e registra-se a degradação resultante na métrica de desempenho
+preditivo. Na segunda, esse perfil é convertido em uma taxa de poda por camada, atribuída
+em proporção à robustez medida e escalada de modo que o orçamento global pretendido seja
+respeitado. Como cada estratégia de poda remove unidades de natureza distinta, o perfil é
+levantado separadamente para cada uma delas. A formulação da regra de alocação, a
+taxa-sonda empregada no perfilamento e os valores adotados para os demais parâmetros são
+apresentados no Capítulo~\ref{chap:desenvolvimento}.
+
+Os critérios que orientaram a escolha dessa técnica entre as alternativas cogitadas foram
+sua aderência direta à hipótese do trabalho e o fato de não alterar a natureza da poda:
+ela redistribui o orçamento entre as camadas sem modificar o critério de importância nem
+introduzir um segundo modelo no experimento. Isso mantém a comparação com as estratégias
+sem otimização restrita a uma única variável.
+
+\subsection*{Alternativas consideradas e descartadas}
+
+Outras técnicas de otimização foram cogitadas e não integram o escopo experimental, por
+restrição de tempo. Registram-se a seguir, por delimitarem o alcance das conclusões e por
+constituírem desdobramentos naturais para trabalhos futuros:
 
 \begin{itemize}
-    \item Comparação entre taxas de poda fixas e dinâmicas;
-    \item Variação do momento de aplicação da poda --- antes do treinamento, durante ou após
-          o \textit{fine-tuning};
-    \item Análise de sensibilidade por camada, para alocação não uniforme do orçamento de poda;
-    \item \textit{Knowledge Distillation}, na qual um modelo menor (\textit{student}) é treinado
-          para reproduzir o comportamento de um modelo maior (\textit{teacher}).
+    \item \textbf{comparação entre taxas de poda fixas e dinâmicas}, em que o orçamento de
+          poda varia ao longo do processo em vez de ser fixado de antemão;
+    \item \textbf{variação do momento de aplicação da poda} --- antes, durante ou após o
+          treinamento. Este trabalho aplica a poda sempre sobre o modelo pré-treinado,
+          reservando o retreinamento para a etapa de recuperação descrita na
+          Seção~\ref{sec:metodologia_finetuning};
+    \item \textbf{\textit{Knowledge Distillation}}, na qual um modelo menor
+          (\textit{student}) é treinado para reproduzir o comportamento de um modelo maior
+          (\textit{teacher}); trata-se de técnica de compressão de natureza distinta da
+          poda, cuja avaliação exigiria protocolo experimental próprio;
+    \item \textbf{quantização}, que reduz a precisão numérica da representação dos pesos
+          em vez de eliminá-los.
 \end{itemize}
 
-A comparação entre os modelos obtidos com e sem otimização visa identificar combinações que
-melhorem o balanço entre desempenho preditivo e eficiência computacional em relação às
-estratégias aplicadas sem otimização.
+A comparação entre os modelos obtidos com e sem otimização visa identificar em que medida
+a alocação guiada por sensibilidade melhora o balanço entre desempenho preditivo e
+eficiência computacional em relação às alocações ingênuas.
+
+% -------------------------------------------------------
+% AJUSTE: seção nova — o fine-tuning de recuperação era, até aqui, apenas um
+% sub-item da lista de estratégias de otimização, embora seja uma etapa própria
+% no Cap. 5 e uma seção inteira do Cap. 6.
+\section{\textit{Fine-tuning} de Recuperação}\label{sec:metodologia_finetuning}
+% -------------------------------------------------------
+
+As etapas anteriores operam em regime \textit{one-shot}: o modelo é podado e medido
+imediatamente, sem retreinamento. Esse regime é deliberado, pois isola o dano causado pela
+poda do efeito de qualquer recuperação posterior, mas não corresponde ao procedimento da
+literatura --- tanto \citeonline{Han2015} quanto \citeonline{Li2017} retreinam o modelo
+depois de podá-lo. Esta etapa fecha essa lacuna, medindo quanto da degradação é recuperável
+sob um orçamento de retreinamento limitado.
+
+Dois cuidados metodológicos condicionam a validade dessa medição.
+
+O primeiro é a necessidade de uma \textbf{linha de controle densa}. O modelo de referência
+não foi pré-treinado no corpus de avaliação, de modo que retreiná-lo nesse corpus já
+melhora o desempenho preditivo por simples adaptação de domínio, sem poda alguma
+envolvida. Sem essa linha de controle, seria impossível distinguir a recuperação do dano da
+poda da mera adaptação ao corpus. O modelo denso é, portanto, submetido ao mesmo orçamento
+de retreinamento e avaliado junto às demais configurações.
+
+O segundo é a \textbf{preservação da esparsidade}. Na poda não estruturada os pesos são
+apenas anulados, e o otimizador os restauraria ao longo do treinamento, desfazendo a
+compressão que se pretende avaliar. Como em \citeonline{Han2015}, a esparsidade é mantida
+por uma máscara binária fixa, capturada imediatamente após a poda e reaplicada a cada passo
+do otimizador. Na poda estruturada esse cuidado é dispensável, pois as unidades removidas
+deixaram de existir.
+
+Registre-se, por fim, que esta é a única etapa estocástica do experimento: as varreduras
+\textit{one-shot} são determinísticas, e a semente aleatória passa a afetar o resultado
+apenas aqui. O custo energético do retreinamento é medido separadamente do custo de
+inferência, por se tratar de custo pago uma única vez, que precisa ser amortizado contra a
+economia obtida a cada inferência.
+
+O protocolo concreto --- otimizador, orçamento de passos, hiperparâmetros e configurações
+submetidas ao retreinamento --- é apresentado no Capítulo~\ref{chap:desenvolvimento}.
 
 % -------------------------------------------------------
 % AJUSTE: reunião 13/05 — reescrita completa da Seção 3.4 (métricas explicadas em detalhe)
@@ -122,17 +203,19 @@ como é obtida operacionalmente.
 
 \subsection*{Desempenho preditivo}
 
-A métrica de desempenho preditivo adotada depende da natureza da tarefa do modelo
-selecionado. Em tarefas de classificação, a métrica usual é a acurácia --- definida como
-a proporção de predições corretas sobre o total de amostras avaliadas --- ou medidas
-derivadas, como precisão, revocação e F1 \cite{Goodfellow2016}. Em modelos de linguagem
-voltados à geração de texto, a métrica padrão é a \textit{perplexity}, que quantifica o
-grau de ``surpresa'' do modelo diante de cada \textit{token} do conjunto de validação,
-constituindo uma medida da qualidade da modelagem probabilística da linguagem. Valores
-mais baixos de \textit{perplexity} indicam melhor capacidade preditiva.
+Como o modelo de referência é um modelo de linguagem autorregressivo, a métrica de
+desempenho preditivo adotada é a \textit{perplexity}, padrão para essa classe de modelos.
+Ela quantifica o grau de ``surpresa'' do modelo diante de cada \textit{token} do conjunto
+de avaliação, constituindo uma medida da qualidade da modelagem probabilística da
+linguagem \cite{Goodfellow2016}. Valores mais baixos de \textit{perplexity} indicam melhor
+capacidade preditiva.
 
-A métrica específica adotada neste trabalho será apresentada no
-Capítulo~\ref{chap:desenvolvimento}, em coerência com a tarefa do modelo selecionado.
+A adoção da \textit{perplexity}, em lugar de métricas de tarefas descendentes --- como a
+acurácia em uma tarefa de classificação ---, decorre de ela ser uma métrica intrínseca:
+pode ser medida diretamente sobre o corpus de avaliação, sem exigir o \textit{fine-tuning}
+do modelo em uma tarefa específica, procedimento que tornaria a comparação entre
+configurações dependente de um segundo treinamento. O procedimento de cálculo adotado é
+descrito no Capítulo~\ref{chap:desenvolvimento}.
 
 \subsection*{Custo computacional}
 
@@ -146,8 +229,12 @@ O custo computacional é avaliado por meio de quatro indicadores complementares:
     \item \textbf{Operações de ponto flutuante (FLOPs):} contagem das operações matemáticas
           necessárias para uma inferência completa, obtida por análise estática do grafo
           computacional do modelo. Bibliotecas específicas --- como \texttt{thop}, em
-          ambiente PyTorch --- automatizam essa contagem percorrendo cada camada do modelo
-          e acumulando as operações correspondentes;
+          ambiente PyTorch --- percorrem cada camada do modelo e acumulam as operações
+          correspondentes. A automação, porém, é parcial: a contagem cobre apenas os tipos
+          de camada previstos no catálogo da ferramenta, de modo que camadas fora dele
+          exigem o registro de regras de contagem próprias, sob pena de serem silenciosamente
+          ignoradas. O tratamento efetivamente necessário no modelo adotado, bem como as
+          omissões remanescentes, são detalhados no Capítulo~\ref{chap:desenvolvimento};
 
     \item \textbf{Tempo de inferência:} medido empiricamente, registrando o tempo decorrido
           durante o processamento de uma entrada representativa em condições controladas de
@@ -173,8 +260,12 @@ O impacto ambiental é mensurado por meio de dois indicadores:
     \item \textbf{Emissões equivalentes de CO\textsubscript{2}:} calculadas a partir do
           consumo energético registrado, multiplicado por um fator de intensidade carbônica
           da matriz energética da região onde os experimentos são executados. A biblioteca
-          CodeCarbon mantém base atualizada desses fatores e realiza essa conversão
-          automaticamente.
+          CodeCarbon mantém base desses fatores e realiza essa conversão automaticamente.
+          Cabe uma ressalva sobre o alcance desse indicador: como o fator de intensidade
+          carbônica depende da localidade em que o código executa, ele não é controlado pelo
+          experimento e pode variar entre execuções. As emissões devem, por isso, ser lidas
+          como aproximações de ordem de grandeza, e a comparação entre configurações
+          apoia-se no consumo energético, não nas emissões dele derivadas.
 \end{itemize}
 
 % Todas as métricas são calculadas tanto para o modelo de referência quanto para cada

@@ -27,7 +27,7 @@ finalmente, o modelo GPT-2, que é o objeto central dos experimentos de poda.
 
 Toda arquitetura nasce como resposta a uma limitação da anterior, e o \textit{Transformer}
 não é exceção. Compreender qual era essa limitação é o que transforma o mecanismo de
-atenção --- apresentado a seguir --- em uma solução, e não em uma escolha arbitrária.
+atenção em uma solução, e não em uma escolha arbitrária.
 
 Até 2017, o processamento de texto era dominado pelas redes neurais recorrentes
 (\textit{Recurrent Neural Networks}, RNNs). Elas leem a frase palavra por palavra, na
@@ -36,7 +36,7 @@ palavra, esse resumo é atualizado. É, em essência, o modo como uma pessoa lê
 voz alta, guardando na memória o que veio antes. Dessa mecânica decorrem os dois
 problemas que motivaram o \textit{Transformer}.
 
-O primeiro é o \textbf{esquecimento}. Considere o trecho ``A Inglaterra é minha terra
+O primeiro é o esquecimento. Considere o trecho ``A Inglaterra é minha terra
 natal. Passei toda a minha vida lá. Mudei-me para a Espanha há dois dias. Eu falo apenas
 uma língua, que é o \_\_\_''. Preencher a lacuna com ``inglês'' exige recuperar uma
 palavra que apareceu muito antes. Como o resumo é reescrito a cada passo, a informação
@@ -45,18 +45,19 @@ Tecnicamente, o fenômeno se manifesta durante o treinamento como gradiente desa
 (\textit{vanishing gradient}): os gradientes são multiplicados repetidamente pelas
 matrizes de peso e, quando esses valores são pequenos, encolhem até se aproximarem de zero
 \cite{Bengio1994}. É a limitação conhecida como incapacidade de lidar com
-\textbf{dependências de longo alcance}. Arquiteturas posteriores, como as redes LSTM
+dependências de longo alcance. Arquiteturas posteriores, como as redes LSTM
 (\textit{Long Short-Term Memory}), atenuaram o esquecimento por meio de mecanismos que
 regulam o que deve ser mantido ou descartado \cite{Hochreiter1997}, mas não resolveram o
 segundo problema.
 
-O segundo é a \textbf{lentidão}, e é o que mais interessa a este trabalho. Como cada
+O segundo é a lentidão, como cada
 palavra só pode ser processada depois da anterior, a leitura é obrigatoriamente
 sequencial: não há como dividir o trabalho entre vários processadores. Isso desperdiça
 justamente a principal característica das unidades de processamento gráfico (GPUs)
-modernas, que é executar milhares de operações ao mesmo tempo. A analogia é a de um
-supermercado com vinte caixas abertos, mas com uma regra que obrigue os clientes a passar
-por um de cada vez: os outros dezenove ficam ociosos, e a fila anda no ritmo de um só.
+modernas, que é executar milhares de operações ao mesmo tempo. 
+% A analogia é a de um
+% supermercado com vinte caixas abertos, mas com uma regra que obrigue os clientes a passar
+% por um de cada vez: os outros dezenove ficam ociosos, e a fila anda no ritmo de um só.
 
 Foi para atacar essas duas limitações simultaneamente que se desenvolveu o mecanismo de
 atenção.

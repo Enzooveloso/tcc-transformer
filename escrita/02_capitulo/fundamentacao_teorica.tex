@@ -1,11 +1,6 @@
 % =============================================================
 % Capítulo 2 — Fundamentação Teórica
 % =============================================================
-% Legenda de cores (para revisão):
-%   \mantido{...}    → texto do Enzo preservado integralmente
-%   \modificado{...} → texto do Enzo com ajustes pontuais
-%   \adicionado{...} → texto novo acrescentado por esta revisão
-% =============================================================
 
 \chapter{Fundamentação Teórica}\label{chap:fundamentacao_teorica}
 
@@ -19,22 +14,23 @@ raciocínio antes de encontrar a notação matemática que o descreve.
 \section{Aprendizado Profundo e Redes Neurais}
 
 \subsection{Aprendizado Profundo (Deep Learning)}
-O Aprendizado Profundo é um campo especializado de aprendizado de máquina \adicionadomarcelo{\cite{Goodfellow2016}}, \modificado{caracterizado pelo uso de redes neurais artificiais com múltiplas camadas, o que permite aprender e extrair informações complexas a partir de grandes volumes de dados}.
+O Aprendizado Profundo é um campo especializado de aprendizado de máquina \adicionadomarcelo{\cite{Goodfellow2016,LeCun2015}}, \modificado{caracterizado pelo uso de redes neurais artificiais com múltiplas camadas, o que permite aprender e extrair informações complexas a partir de grandes volumes de dados}.
 
 \subsection{Redes Neurais Artificiais}
 \modificado{A rede neural artificial é um modelo computacional inspirado na estrutura do cérebro humano, que busca imitar a forma como neurônios se conectam e processam sinais para aprender a partir de dados, identificando padrões e tomando decisões. Um exemplo clássico é o perceptron multicamadas (MLP), um modelo composto por funções matemáticas que mapeiam valores de entrada em valores de saída \cite{Goodfellow2016}. Em tarefas de visão computacional, por exemplo, milhões de imagens de um objeto podem ser processadas para que a rede aprenda suas características visuais e seja capaz de reconhecê-lo posteriormente.}
 
-Uma analogia ajuda a fixar a ideia antes da definição formal. Imagine uma comissão
+Uma forma de tentar enteder a definição de uma RNN é, imagine uma comissão
 encarregada de decidir se um pedido de empréstimo deve ser aprovado. Nenhum membro decide
-sozinho: cada um examina um aspecto diferente --- a renda declarada, o histórico de
-pagamentos, o tempo de emprego --- e emite um parecer. Esses pareceres não têm todos o
+sozinho, cada um examina um aspecto diferentee, como a renda declarada, o histórico de
+pagamentos, o tempo de emprego e então, após analisar todos os aspectos, emite um parecer. Esses pareceres não têm todos o
 mesmo valor, pois a comissão confia mais em uns avaliadores do que em outros, e a decisão
 final combina todos eles, ponderados por essa confiança. Em uma rede neural, cada nó é um
 desses avaliadores e o peso de cada conexão é exatamente a confiança depositada naquele
-parecer. A diferença essencial é que a rede não recebe essas confianças prontas: ela as
+parecer. A diferença essencial é que a rede não recebe essas confianças prontas, ela as
 descobre sozinha, por tentativa e erro, ao longo do treinamento.
 
-Uma rede neural profunda é composta por unidades (nós) interconectadas, organizadas em camadas.
+Uma rede neural profunda é composta por unidades (nós) interconectadas, organizadas em camadas
+\cite{Goodfellow2016,NielsenNNDL2015}.
 
 \begin{itemize}
     \item \textbf{Nó (neurônio):} É uma unidade computacional que calcula uma soma ponderada das entradas mais um \textit{bias} e passa o resultado através de uma função de ativação, produzindo uma saída.
@@ -43,24 +39,24 @@ Uma rede neural profunda é composta por unidades (nós) interconectadas, organi
     \item \textbf{Camada de Saída (Output Layer):} Camada final da rede, onde o resultado é produzido. A estrutura da camada de saída depende da tarefa: em regressão, há um único nó com função de ativação linear; em classificação binária, um único nó expressa resultados do tipo sim/não; em classificação multiclasse, há um nó para cada classe possível, e o de maior ativação corresponde à predição final.
 \end{itemize}
 
-\modificado{Cada conexão entre nós possui um peso associado, que determina a sua importância relativa. Pesos altos amplificam o sinal de entrada, enquanto pesos próximos de zero tornam a conexão pouco influente. Os pesos são inicializados com valores aleatórios e ajustados durante o treinamento.}
+\modificado{Cada conexão entre nós possui um peso associado, que determina a sua importância relativa. Pesos altos amplificam o sinal de entrada, enquanto pesos próximos de zero tornam a conexão pouco influente. Os pesos são inicializados com valores aleatórios e ajustados durante o treinamento \cite{Goodfellow2016}.}
 
-\begin{figure}[htb]
-\centering
-\caption{\adicionadomarcelo{Arquitetura típica de uma rede neural artificial com uma camada de entrada, duas camadas ocultas e uma camada de saída.}}
-\label{fig:arquitetura_rede_neural}
-\includegraphics[scale=0.45]{02_capitulo/imageArquiteturaRedeNeural.png}
-% \\ \adicionadomarcelo{Fonte: \citeonline{NielsenNNDL2015}.}
-\end{figure}
+% \begin{figure}[htb]
+% \centering
+% \caption{\adicionadomarcelo{Arquitetura típica de uma rede neural artificial com uma camada de entrada, duas camadas ocultas e uma camada de saída.}}
+% \label{fig:arquitetura_rede_neural}
+% \includegraphics[scale=0.45]{02_capitulo/imageArquiteturaRedeNeural.png}
+% % \\ \adicionadomarcelo{Fonte: \citeonline{NielsenNNDL2015}.}
+% \end{figure}
 
 \subsection{Bias em Redes Neurais}
 \modificado{O \textit{bias} é um parâmetro adicional que ajusta a saída de um neurônio. Trata-se de um valor numérico associado a cada neurônio, não ligado a nenhuma entrada específica, atuando como um coeficiente linear. Antes da aplicação da função de ativação, o \textit{bias} é somado ao resultado da soma ponderada das entradas.}
 
-A principal função do \textit{bias} é deslocar a função de ativação, permitindo que o modelo se ajuste melhor aos dados. Sem ele, a soma ponderada precisaria ser alta para que o neurônio fosse ativado; com o \textit{bias}, um neurônio pode ser ativado mesmo com uma soma ponderada baixa, caso seu \textit{bias} seja suficientemente alto. Inversamente, um \textit{bias} muito negativo dificulta a ativação do neurônio. \modificado{O \textit{bias} é um parâmetro aprendível: inicialmente é inicializado com zero ou valores próximos de zero e, durante o treinamento, é atualizado pelo mesmo processo de retropropagação e descida de gradiente utilizado para os pesos.}
+A principal função do \textit{bias} é deslocar a função de ativação, permitindo que o modelo se ajuste melhor aos dados. Sem ele, a soma ponderada precisaria ser alta para que o neurônio fosse ativado; com o \textit{bias}, um neurônio pode ser ativado mesmo com uma soma ponderada baixa, caso seu \textit{bias} seja suficientemente alto \cite{NielsenNNDL2015}. Inversamente, um \textit{bias} muito negativo dificulta a ativação do neurônio. \modificado{O \textit{bias} é um parâmetro aprendível: inicialmente é inicializado com zero ou valores próximos de zero e, durante o treinamento, é atualizado pelo mesmo processo de retropropagação e descida de gradiente utilizado para os pesos.}
 
-Retomando a comissão de crédito: se os pesos representam o quanto se confia em cada
+Retomando com a analogia da comissão de crédito, se os pesos representam o quanto se confia em cada
 avaliador, o \textit{bias} representa o quanto o avaliador é exigente. Um membro
-benevolente aprova o pedido mesmo diante de evidências modestas; um membro rigoroso só
+gentil aprova o pedido mesmo diante de evidências modestas; um membro rigoroso só
 aprova quando as evidências são fortes. São duas coisas independentes --- confiar muito em
 alguém não diz nada sobre o quanto essa pessoa é exigente --- e é por isso que a rede
 precisa aprender os dois conjuntos de valores separadamente.
@@ -69,18 +65,33 @@ precisa aprender os dois conjuntos de valores separadamente.
 \modificado{A função de ativação é uma função matemática aplicada ao resultado da soma ponderada das entradas de um neurônio (já acrescido do \textit{bias}), determinando a saída do neurônio. Sua principal função é introduzir não linearidade no modelo: sem ela, a composição de diversas camadas resultaria em uma transformação puramente linear, equivalente a uma rede com uma única camada, o que limitaria drasticamente a capacidade expressiva do modelo \cite{Goodfellow2016}.}
 
 A razão de existir dessa função merece um exemplo concreto, pois é ela que justifica o
-próprio empilhamento de camadas. Aplicar dois descontos sucessivos em um preço --- um de
-10\% e outro de 20\% --- produz exatamente o mesmo efeito que aplicar um único desconto de
-28\%: encadear operações lineares nunca gera nada além de outra operação linear. Com redes
-neurais acontece o mesmo. Sem a função de ativação, uma rede de cem camadas calcularia
-exatamente aquilo que uma única camada já calcularia, e toda a profundidade seria
-desperdiçada. A não linearidade é o que quebra esse encadeamento e permite que cada camada
-acrescente algo que a anterior não conseguia representar.
+próprio empilhamento de camadas. Considere um produto de R\$ 100,00 submetido a dois
+descontos sucessivos, um de 10\% e outro de 20\%: o primeiro leva o preço a R\$ 90,00 e o
+segundo a R\$ 72,00, exatamente o mesmo resultado que um único desconto de 28\% produziria.
+Os dois passos colapsaram em um só, e o segundo nada acrescentou que um único desconto bem
+escolhido não fizesse sozinho. Encadear operações lineares nunca gera nada além de outra
+operação linear, e com redes neurais acontece o mesmo: sem função de ativação, uma rede de
+cem camadas calcularia exatamente aquilo que uma única camada já calcularia, e toda a
+profundidade seria desperdiçada.
 
-A ativação de um neurônio ocorre em três etapas:
+Suponha agora que a loja adote uma regra adicional, aplicada logo depois de cada desconto:
+nenhum produto pode ser vendido por menos de R\$ 85,00. Essa regra é o análogo da função de
+ativação --- ela não faz parte do desconto, mas incide sobre o resultado dele, antes que
+esse resultado siga para a etapa seguinte. Com ela, o encadeamento deixa de colapsar. O
+produto de R\$ 100,00 cai para R\$ 90,00 e depois para R\$ 72,00, mas a regra o devolve a
+R\$ 85,00, de modo que o desconto efetivo foi de 15\%. Já um produto de R\$ 200,00 percorre
+os mesmos dois descontos, chega a R\$ 144,00 sem nunca esbarrar no limite e tem desconto
+efetivo de 28\%. A mesma sequência de operações passou a produzir resultados diferentes
+conforme a entrada, e nenhum desconto único reproduz esse comportamento. É esse
+rompimento do encadeamento que permite a cada camada acrescentar algo que a anterior não
+conseguia representar. A regra de preço mínimo, aliás, tem a mesma forma da ReLU,
+apresentada adiante nesta seção: ambas preservam os valores acima de um limiar e
+substituem os demais por um valor fixo.
+
+A ativação de um neurônio ocorre em três etapas \cite{NielsenNNDL2015}:
 \begin{itemize}
     \item \modificado{Soma ponderada: o neurônio multiplica o valor de ativação de cada nó da camada anterior pelo peso da respectiva conexão e soma todos os resultados.}
-    \item \modificado{Adição do \textit{bias}: ao resultado da soma ponderada é somado o valor do \textit{bias}, que auxilia o neurônio a ativar-se mais ou menos facilmente.}
+    \item \modificado{Adição do \textit{bias}: ao resultado da soma ponderada é somado o valor do \textit{bias}, que auxilia o neurônio a ativar-se mais ou menos facilidade.}
     \item \modificado{Função de ativação: o resultado final (soma ponderada acrescida do \textit{bias}) é passado pela função de ativação, cuja saída é então transmitida aos nós da próxima camada.}
 \end{itemize}
 
@@ -119,19 +130,37 @@ A ativação de um neurônio ocorre em três etapas:
 Há diversas funções de ativação, cada uma com suas próprias características e aplicações.
 \begin{itemize}
     \item \textbf{ReLU (Rectified Linear Unit):} \modificado{Função de ativação mais utilizada em redes neurais modernas, proposta para redes profundas por \citeonline{Nair2010} e popularizada por \citeonline{Krizhevsky2012}. É uma função linear por partes, com inclinação 1 para valores positivos e 0 para valores negativos. É computacionalmente muito eficiente e não sofre do problema do desaparecimento do gradiente para entradas positivas. Em contrapartida, pode sofrer do problema conhecido como \textit{Dying ReLU}, no qual neurônios cujas entradas se tornam persistentemente negativas deixam de ser ativados e param de aprender.}
-    \item \textbf{Sigmoide:} \modificado{Função que mapeia qualquer valor real para o intervalo $(0,1)$, sendo útil em classificação binária, já que a saída pode ser interpretada como uma probabilidade. Caiu em desuso em camadas ocultas porque, para entradas com magnitude muito alta ou muito baixa, sua derivada se aproxima de zero, fenômeno conhecido como desaparecimento do gradiente.}
+    \item \textbf{Sigmoide:} \modificado{Função que mapeia qualquer valor real para o intervalo $(0,1)$, sendo útil em classificação binária, já que a saída pode ser interpretada como uma probabilidade. Caiu em desuso em camadas ocultas porque, para entradas com magnitude muito alta ou muito baixa, sua derivada se aproxima de zero, fenômeno conhecido como desaparecimento do gradiente \cite{Bengio1994}.}
     \item \textbf{Tanh (Tangente Hiperbólica):} \modificado{Semelhante à Sigmoide, porém mapeando os valores para o intervalo $(-1,1)$, o que a torna centrada em zero e costuma favorecer a convergência. Também sofre do problema do desaparecimento do gradiente.}
     \item \textbf{Softmax:} \modificado{Diferentemente das demais, não é aplicada a neurônios individuais de camadas ocultas, mas sim ao conjunto dos neurônios da camada de saída em tarefas de classificação multiclasse. Transforma as saídas brutas da última camada em uma distribuição de probabilidades, com valores no intervalo $(0,1)$ que somam 1. Na prática, converte pontuações sem escala definida em porcentagens comparáveis: o modelo deixa de responder ``7,2 para gato e 3,1 para cachorro'' e passa a responder ``85\% de chance de ser gato, 15\% de ser cachorro''.}
 \end{itemize}
 
-\modificado{Em cada camada, as ativações produzidas determinam as ativações da camada seguinte. De camada em camada, esses padrões tornam-se progressivamente mais complexos e abstratos, até que a camada de saída produz o resultado final. Assim, camadas iniciais aprendem características simples, enquanto camadas mais profundas combinam essas características para representar conceitos de alto nível.}
+\modificado{Em cada camada, as ativações produzidas determinam as ativações da camada seguinte. De camada em camada, esses padrões tornam-se progressivamente mais complexos e abstratos, até que a camada de saída produz o resultado final. Assim, camadas iniciais aprendem características simples, enquanto camadas mais profundas combinam essas características para representar conceitos de alto nível \cite{LeCun2015}.}
 
 \section{Treinamento de Redes Neurais}
 
 \subsection{Gradiente}
 \modificado{No contexto de redes neurais, o gradiente corresponde ao vetor de derivadas parciais da função de perda em relação aos pesos da rede. Ele é o elemento central que permite a minimização da função de perda por meio do algoritmo da descida do gradiente, um método de primeira ordem que utiliza as informações do gradiente para atualizar os parâmetros da rede \cite{Goodfellow2016}.}
 
+Formalmente, sendo $L$ a função de perda e $\mathbf{w} = (w_1, w_2, \dots, w_n)$ o conjunto
+dos $n$ parâmetros da rede, o gradiente é o vetor que reúne a derivada parcial da perda em
+relação a cada um deles \cite{Goodfellow2016}:
+
+\begin{equation}\label{eq:gradiente}
+\nabla L(\mathbf{w}) = \left[
+\frac{\partial L}{\partial w_1},\;
+\frac{\partial L}{\partial w_2},\;
+\dots,\;
+\frac{\partial L}{\partial w_n}
+\right]
+\end{equation}
+
 \modificado{Cada componente do vetor de gradiente é uma derivada parcial, calculada assumindo que as demais variáveis são mantidas constantes. A magnitude da derivada indica o quanto a função está variando; o seu sinal, a direção dessa variação: positivo, a função está aumentando; negativo, diminuindo.}
+
+Tomado como um todo, o vetor da Equação~\ref{eq:gradiente} aponta na direção em que a perda
+cresce mais rapidamente. É por isso que a descida do gradiente caminha no sentido oposto,
+$-\nabla L(\mathbf{w})$: seguir o gradiente invertido é o que aproxima a rede de um mínimo
+da função de perda.
 
 \adicionadomarcelo{Uma analogia comum é a de um caminhante que desce uma encosta em meio à neblina, enxergando apenas o solo ao seu redor: a cada passo, ele sente para qual lado o terreno mais desce (o oposto do gradiente) e avança nessa direção. Na descida do gradiente, a ``encosta'' é a função de perda e os ``passos'' são os ajustes nos pesos, repetidos até alcançar um ponto de mínimo.}
 
@@ -151,19 +180,17 @@ forma matemática, atribuindo a cada peso da rede uma parcela de responsabilidad
 
 Voltando ao caminhante na neblina, a taxa de aprendizado é o tamanho do passo que ele dá.
 Passos curtos demais tornam a descida segura, porém lenta a ponto de o treinamento não
-terminar em tempo viável. Passos longos demais fazem o caminhante saltar por cima do fundo
-do vale e subir a encosta oposta, oscilando indefinidamente sem nunca chegar ao ponto mais
-baixo. Encontrar um valor adequado é uma das decisões mais sensíveis do treinamento.
+terminar em tempo viável, já passos longos demais fazem o caminhante descer mais rápido, mas aumenta o risco de se machucar. Encontrar um valor adequado é uma das decisões mais sensíveis do treinamento.
 
 \subsection{Hiperparâmetros}
-\modificado{Hiperparâmetros são variáveis externas que definem tanto o algoritmo de aprendizado quanto a arquitetura da rede neural. Diferentemente dos parâmetros do modelo (pesos e \textit{biases}), que são ajustados automaticamente pelo \textit{backpropagation}, os hiperparâmetros são definidos antes do início do treinamento e controlam como a rede aprende a partir dos dados. Existem técnicas automatizadas para sua busca, como \textit{grid search} e otimização bayesiana, mas o ajuste manual baseado em experiência ainda é amplamente empregado.}
+\modificado{Hiperparâmetros são variáveis externas que definem tanto o algoritmo de aprendizado quanto a arquitetura da rede neural. Diferentemente dos parâmetros do modelo (pesos e \textit{biases}), que são ajustados automaticamente pelo \textit{backpropagation}, os hiperparâmetros são definidos antes do início do treinamento e controlam como a rede aprende a partir dos dados. Existem técnicas automatizadas para sua busca, como \textit{grid search} \cite{Bergstra2012} e otimização bayesiana \cite{Snoek2012}, mas o ajuste manual baseado em experiência ainda é amplamente empregado.}
 
 A distinção entre parâmetros e hiperparâmetros é a mesma que separa, em uma cozinha, as
 escolhas do cozinheiro do resultado do cozimento. A temperatura do forno e o tempo de
 preparo são definidos antes de o prato ir ao fogo e não se alteram sozinhos: são os
 hiperparâmetros. O ponto da massa e a cor da crosta, por outro lado, são produzidos pelo
 processo: são os parâmetros. Errar a temperatura não impede o prato de assar, mas
-compromete o resultado --- e, do mesmo modo, hiperparâmetros mal escolhidos não impedem o
+compromete o resultado e, do mesmo modo, hiperparâmetros mal escolhidos não impedem o
 treinamento de ocorrer, apenas fazem com que ele chegue a um modelo pior.
 
 \modificado{Em geral, os hiperparâmetros podem ser agrupados em duas categorias:}
@@ -180,7 +207,7 @@ treinamento de ocorrer, apenas fazem com que ele chegue a um modelo pior.
     \item \textbf{Conjunto de teste}, usado para avaliar o desempenho final do modelo de forma imparcial.
 \end{itemize}
 
-\modificado{Além disso, é necessário definir a arquitetura da rede (camadas, neurônios, funções de ativação) e os hiperparâmetros de treinamento. O treinamento ocorre ao longo de diversas iterações, nas quais cada passagem completa pelo conjunto de treinamento é chamada de época (\textit{epoch}); em cada época, os dados são processados em pequenos lotes (\textit{batches}).}
+\modificado{Além disso, é necessário definir a arquitetura da rede (camadas, neurônios, funções de ativação) e os hiperparâmetros de treinamento. O treinamento ocorre ao longo de diversas iterações, nas quais cada passagem completa pelo conjunto de treinamento é chamada de época (\textit{epoch}); em cada época, os dados são processados em pequenos lotes (\textit{batches}) \cite{Goodfellow2016}.}
 
 A analogia mais direta é a de um estudante diante de um livro. Uma época equivale a
 percorrer o livro inteiro uma vez; os lotes são os trechos em que essa leitura é dividida,
@@ -188,7 +215,8 @@ com uma pausa para revisão ao fim de cada um. E, assim como raramente basta uma
 leitura para fixar o conteúdo, a rede precisa percorrer o conjunto de treinamento diversas
 vezes até que os ajustes se estabilizem.
 
-\modificado{Como exemplo, considere um modelo de linguagem que recebe a frase ``O gato subiu no''. Antes de qualquer cálculo, o texto precisa virar número: ele é fragmentado em unidades menores, chamadas \textit{tokens}, e cada \textit{token} é convertido em um vetor de valores numéricos. São esses vetores que alimentam a camada de entrada --- cada posição do vetor corresponde a um nó, exatamente como, em uma rede que classifica imagens de 28$\times$28 pixels, cada um dos 784 nós de entrada receberia a intensidade de um pixel. Em ambos os casos vale a mesma regra: um nó de entrada para cada característica do dado.}
+\modificado{Como exemplo, considere um modelo de linguagem que recebe a frase ``O gato subiu no''. Antes de qualquer cálculo, o texto precisa virar número: ele é fragmentado em unidades menores, chamadas \textit{tokens}, e cada \textit{token} é convertido em um vetor de valores numéricos. São esses vetores que alimentam a camada de entrada --- cada posição do vetor corresponde a um nó \cite{Jurafsky2025}.}
+% , exatamente como, em uma rede que classifica imagens de 28$\times$28 pixels, cada um dos 784 nós de entrada receberia a intensidade de um pixel. Em ambos os casos vale a mesma regra: um nó de entrada para cada característica do dado.}
 
 \begin{figure}[htb]
 \centering
@@ -220,10 +248,10 @@ vezes até que os ajustes se estabilizem.
     node[midway,below=6pt,font=\scriptsize,align=center]
     {cada valor desses vetores entra em um nó da camada de entrada};
 \end{tikzpicture}
-\fonte{Elaborada pelo autor.}
+\fonte{.}
 \end{figure}
 
-\modificado{O ciclo de treinamento pode ser resumido nos seguintes passos:}
+\modificado{O ciclo de treinamento pode ser resumido nos seguintes passos \cite{Goodfellow2016}:}
 \begin{itemize}
     \item \textbf{Passo 1 -- Inicialização dos parâmetros:} pesos são inicializados com valores aleatórios baixos e \textit{biases} com zero. Essa quebra de simetria permite que diferentes neurônios aprendam características distintas.
     \item \textbf{Passo 2 -- \textit{Forward pass}:} um lote de dados é inserido na camada de entrada e propagado através das camadas ocultas até a camada de saída, produzindo uma predição.
@@ -243,9 +271,9 @@ vezes até que os ajustes se estabilizem.
 
 \modificado{Esse custo energético concentra-se em duas etapas do ciclo de vida de um modelo: o treinamento e a inferência.}
 
-\modificado{No \textbf{treinamento}, o modelo é alimentado com grandes volumes de dados e ajustado iterativamente pelo \textit{backpropagation}. Esse processo é computacionalmente intenso e geralmente requer \textit{hardware} especializado (GPUs ou TPUs), muitas vezes organizado em \textit{clusters} com centenas ou milhares de aceleradores.}
+\modificado{No treinamento, o modelo é alimentado com grandes volumes de dados e ajustado iterativamente pelo \textit{backpropagation}. Esse processo é computacionalmente intenso e geralmente requer \textit{hardware} especializado (GPUs ou TPUs), muitas vezes organizado em \textit{clusters} com centenas ou milhares de aceleradores \cite{Patterson2021,Schwartz2020}.}
 
-\modificado{Na \textbf{inferência}, o modelo já treinado é utilizado para gerar predições. O custo de uma única predição é relativamente baixo; contudo, em contextos de larga escala --- como os modelos de IA generativa servindo milhões de requisições diárias --- o custo energético agregado é expressivo \cite{Luccioni2022}.}
+\modificado{Na inferência, o modelo já treinado é utilizado para gerar predições. O custo de uma única predição é relativamente baixo; contudo, em contextos de larga escala --- como os modelos de IA generativa servindo milhões de requisições diárias --- o custo energético agregado é expressivo \cite{Luccioni2022}.}
 
 A diferença entre as duas etapas é de natureza, não apenas de grandeza. O treinamento é um
 gasto concentrado e único, comparável ao custo de construir uma ponte; a inferência é um
@@ -270,8 +298,8 @@ técnicas de compressão procuram eliminar.
 \begin{itemize}
     \item \textbf{Quantização (Quantization):} \modificado{reduz o número de \textit{bits} utilizados para representar cada peso do modelo. Em vez de pontos flutuantes de 32 bits, os parâmetros passam a ser representados com precisão reduzida (16 ou 8 bits, por exemplo), o que diminui o tamanho do modelo e pode acelerar operações em \textit{hardware} que suporta aritmética de menor precisão \cite{Jacob2018}. O equivalente cotidiano é anotar preços arredondados: registrar R\$ 20 em vez de R\$ 19,99 ocupa menos espaço e agiliza as contas, e na maioria das situações a diferença é irrelevante.}
     \item \textbf{Destilação de Conhecimento (Knowledge Distillation):} \modificado{proposta por \citeonline{Hinton2015}, é uma metodologia de treinamento em que um modelo menor (\textit{aluno}) aprende a partir de um modelo maior e mais preciso (\textit{professor}). O aluno é treinado não apenas para acertar os rótulos verdadeiros, mas também para imitar a distribuição de saída do professor, resultando em um modelo compacto que, frequentemente, alcança acurácia superior à que teria se fosse treinado do zero.}
-    \item \textbf{Fatoração de Matrizes (Matrix Factorization):} \modificado{matrizes de pesos de grandes dimensões são decompostas em produto de matrizes menores cuja multiplicação aproxima a matriz original, reduzindo o custo computacional.}
-    \item \textbf{Poda Neural (Neural Pruning):} \modificado{processo de remoção de pesos --- ou de estruturas maiores, como filtros --- que contribuem pouco para a saída do modelo. É a técnica central deste trabalho e será detalhada na Seção~\ref{sec:pruning}.}
+    \item \textbf{Fatoração de Matrizes (Matrix Factorization):} \modificado{matrizes de pesos de grandes dimensões são decompostas em produto de matrizes menores cuja multiplicação aproxima a matriz original, reduzindo o custo computacional \cite{Denton2014}.}
+    \item \textbf{Poda Neural (Neural Pruning):} \modificado{processo de remoção de pesos --- ou de estruturas maiores, como filtros --- que contribuem pouco para a saída do modelo. É a técnica central deste trabalho e será detalhada na Seção a seguir.}
 \end{itemize}
 
 \begin{figure}[htb]
@@ -322,13 +350,13 @@ técnicas de compressão procuram eliminar.
 \end{figure}
 
 \section{Poda Neural (Pruning)}\label{sec:pruning}
-\modificado{A poda neural é uma técnica de compressão que visa reduzir o tamanho do modelo e o custo computacional da inferência por meio da remoção de parâmetros que pouco contribuem para o resultado final. O processo mais comum parte de um modelo previamente treinado, cujo foco inicial foi exclusivamente a acurácia, e aplica a poda como uma etapa posterior.}
+\modificado{A poda neural é uma técnica de compressão que visa reduzir o tamanho do modelo e o custo computacional da inferência por meio da remoção de parâmetros que pouco contribuem para o resultado final. O processo mais comum parte de um modelo previamente treinado, cujo foco inicial foi exclusivamente a acurácia, e aplica a poda como uma etapa posterior \cite{Han2015,Blalock2020}.}
 
-O termo é emprestado da jardinagem, e a metáfora é precisa: podar uma árvore consiste em
-cortar os galhos que consomem seiva sem produzir frutos, de modo que a planta fique mais
-leve e continue rendendo o mesmo. A dificuldade, tanto no jardim quanto na rede neural,
-está em identificar com segurança quais galhos são realmente dispensáveis --- e é essa
-pergunta que separa as diferentes estratégias de poda apresentadas a seguir.
+% O termo é emprestado da jardinagem, e a metáfora é precisa: podar uma árvore consiste em
+% cortar os galhos que consomem seiva sem produzir frutos, de modo que a planta fique mais
+% leve e continue rendendo o mesmo. A dificuldade, tanto no jardim quanto na rede neural,
+% está em identificar com segurança quais galhos são realmente dispensáveis --- e é essa
+% pergunta que separa as diferentes estratégias de poda apresentadas a seguir.
 
 \subsection{Tipos de Poda}
 \modificado{Na literatura, duas categorias principais de poda são consideradas \cite{Blalock2020}:}
@@ -377,7 +405,7 @@ pergunta que separa as diferentes estratégias de poda apresentadas a seguir.
   \draw[-{Stealth},thick] (orig.north east) to[out=35,in=180] (ne.west);
   \draw[-{Stealth},thick] (orig.south east) to[out=-35,in=180] (es.west);
 \end{tikzpicture}
-\fonte{Elaborada pelo autor.}
+% \fonte{Elaborada pelo autor.}
 \end{figure}
 
 A distinção entre as duas categorias é o que separa um ganho real de um ganho apenas
@@ -391,9 +419,9 @@ multiplicação, apenas a segunda forma se converte em redução efetiva de temp
 Essa diferença é retomada no Capítulo~\ref{chap:resultados}, onde é verificada
 experimentalmente.
 
-\adicionadomarcelo{Cabe mencionar também a chamada \textbf{esparsidade estruturada} (por exemplo, padrões 2:4), em que o algoritmo é forçado a zerar, a cada bloco de quatro pesos, exatamente dois. Como o \textit{hardware} sabe previamente quantos e em que formato os zeros aparecem, a matriz pode ser comprimida de maneira determinística, permitindo acelerações reais em GPUs modernas que suportam esse padrão \cite{NVIDIA2020Ampere}.}
+\adicionadomarcelo{Cabe mencionar também a chamada esparsidade estruturada (por exemplo, padrões 2:4), em que o algoritmo é forçado a zerar, a cada bloco de quatro pesos, exatamente dois. Como o \textit{hardware} sabe previamente quantos e em que formato os zeros aparecem, a matriz pode ser comprimida de maneira determinística, permitindo acelerações reais em GPUs modernas que suportam esse padrão \cite{NVIDIA2020Ampere}.}
 
-\modificado{Assim, a poda estruturada é a que apresenta benefícios mais imediatos em termos de FLOPs e consumo de energia em \textit{hardware} convencional, razão pela qual ela recebe destaque neste trabalho.}
+\modificado{Assim, a poda estruturada é a que apresenta benefícios mais imediatos em termos de FLOPs e consumo de energia em \textit{hardware} convencional \cite{Li2017}, razão pela qual ela recebe destaque neste trabalho.}
 
 \subsection{Poda por Magnitude}
 \modificado{A técnica mais simples e amplamente estudada é a poda por magnitude. Nela, considera-se que pesos cujos valores absolutos são próximos de zero contribuem pouco para a saída do modelo e, portanto, podem ser removidos. Define-se um limiar (ou uma taxa de esparsidade desejada) e todos os pesos abaixo desse limiar são zerados, criando redes esparsas \cite{Han2015}.}
@@ -426,8 +454,113 @@ experimentalmente.
 \end{figure}
 
 
+\subsection{Sensibilidade e a Alocação do Orçamento de Poda}\label{subsec:sensibilidade}
+
+A poda por magnitude responde a uma pergunta: \textit{quais} pesos remover. Ela deixa
+intocada uma segunda pergunta, logicamente anterior e menos discutida: \textit{quanto}
+remover de cada parte da rede. Um modelo com doze camadas e um orçamento de poda de
+30\,\% admite infinitas distribuições desse orçamento --- 30\,\% em cada camada, 60\,\% na
+metade delas e nada na outra metade, ou qualquer combinação intermediária. Todas removem a
+mesma quantidade de parâmetros e produzem modelos de custo praticamente idêntico, mas não
+produzem modelos de qualidade idêntica.
+
+A analogia é a de uma empresa que precisa cortar 30\,\% das despesas. O corte linear ---
+30\,\% em todos os setores --- é o mais simples de justificar e o que exige menos
+informação, mas trata a contabilidade e a produção como igualmente dispensáveis. Um corte
+melhor exige saber de antemão qual setor a empresa suporta perder e qual a paralisa. Essa
+informação não está no orçamento de cada setor: um setor caro pode ser supérfluo, e um
+setor barato pode ser crítico. Ela só aparece quando se pergunta o que acontece com a
+empresa na ausência de cada setor.
+
+É exatamente essa a definição de \textbf{sensibilidade} adotada neste trabalho: a
+sensibilidade de uma camada é o quanto o desempenho do modelo se degrada quando aquela
+camada, e somente ela, é podada. Trata-se de uma medida empírica e direta de importância,
+obtida por ablação, e não de um \textit{proxy}. A distinção em relação à magnitude é
+central: a magnitude é uma propriedade dos pesos, disponível sem custo algum, mas apenas
+correlacionada com a importância; a sensibilidade é uma propriedade medida do
+comportamento do modelo, cara de obter, porém direta.
+
+\begin{figure}[htb]
+\centering
+\caption{Duas distribuições do mesmo orçamento de poda entre as camadas de uma rede. À
+esquerda, a alocação uniforme, que ignora qualquer medida de importância; à direita, a
+alocação guiada por sensibilidade, que poupa as camadas mais sensíveis e compensa nas mais
+robustas. Ambas removem a mesma fração total de parâmetros. Figura esquemática.}
+\label{fig:alocacao_sensibilidade}
+\begin{tikzpicture}[font=\scriptsize]
+  \def\bw{0.34}   % largura da barra
+  \def\sx{0.52}   % espaçamento horizontal
+  \def\h{2.2}     % altura de referência (100%)
+
+  % ---------- alocação uniforme ----------
+  \begin{scope}
+    \foreach \i in {0,...,5}{
+      \draw[fill=gray!35,draw=gray!70] (\i*\sx,0) rectangle ++(\bw,{0.30*\h});
+    }
+    \draw[-{Stealth}] (-0.25,0) -- (3.3,0) node[right,font=\tiny] {camadas};
+    \draw[-{Stealth}] (-0.25,0) -- (-0.25,{1.05*\h}) node[above,font=\tiny,align=center] {taxa\\de poda};
+    \draw[dashed,gray] (-0.25,{0.30*\h}) -- (3.15,{0.30*\h})
+         node[right,font=\tiny,black] {30\,\%};
+    \node[below,align=center] at (1.5,-0.35) {\textbf{alocação uniforme}\\ mesma taxa em toda camada};
+  \end{scope}
+
+  % ---------- alocação guiada ----------
+  \begin{scope}[xshift=6.2cm]
+    % taxas ilustrativas com média 30%
+    \foreach \i/\r in {0/0.05, 1/0.50, 2/0.28, 3/0.26, 4/0.34, 5/0.37}{
+      \draw[fill=gray!35,draw=gray!70] (\i*\sx,0) rectangle ++(\bw,{\r*\h});
+    }
+    \draw[-{Stealth}] (-0.25,0) -- (3.3,0) node[right,font=\tiny] {camadas};
+    \draw[-{Stealth}] (-0.25,0) -- (-0.25,{1.05*\h}) node[above,font=\tiny,align=center] {taxa\\de poda};
+    \draw[dashed,gray] (-0.25,{0.30*\h}) -- (3.15,{0.30*\h})
+         node[right,font=\tiny,black] {30\,\%};
+    \draw[-{Stealth},thick] (0.17,{0.05*\h+0.15}) ++(0,0.45) -- ++(0,-0.4);
+    \node[above,font=\tiny,align=center] at (0.17,{0.05*\h+0.62}) {camada\\sensível\\poupada};
+    \node[below,align=center] at (1.5,-0.35) {\textbf{alocação guiada}\\ taxa proporcional à robustez};
+  \end{scope}
+\end{tikzpicture}
+% \fonte{Elaborada pelo autor.}
+\end{figure}
+
+A ideia de medir importância por degradação não é nova. Ela remonta ao \textit{Optimal
+Brain Damage} de \citeonline{LeCun1990}, que estima, por aproximação de segunda ordem, o
+aumento de erro provocado pela remoção de cada peso, e ordena os parâmetros por essa
+estimativa em vez de por magnitude. A limitação do método é o custo: a aproximação exige
+informação de curvatura, cujo cálculo é proibitivo em redes com centenas de milhões de
+parâmetros. A alternativa adotada aqui troca a estimativa analítica por medição direta e
+reduz drasticamente a granularidade --- em vez de estimar a importância de cada peso
+individualmente, mede-se a de cada camada. Com doze camadas, o perfil completo custa doze
+avaliações do modelo, sem nenhum treinamento envolvido.
+
+Há evidência consolidada de que essa desigualdade entre partes da rede existe e é
+substancial. \citeonline{Denil2013} mostram que uma fração pequena dos parâmetros de uma
+rede é suficiente para predizer todos os demais, o que indica redundância distribuída de
+forma desigual. Em \textit{Transformers} especificamente, \citeonline{Michel2019}
+verificam que a maioria das cabeças de atenção pode ser removida após o treinamento com
+perda pequena de desempenho, enquanto algumas poucas são indispensáveis --- e que quais
+delas são indispensáveis não é previsível a partir de propriedades dos pesos. Se a
+importância fosse aproximadamente uniforme, a alocação do orçamento seria irrelevante e a
+poda uniforme seria ótima por construção; é precisamente porque não é uniforme que existe
+espaço para alocar melhor.
+
+Duas ressalvas conceituais acompanham o método e delimitam o que ele pode oferecer.
+
+A primeira é que a sensibilidade medida por ablação de uma camada por vez não captura
+interações entre camadas. A degradação causada por podar duas camadas simultaneamente não
+é, em geral, a soma das degradações individuais, de modo que o perfil deve ser tratado
+como uma \textbf{ordenação relativa de robustez}, e não como um modelo capaz de prever a
+qualidade de uma configuração completa. A segunda é que a sensibilidade não é uma
+propriedade absoluta da camada: ela é medida em relação a uma estratégia de poda
+específica, porque remover pesos de menor magnitude e remover cabeças de atenção inteiras
+são operações diferentes, que danificam a camada de maneiras diferentes. O perfil precisa,
+portanto, ser levantado uma vez para cada estratégia.
+
+O procedimento que converte esse perfil em taxas de poda por camada é detalhado na
+Seção~\ref{sec:estrategia_otimizada}, e ambas as ressalvas acima são verificadas
+experimentalmente no Capítulo~\ref{chap:resultados}.
+
 \subsection{Pipeline Geral da Poda}
-\modificado{De forma geral, a poda pode ser dividida nos seguintes passos:}
+\modificado{De forma geral, a poda pode ser dividida nos seguintes passos \cite{Blalock2020}:}
 \begin{itemize}
     \item \textbf{Passo 1 -- Definição de critério e taxa de poda:} partindo de um modelo já treinado, define-se o critério de importância dos parâmetros (magnitude absoluta, norma $L_1$ de filtros, sensibilidade, entre outros) e a taxa de esparsidade desejada.
     \item \textbf{Passo 2 -- Identificação dos parâmetros a podar:} com base no critério escolhido, o algoritmo classifica os parâmetros por importância e seleciona os menos relevantes.
@@ -437,6 +570,6 @@ experimentalmente.
 \end{itemize}
 
 \subsection{Quando a Poda é Aplicada}
-\modificado{Tradicionalmente, a poda é aplicada após o treinamento inicial do modelo, seguida de um ajuste fino. Métodos mais recentes aplicam a poda de forma gradual durante o próprio treinamento, intercalando passos de treino e poda, o que permite à rede adaptar-se progressivamente à nova estrutura.}
+\modificado{Tradicionalmente, a poda é aplicada após o treinamento inicial do modelo, seguida de um ajuste fino. Métodos mais recentes aplicam a poda de forma gradual durante o próprio treinamento, intercalando passos de treino e poda, o que permite à rede adaptar-se progressivamente à nova estrutura \cite{Zhu2017}.}
 
 \adicionadomarcelo{Uma linha de pesquisa mais recente investiga a possibilidade de podar a rede antes do treinamento, identificando sub-redes inerentemente promissoras dentro de uma rede densa inicializada aleatoriamente. Essa abordagem é impulsionada pela chamada \textit{Lottery Ticket Hypothesis} \cite{Frankle2019}, segundo a qual, dentro de uma rede grande inicializada aleatoriamente, existe uma sub-rede pequena (o ``bilhete premiado'') que, quando treinada isoladamente com a mesma inicialização, atinge acurácia comparável à da rede completa.}
