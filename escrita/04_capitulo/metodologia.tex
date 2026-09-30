@@ -80,33 +80,35 @@ Tabela~\ref{tab:decisoes_metodologicas} sintetiza as principais decisões adotad
 alternativas consideradas e a justificativa de cada uma. As seções seguintes desenvolvem
 em maior profundidade as que são mais críticas para a interpretação dos resultados.
 
-\begin{table}[htb]
+\begin{table}[htbp]
 \centering
 \caption{Síntese das principais decisões metodológicas do trabalho.}
 \label{tab:decisoes_metodologicas}
 \small
-\begin{tabular}{p{2.6cm} p{3.4cm} p{2.6cm} p{4.4cm}}
+\begin{tabular}{>{\raggedright\arraybackslash}p{2.4cm} >{\raggedright\arraybackslash}p{3.4cm} >{\raggedright\arraybackslash}p{2.6cm} >{\raggedright\arraybackslash}p{5.1cm}}
 \hline
 \textbf{Decisão} & \textbf{Alternativas consideradas} & \textbf{Escolha} & \textbf{Justificativa} \\
 \hline
 
 \textit{Dataset}
-& WikiText-103, The Pile, OpenWebText
+& WikiText-103, Penn Treebank, OpenWebText, The Pile
 & \textbf{WikiText-2}
-& Referência consolidada para perplexity de modelos de linguagem, com custo de avaliação
-  compatível com o \textit{hardware} disponível. \\
+& Atende aos quatro critérios da Seção~\ref{sec:metodologia_metricas}; entre os que
+  atendem, tem o menor conjunto de treino (Tabela~\ref{tab:candidatos_dataset}). \\
 
 Modelo
-& GPT-2 \textit{medium}/\textit{large}, BERT, modelos da família LLaMA
+& GPT-2 \textit{medium}/\textit{large}/XL, DistilGPT2, OPT-125M, Pythia-160M, BERT, Llama 2
 & \textbf{GPT-2 \textit{small}}
-& Arquitetura \textit{Transformer} representativa, com pesos públicos e ampla presença na
-  literatura de compressão; 124M parâmetros cabem na GPU disponível. \\
+& Atende aos seis critérios da Seção~\ref{sec:metodologia_modelo} e forma com o
+  WikiText-2 um par que atende a D1--D4; entre os que atendem, é o de menor número de
+  parâmetros (Tabela~\ref{tab:candidatos_modelo}). \\
 
 Estratégias de poda
-& Três ou mais estratégias
+& SparseGPT, Wanda, \textit{movement pruning}, poda de cabeças por gradiente
 & \textbf{Duas} (magnitude e estruturada)
-& Cobrem os dois extremos de granularidade; restrição de tempo experimental
-  inviabilizaria uma terceira com a mesma profundidade. \\
+& Únicas alternativas que atendem a P1 e P2; juntas, atendem a P3
+  (Tabela~\ref{tab:candidatos_poda}). A restrição de tempo experimental inviabilizaria uma
+  terceira com a mesma profundidade. \\
 
 Regime de poda
 & Iterativo (podar e retreinar em ciclos)
@@ -141,8 +143,9 @@ Ambiente
 \subsection{O WikiText-2}\label{subsec:wikitext2}
 
 O WikiText-2 é um corpus de língua inglesa extraído de artigos verificados da Wikipédia,
-amplamente utilizado como referência na avaliação de modelos de linguagem. Diferentemente
-de corpora construídos a partir de frases isoladas, o WikiText preserva a estrutura
+proposto por \citeonline{Merity2017}, com \textit{perplexity} do GPT-2 nesse corpus
+reportada por \citeonline{Radford2019}. Diferentemente de corpora construídos a partir de
+frases isoladas, o WikiText preserva a estrutura
 original dos artigos --- parágrafos completos, pontuação e capitalização mantidas ---, o
 que o torna adequado para medir a capacidade de um modelo de acompanhar contexto ao longo
 de textos extensos.
@@ -155,14 +158,72 @@ capacidade e distorceria a perplexity medida.
 
 \subsection{Justificativa da Escolha}\label{subsec:dataset_justificativa}
 
-Três fatores motivaram a escolha. O primeiro é a comparabilidade: perplexities medidas no
-WikiText-2 são reportadas em grande número de trabalhos, o que permite verificar se o
-\textit{baseline} obtido é coerente com o esperado --- verificação efetivamente realizada,
-como se discute na Seção~\ref{sec:res_protocolo}. O segundo é o custo: o conjunto de teste
-é pequeno o suficiente para que uma avaliação completa de perplexity leve menos de um
-minuto na GPU utilizada, o que é determinante em um trabalho que executa mais de uma
-centena de avaliações. O terceiro é a existência de uma divisão oficial em treino,
-validação e teste, que dispensa decisões arbitrárias de particionamento.
+A Seção~\ref{sec:metodologia_metricas} estabeleceu quatro critérios objetivos (D1 a D4)
+para a seleção do corpus de avaliação. A Tabela~\ref{tab:candidatos_dataset} aplica esses
+critérios a cinco candidatos: o WikiText-2 e o WikiText-103 \cite{Merity2017}, o Penn
+Treebank \cite{Merity2017}, o OpenWebText \cite{Gokaslan2019} e The Pile \cite{Gao2020}.
+Como D1 e D4 dependem do modelo, a tabela os verifica para a família GPT-2, adotada na
+Seção~\ref{sec:modelo}; a verificação recíproca, para os demais candidatos a modelo,
+consta na Tabela~\ref{tab:candidatos_modelo}.
+
+\begin{table}[htb]
+\centering
+\caption{Candidatos a corpus de avaliação e verificação dos critérios de seleção.}
+\label{tab:candidatos_dataset}
+\footnotesize
+\begin{tabular}{l r c c c c}
+\hline
+\textbf{Corpus} & \textbf{Treino} & \textbf{D1} & \textbf{D2} & \textbf{D3} & \textbf{D4} \\
+\hline
+WikiText-2    & 2,1 mi \textit{tokens}   & \checkmark & \checkmark & \checkmark & \checkmark \\
+WikiText-103  & 103,2 mi \textit{tokens} & \checkmark & \checkmark & \checkmark & \checkmark \\
+Penn Treebank & 0,93 mi \textit{tokens}  & \checkmark & $\times$   & \checkmark & \checkmark \\
+OpenWebText   & 39,8 GB                  & ---        & \checkmark & $\times$   & $\times$   \\
+The Pile      & 825 GiB                  & \checkmark & \checkmark & \checkmark & $\times$   \\
+\hline
+\end{tabular}
+\par\smallskip
+\begin{minipage}{0.92\textwidth}\centering D1: resultado de referência; D2: texto sem
+pré-processamento destrutivo; D3: divisão oficial; D4: ausência de sobreposição com o
+pré-treinamento (critérios definidos na Seção~\ref{sec:metodologia_metricas}). D1 e D4
+verificados para a família GPT-2. ---: não verificado, candidato já eliminado por outro
+critério.\end{minipage}\par\smallskip
+\textit{Fonte: Elaboração própria, com dados de \citeonline{Merity2017},
+\citeonline{Radford2019}, \citeonline{Gao2020} e da plataforma Hugging Face (acesso em 28
+set. 2026).}
+\end{table}
+
+Dos cinco candidatos, três não atendem a todos os critérios. O Penn Treebank cai em D2: na
+versão usual, as palavras estão em caixa baixa, a pontuação foi removida e o vocabulário
+foi limitado a 10 mil palavras \cite{Merity2017}, ao passo que o WikiText mantém pontuação,
+caixa original e números \cite{Merity2017}, e a variante \textit{raw} adotada neste
+trabalho não substitui palavras raras. O OpenWebText cai em D3, pois é distribuído com uma
+única partição, de treino, sem divisão oficial em validação e teste (8.013.769 documentos,
+39,8 GB, verificado na plataforma Hugging Face); e em D4, por ser uma reprodução aberta do
+WebText, o corpus de pré-treinamento do GPT-2 \cite{Gokaslan2019}. The Pile atende a D1 ---
+\citeonline{Gao2020} avaliam as quatro variantes do GPT-2 em seu conjunto de teste, com a
+\textit{perplexity} convertida em bits por \textit{byte} --- e a D3, por dispor de
+partições oficiais de treino, validação e teste --- validação e teste com cerca de 0,1\% dos
+dados cada, mais de 1 GiB cada \cite{Gao2020}; cai em D4 porque inclui o OpenWebText2 (62,77
+GiB), construído pelo mesmo método do WebText, com votos no Reddit como filtro de qualidade
+dos links \cite{Gao2020}. Em sentido oposto, os autores do GPT-2 removeram do WebText todos
+os documentos da Wikipédia justamente para evitar sobreposição com conjuntos de avaliação
+\cite{Radford2019}; a sobreposição de 8-gramas medida por eles entre os conjuntos de teste e
+o treino do WebText é de 1,63\% no WikiText-2, 2,42\% no WikiText-103 e 0,88\% no Penn
+Treebank (Tabela 6 de \citeonline{Radford2019}).
+
+Restam dois candidatos que atendem a todos os critérios: o WikiText-2 e o WikiText-103.
+Ambos compartilham os mesmos conjuntos de validação e teste, com 217.646 e 245.569
+\textit{tokens}, respectivamente \cite{Merity2017}; diferem apenas no conjunto de treino,
+cerca de 49 vezes maior no WikiText-103. Como o conjunto de teste é o mesmo, a avaliação de
+\textit{perplexity} é idêntica nos dois; a diferença está inteiramente no custo do
+\textit{fine-tuning}, determinado pelo treino. Com a vazão medida na
+Seção~\ref{subsec:justificativa_gpt2} --- uma época sobre o treino do WikiText-2 em cerca de
+4,6 minutos ---, uma época sobre o WikiText-103 levaria cerca de 3,8 horas por
+\textit{fine-tuning}, e os sete \textit{fine-tunings} da campanha passariam de cerca de 31
+minutos para cerca de 25 horas (estimativa proporcional ao número de \textit{tokens} de
+treino). Aplica-se, então, a regra de desempate da Seção~\ref{sec:metodologia_metricas}:
+adota-se o de menor conjunto de treino, o WikiText-2.
 
 Registre-se que o corpus é parametrizável na implementação: a substituição pelo
 WikiText-103, de mesma natureza e cerca de cinquenta vezes maior, exige apenas a alteração
@@ -234,12 +295,121 @@ Perplexity no WikiText-2 (teste) & 25,17 \\
 
 \subsection{Justificativa da Escolha}\label{subsec:justificativa_gpt2}
 
-O GPT-2 \textit{small} atende simultaneamente aos cinco critérios estabelecidos na
-Seção~\ref{sec:metodologia_modelo}. É um modelo de linguagem representativo e amplamente
-estudado; dispõe de pesos pré-treinados de acesso público; possui 124 milhões de
-parâmetros, volume que cabe confortavelmente na memória da GPU disponível mesmo durante o
-\textit{fine-tuning}; é frequentemente empregado como objeto de estudo em trabalhos de
-compressão; e conta com implementação madura em PyTorch.
+A Seção~\ref{sec:metodologia_modelo} estabeleceu seis critérios objetivos (C1 a C6) para a
+seleção do modelo de referência. A Tabela~\ref{tab:candidatos_modelo} aplica esses
+critérios a nove candidatos: as quatro variantes do GPT-2 \cite{Radford2019}, o
+DistilGPT2 \cite{Sanh2019}, o OPT-125M \cite{Zhang2022}, o Pythia-160M
+\cite{Biderman2023}, o BERT-base \cite{Devlin2019} e o Llama 2 7B \cite{Touvron2023}. Os
+candidatos compreendem as quatro variantes da família GPT-2; três modelos abertos de porte
+próximo ao do GPT-2 \textit{small}; e dois modelos de classes distintas, incluídos para
+verificar os limites dos critérios: um codificador e um modelo com bilhões de parâmetros.
+Como a seleção é conjunta (Seção~\ref{sec:metodologia_modelo}), a tabela verifica também
+o critério D4 de cada candidato em relação ao WikiText-2.
+\todo[inline]{Avaliar a inclusão de modelos pequenos posteriores a 2023 (por exemplo,
+SmolLM2, Qwen2.5-0.5B, Llama 3.2 1B), que a banca pode questionar.}
+
+\begin{table}[htb]
+\centering
+\caption{Candidatos ao modelo de referência e verificação dos critérios de seleção.}
+\label{tab:candidatos_modelo}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{l r r r c c c c c c c}
+\hline
+\textbf{Modelo} & \textbf{Parâm.} & \textbf{Mem.\ FT (GB)} & \textbf{Downl.\ (mi)} & \textbf{C1} & \textbf{C2} & \textbf{C3} & \textbf{C4} & \textbf{C5} & \textbf{C6} & \textbf{D4} \\
+\hline
+GPT-2 \textit{small}  & 124M  & 2,0   & 930,1   & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
+GPT-2 \textit{medium} & 355M  & 5,7   & 29,8    & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
+GPT-2 \textit{large}  & 774M  & 12,4  & 61,0    & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
+GPT-2 XL              & 1,56B & 24,9  & 17,0    & \checkmark & \checkmark & $\times$   & \checkmark & \checkmark & \checkmark & \checkmark \\
+DistilGPT2            & 82M   & 1,3   & 256,8   & \checkmark & \checkmark & \checkmark & $\times$   & ---        & \checkmark & ---        \\
+OPT-125M              & 125M  & 2,0   & 215,8   & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & $\times$   \\
+Pythia-160M           & 162M  & 2,6   & 27,2    & \checkmark & \checkmark & \checkmark & \checkmark & ---        & \checkmark & $\times$   \\
+BERT-base             & 110M  & 1,8   & 3.246,2 & $\times$   & \checkmark & \checkmark & \checkmark & $\times$   & \checkmark & $\times$   \\
+Llama 2 7B            & 6,74B & 107,8 & 34,6    & \checkmark & $\times$   & $\times$   & \checkmark & \checkmark & \checkmark & ---        \\
+\hline
+\end{tabular}
+\par\smallskip
+\begin{minipage}{0.92\textwidth}\centering C1: arquitetura decodificadora autorregressiva; C2: pesos abertos; C3: viabilidade
+do \textit{fine-tuning}; C4: modelo original; C5: resultado de referência publicado; C6:
+implementação disponível (critérios definidos na Seção~\ref{sec:metodologia_modelo}); D4:
+ausência de sobreposição entre o pré-treinamento e o WikiText-2
+(Seção~\ref{sec:metodologia_metricas}). ---: não verificado, candidato já eliminado por
+outro critério. Mem.\ FT: memória mínima para o \textit{fine-tuning} completo, a 16 bytes
+por parâmetro. Downl.: \textit{downloads} acumulados na plataforma Hugging Face, em
+milhões.\end{minipage}\par\smallskip
+\textit{Fonte: Elaboração própria, com dados de \citeonline{Radford2019},
+\citeonline{Rajbhandari2020}, \citeonline{Frantar2023}, \citeonline{Sun2024},
+\citeonline{Gao2020} e da plataforma Hugging Face (acesso em 28 set. 2026).}
+\end{table}
+
+As quatro variantes do GPT-2 atendem a C5 porque \citeonline{Radford2019} publicam, na
+Tabela 3 do artigo original, a \textit{perplexity} de cada uma no WikiText-2: 29,41
+(\textit{small}), 22,76 (\textit{medium}), 19,93 (\textit{large}) e 18,34 (XL). A relação
+entre o valor publicado para o \textit{small} e o medido neste trabalho, obtidos por
+protocolos distintos, é discutida na Seção~\ref{sec:res_protocolo}.
+
+O GPT-2 \textit{small} acumula, além disso, 930,1 milhões de \textit{downloads} na
+plataforma Hugging Face, o maior valor entre os candidatos de geração de texto considerados
+--- o BERT-base tem mais \textit{downloads}, mas é um codificador, já excluído por C1. Nos
+30 dias anteriores ao acesso, o modelo somou 15,4 milhões de \textit{downloads}, o segundo
+maior volume entre todos os modelos de geração de texto da plataforma (acesso em 28 set.
+2026). Esse dado reforça a representatividade do modelo, sem substituir os critérios de
+seleção.
+
+Dos nove candidatos, seis não atendem a todos os critérios. O BERT-base cai em C1: sua
+arquitetura é apenas codificadora, pré-treinada com modelagem de linguagem mascarada
+\cite{Devlin2019}, de modo que a \textit{perplexity} autorregressiva não se aplica --- ela
+não é bem definida para modelos de linguagem mascarada \cite{HuggingFacePerplexity} ---,
+o que o faz cair também em C5; e cai em D4, por ser pré-treinado sobre a Wikipédia em
+inglês \cite{Devlin2019}. O Llama 2 7B cai em C2:
+o acesso a seus pesos na plataforma Hugging Face está condicionado a aprovação manual
+(verificado em 28 set. 2026). Cai também em C3 --- seus 6,74 bilhões de parâmetros exigiriam
+107,8 GB para o \textit{fine-tuning} completo, muito acima dos 16 GB disponíveis. Atende,
+porém, a C5: \citeonline{Sun2024} reportam \textit{perplexity} de 5,12 no WikiText-2 para o
+modelo denso. O GPT-2 XL
+cai isoladamente em C3: \citeonline{Rajbhandari2020} apontam que um modelo de 1,5 bilhão de
+parâmetros exige, no mínimo, 24 GB de memória para o treinamento em precisão mista com
+Adam, acima do limite disponível. O DistilGPT2 cai em C4, por ser obtido por destilação de
+conhecimento supervisionada pelo GPT-2 de 124M \cite{Sanh2019}.
+
+O OPT-125M e o Pythia-160M exigem exame mais detido, pois atendem a C1--C4 e C6. O
+OPT-125M atende também a C5: \citeonline{Frantar2023} reportam \textit{perplexity} de 27,66
+para o modelo denso no WikiText-2, em estudo de poda. Ambos, porém, caem em D4 em relação
+ao WikiText-2, pois incluem a Wikipédia no pré-treinamento: o OPT foi pré-treinado sobre
+um conjunto de subcorpora do The Pile que inclui a Wikipédia \cite{Zhang2022}, e o Pythia
+sobre o The Pile completo \cite{Biderman2023}, cujo componente Wikipedia (en) soma 6,38
+GiB \cite{Gao2020}. O GPT-2, ao contrário, teve os documentos da Wikipédia removidos de
+seu corpus de pré-treinamento \cite{Radford2019} (Seção~\ref{subsec:dataset_justificativa}).
+Nenhum dos dois modelos forma par admissível com os demais corpora candidatos
+(Tabela~\ref{tab:candidatos_dataset}): o WikiText-103 cai em D4 pelo mesmo motivo; o Penn
+Treebank e o OpenWebText caem em critérios que independem do modelo (D2 e D3,
+respectivamente); e The Pile cai em D4, por ser o corpus de pré-treinamento do Pythia e
+fornecer parte do pré-treinamento do OPT.
+
+Restam três
+candidatos que atendem a todos os critérios: as variantes \textit{small},
+\textit{medium} e \textit{large} do GPT-2, esta última com margem estreita em C3 --- dos
+12,4 GB estimados, restam cerca de 3,6 GB para as ativações. Aplica-se, então, a regra de
+desempate da Seção~\ref{sec:metodologia_modelo}: entre os candidatos que atendem a todos os
+critérios, adota-se o de menor número de parâmetros. O GPT-2 \textit{medium} e o
+\textit{large} têm, respectivamente, cerca de 2,9 e 6,2 vezes mais parâmetros que o
+\textit{small}; a diferença é relevante porque a campanha experimental deste trabalho
+registrou 195 execuções completas de avaliação --- 20 da poda por magnitude, 60 da poda
+estruturada, 48 do perfil de sensibilidade nas duas taxas-sonda, 60 da alocação por
+sensibilidade e 7 de \textit{fine-tuning} de recuperação ---, com resultados reunidos em
+\texttt{codigo/resultados/}.
+
+No ambiente adotado, uma época de \textit{fine-tuning} do GPT-2 \textit{small} sobre o
+conjunto de treino do WikiText-2 (4.743 blocos de 512 \textit{tokens}, isto é, 2.428.416
+\textit{tokens}) levou 274 s, cerca de 4,6 minutos, o que corresponde a aproximadamente 8,9
+mil \textit{tokens} por segundo; os sete \textit{fine-tunings} da campanha somaram cerca de
+31 minutos. Supondo custo proporcional ao número de parâmetros --- aproximação coerente com
+a contagem de FLOPs da Tabela~\ref{tab:gpt2_config}, em que 126,6 GFLOPs por janela de 512
+\textit{tokens} correspondem a cerca de 2 operações por parâmetro por \textit{token} ---, o
+mesmo conjunto de \textit{fine-tunings} levaria cerca de 1,5 hora com o \textit{medium} e
+3,2 horas com o \textit{large}; trata-se de estimativas, não de medições diretas. A escolha
+recai, portanto, sobre o GPT-2 \textit{small}.
 
 Cabe observar que, embora seja a menor variante da família GPT-2, o modelo é cerca de
 cinco vezes maior que a ResNet-50, arquitetura tradicionalmente usada em estudos de poda
@@ -281,6 +451,53 @@ parâmetros, a esparsidade sobre o total é sempre menor que a esparsidade sobre
 podável, e as duas grandezas são reportadas separadamente.
 
 \section{Métodos de Poda da Literatura}\label{sec:metodos_poda}
+
+A Seção~\ref{sec:metodologia_poda_sem} estabeleceu três critérios (P1 a P3) para a escolha
+das estratégias de poda sem otimização. A Tabela~\ref{tab:candidatos_poda} aplica esses
+critérios à poda por magnitude \cite{Han2015}, à poda estruturada por norma $L_1$
+\cite{Li2017} e a quatro alternativas da literatura.
+
+\begin{table}[htb]
+\centering
+\caption{Estratégias de poda candidatas e verificação dos critérios de seleção.}
+\label{tab:candidatos_poda}
+\footnotesize
+\begin{tabular}{l l l c c}
+\hline
+\textbf{Estratégia} & \textbf{Granularidade} & \textbf{Critério de importância} & \textbf{P1} & \textbf{P2} \\
+\hline
+Magnitude                  & fina   & $|w|$ de cada peso                          & \checkmark & \checkmark \\
+Norma $L_1$                & grossa & norma $L_1$ dos pesos da unidade            & \checkmark & \checkmark \\
+SparseGPT                  & fina   & reconstrução com dados de calibração        & $\times$   & \checkmark \\
+Wanda                      & fina   & $|w|$ $\times$ norma das ativações          & $\times$   & \checkmark \\
+\textit{Movement pruning}  & fina   & movimento dos pesos no \textit{fine-tuning} & $\times$   & $\times$   \\
+Cabeças por gradiente      & grossa & gradiente da perda em relação à máscara     & $\times$   & \checkmark \\
+\hline
+\end{tabular}
+\par\smallskip
+\begin{minipage}{0.92\textwidth}\centering P1: importância calculada apenas a partir dos
+pesos; P2: aplicação \textit{one-shot} (critérios definidos na
+Seção~\ref{sec:metodologia_poda_sem}). P3 refere-se ao conjunto de estratégias e é
+discutido no texto.\end{minipage}\par\smallskip
+\textit{Fonte: Elaboração própria, com base em \citeonline{Han2015}, \citeonline{Li2017},
+\citeonline{Frantar2023}, \citeonline{Sun2024}, \citeonline{Sanh2020} e
+\citeonline{Michel2019}.}
+\end{table}
+
+As quatro alternativas caem em P1, pois todas estimam a importância com base em dados. O
+SparseGPT e o Wanda, referências recentes da poda não estruturada de LLMs, utilizam 128
+sequências de calibração extraídas do corpus C4: o primeiro para reconstruir, com
+informação de segunda ordem, os pesos remanescentes de cada camada \cite{Frantar2023}; o
+segundo para ponderar a magnitude de cada peso pela norma da ativação de entrada
+correspondente \cite{Sun2024}. A importância das cabeças em \citeonline{Michel2019} é
+estimada pelo gradiente da perda sobre um conjunto de dados. A \textit{movement pruning}
+cai também em P2, pois a importância de cada peso é aprendida ao longo do
+\textit{fine-tuning} \cite{Sanh2020}. A exclusão dessas estratégias não decorre de
+desempenho inferior: elas já incorporam o tipo de informação que a análise de
+sensibilidade introduz, e sua combinação com a alocação por sensibilidade fica fora do
+escopo deste trabalho. Restam a poda por magnitude e a poda estruturada por norma $L_1$,
+que atendem a P1 e P2 e, juntas, atendem a P3: a primeira opera sobre pesos individuais e
+a segunda sobre unidades arquiteturais inteiras.
 
 \subsection{Método 1 --- Poda Não Estruturada por Magnitude}\label{subsec:metodo_magnitude}
 

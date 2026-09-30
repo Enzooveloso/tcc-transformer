@@ -4,15 +4,19 @@
 
 \chapter{Metodologia}\label{chap:metodologia}
 
-Este capítulo apresenta a metodologia adotada neste trabalho. Ela está organizada em cinco etapas: a seleção do modelo de referência, a implementação das estratégias de poda sem
-otimização, a implementação da estratégia de poda com otimização, o \textit{fine-tuning} de
-recuperação e a definição das métricas de avaliação\comentline{teve também o uso das métricas para avaliar o modelo}. \st{Para cada etapa, estabelecem-se os
-critérios que orientaram as decisões tomadas. As decisões concretas decorrentes desses
-critérios --- incluindo} o modelo selecionado, o \textit{dataset} empregado e as
-configurações de poda --- são descritas no Capítulo~\ref{chap:desenvolvimento}.
+Este capítulo apresenta a metodologia adotada neste trabalho. Ela está organizada em cinco
+etapas: (i) a seleção do modelo de referência (Seção~\ref{sec:metodologia_modelo}); (ii) a
+implementação das estratégias de poda sem otimização
+(Seção~\ref{sec:metodologia_poda_sem}); (iii) a implementação da estratégia de poda com
+otimização (Seção~\ref{sec:metodologia_poda_com}); (iv) o \textit{fine-tuning} de
+recuperação (Seção~\ref{sec:metodologia_finetuning}); e (v) a definição das métricas de
+avaliação, do modo como são obtidas para cada modelo avaliado e do corpus sobre o qual são
+medidas (Seção~\ref{sec:metodologia_metricas})\comentline{teve também o uso das métricas para avaliar o modelo}.
+O modelo selecionado, o \textit{dataset} empregado e as configurações de poda são descritos
+no Capítulo~\ref{chap:desenvolvimento}.
 
 % -------------------------------------------------------
-\section{Seleção e Implementação do Modelo de Referência}\label{sec:metodologia_modelo}
+\section{Seleção do Modelo de Referência}\label{sec:metodologia_modelo}
 % -------------------------------------------------------
 
 
@@ -25,24 +29,71 @@ métricas dos modelos podados são comparadas às métricas desse modelo origina
 Para a seleção do modelo de referência, foram adotados os seguintes critérios:
 
 \begin{itemize}
-    \item ser um LLM representativo, amplamente utilizado na literatura de compressão de modelos;
-    \item dispor de pesos pré-treinados publicamente disponíveis;
-    \item apresentar tamanho compatível com as restrições de \textit{hardware} disponível;
-    \item possuir ampla documentação em trabalhos de poda neural;
-    \item \modificado{contar com implementação acessível em \textit{frameworks} consolidados,
-          como PyTorch.}
+    \item \textbf{C1 --- Arquitetura:} ser um \textit{Transformer} composto apenas pelo
+          componente decodificador, treinado de forma autorregressiva para a predição do
+          próximo \textit{token} (Seção~\ref{subsec:llm_gpt2}). A representatividade é
+          definida pela classe arquitetural: a mesma de modelos generativos de pesos
+          abertos como OPT e Llama 2 \cite{Zhang2022,Touvron2023}, e a classe para a qual
+          a \textit{perplexity} é diretamente definida como métrica de desempenho
+          \cite{HuggingFacePerplexity}. Como indicador complementar de adoção, registra-se para cada
+          candidato o número de \textit{downloads} na plataforma Hugging Face
+          (Tabela~\ref{tab:candidatos_modelo}).
+    \item \textbf{C2 --- Pesos abertos:} dispor de pesos pré-treinados com \textit{download}
+          direto na plataforma que os hospeda, sem exigência de aprovação prévia de acesso,
+          sob licença que permita uso acadêmico. O pré-treinamento a partir do zero está
+          fora do alcance deste trabalho: exige corpora da ordem de dezenas de gigabytes de
+          texto --- o WebText, empregado no pré-treinamento da família GPT-2, reúne pouco
+          mais de 8 milhões de documentos e 40 GB de texto \cite{Radford2019} --- e tem
+          custo computacional e energético elevado \cite{Strubell2019}.
+    \item \textbf{C3 --- Viabilidade do \textit{fine-tuning}:} a memória exigida pelo
+          \textit{fine-tuning} completo do modelo deve caber na GPU disponível. Como
+          estimativa, o treinamento com o otimizador Adam em precisão mista exige, no
+          mínimo, 16 bytes por parâmetro apenas para pesos, gradientes e estados do
+          otimizador \cite{Rajbhandari2020}; as ativações somam-se a esse valor, de modo
+          que a estimativa constitui um limite inferior de memória necessária. No ambiente
+          adotado --- GPU NVIDIA Tesla T4, com 16 GB de memória \cite{NVIDIA2019T4},
+          disponibilizada pela plataforma Kaggle ---, o critério restringe os candidatos a
+          modelos de até cerca de 1 bilhão de parâmetros (16 GB $\div$ 16 bytes por parâmetro);
+          como a estimativa não inclui as ativações, o limite prático é inferior.
+    \item \textbf{C4 --- Modelo original:} não ser derivado de um processo prévio de
+          compressão --- destilação, poda ou quantização ---, de modo que a degradação
+          medida ao longo deste trabalho seja atribuível exclusivamente à poda aqui
+          aplicada.
+    \item \textbf{C5 --- Resultado de referência:} ter \textit{perplexity} no corpus de
+          avaliação adotado publicada em artigo científico --- pelos autores do modelo ou
+          em trabalho posterior ---, o que permite situar o modelo de referência
+          reproduzido em relação à literatura.
+    \item \textbf{C6 --- Implementação disponível:} possuir arquitetura implementada
+          nativamente na biblioteca \texttt{transformers} \cite{Wolf2020}, que opera sobre
+          a biblioteca PyTorch, dispensando a implementação própria da arquitetura.
 \end{itemize}
 
 \comentline{Sobre os critérios de escolha: refinar para deixar critérios mais objetivos, por exemplo, o que significa ''ser um LLM representativo''}
 
+Os critérios C1 a C4 e C6 dizem respeito apenas ao modelo. O critério C5, ao contrário,
+depende também do corpus de avaliação, cuja seleção segue critérios próprios
+(Seção~\ref{sec:metodologia_metricas}), dois dos quais --- D1 e D4 --- dependem, por sua
+vez, do modelo. Por essa razão, modelo e corpus são selecionados em conjunto: um par
+modelo--corpus é admissível quando o modelo atende a C1--C6 e o corpus atende a D1--D4
+em relação a esse modelo.
+
+Havendo mais de um candidato que atenda simultaneamente a todos os critérios, adota-se o
+de menor número de parâmetros: as varreduras experimentais deste trabalho exigem um grande
+número de avaliações completas do modelo, e o custo computacional de cada avaliação cresce
+com o tamanho do modelo. A aplicação desses critérios a um conjunto de modelos candidatos é
+apresentada no Capítulo~\ref{chap:desenvolvimento} (Tabela~\ref{tab:candidatos_modelo}).
+
 % AJUSTE: reunião 13/05 — Hugging Face como plataforma, não biblioteca
-\adicionadomarcelo{A implementação do modelo de referência utiliza a biblioteca PyTorch \cite{Paszke2019}.
-Como repositório de modelos pré-treinados, é empregada a plataforma Hugging Face, um
-ambiente colaborativo que disponibiliza ampla variedade de modelos de linguagem de grande
-escala publicamente acessíveis --- como, por exemplo, variantes do GPT-2.
-O modelo selecionado a partir dos critérios estabelecidos --- incluindo a versão específica
-obtida via Hugging Face --- é apresentado e detalhado no
-Capítulo~\ref{chap:desenvolvimento}.}
+A implementação do modelo de referência utiliza a biblioteca PyTorch \cite{Paszke2019}:
+biblioteca de código aberto para aprendizado profundo, com diferenciação automática e
+execução em GPU, recursos exigidos pelo \textit{fine-tuning}. Sobre ela opera a biblioteca
+\texttt{transformers} \cite{Wolf2020}, que implementa as arquiteturas dos modelos
+candidatos. Os pesos pré-treinados são obtidos na plataforma Hugging Face --- não uma
+biblioteca, mas um ambiente colaborativo de hospedagem e distribuição de modelos, que
+hospedava mais de 3,1 milhões de modelos em 28 set. 2026 ---, entre eles diversas famílias
+de modelos de linguagem, como GPT-2, OPT, Pythia, Llama e BERT. O modelo selecionado a partir dos critérios
+estabelecidos, e a versão específica obtida na plataforma, são apresentados no
+Capítulo~\ref{chap:desenvolvimento}.
 
 \comentline{Sobre a escolha do modelo: é importante listar outros candidatos, se possível adicionar uma tabela para mostrar em qual requisito os outros candidatos não atendem.}
 
@@ -60,32 +111,55 @@ representarem os dois extremos do espectro de granularidade da poda neural:
 \comentline{Por que a escolha dessas estratégias de poda, considerando que existem outras opções? Justificar por que poda por magnitude e poda de cabeças. Foi justificado logo a frente}
 
 \begin{itemize}
-    \item \textcolor{red}{poda não estruturada: poda por magnitude} poda baseada em magnitude dos pesos \cite{Han2015}, que remove parâmetros
-          individuais cujos valores absolutos são inferiores a um limiar; representa a
-          granularidade mais fina possível e gera modelos esparsos sem alteração da
-          estrutura física do modelo;
-    \item \textcolor{red}{poda estruturada: poda de cabeças} poda estruturada \cite{Li2017}, que elimina unidades arquiteturais inteiras
-          --- filtros convolucionais, no trabalho original; em uma arquitetura
-          \textit{Transformer}, cabeças de atenção ou neurônios da camada intermediária do
-          MLP --- reduzindo fisicamente as dimensões dos tensores e gerando modelos
-          computacionalmente mais enxutos.
+    \item \textbf{Poda não estruturada --- poda por magnitude:} remove parâmetros
+          individuais cujos valores absolutos são inferiores a um limiar \cite{Han2015};
+          representa a granularidade mais fina possível e gera modelos esparsos sem
+          alteração da estrutura física do modelo;
+    \item \textbf{Poda estruturada --- poda de cabeças de atenção e de neurônios do MLP:}
+          elimina unidades arquiteturais inteiras \cite{Li2017} --- filtros convolucionais,
+          no trabalho original; em uma arquitetura \textit{Transformer}, cabeças de atenção
+          e neurônios da camada intermediária do MLP, isoladamente ou em conjunto ---,
+          reduzindo fisicamente as dimensões dos tensores e gerando modelos de menor custo
+          computacional.
 \end{itemize}}
 
 % AJUSTE: reunião 13/05 — reforçar que estratégias são consolidadas na literatura
-\adicionadomarcelo{Ambas as estratégias são amplamente consolidadas na literatura de compressão de modelos
-neurais, com mais de uma década de aplicação e extensa validação experimental. Sua inclusão
-neste trabalho não constitui contribuição metodológica original; pelo contrário, sua
-aplicação fornece uma base de comparação estabelecida, sobre a qual é avaliada a
-estratégia otimizada proposta na
-Seção~\ref{sec:metodologia_poda_com}.}
+Ambas são estratégias de referência na literatura de compressão: a poda por magnitude foi
+proposta em 2015 \cite{Han2015} e a poda estruturada por norma $L_1$, em 2017
+\cite{Li2017}. Na meta-análise de \citeonline{Blalock2020}, que agregou resultados de 81
+trabalhos de poda, um dos resultados consistentes da área é que a poda de parâmetros pela
+magnitude comprime substancialmente as redes sem reduzir a acurácia. Sua inclusão neste
+trabalho não constitui contribuição metodológica original; pelo contrário, sua aplicação
+fornece uma base de comparação estabelecida, sobre a qual é avaliada a estratégia otimizada
+proposta na Seção~\ref{sec:metodologia_poda_com}.
 
-Os critérios que orientaram a escolha das estratégias a implementar foram:
+% AJUSTE: revisão 24/09 — critérios vagos (representatividade, complementaridade,
+% viabilidade) substituídos por critérios verificáveis, aplicados às alternativas no Cap. 5
+A escolha das duas estratégias, entre as alternativas disponíveis na literatura, seguiu
+três critérios:
 
 \begin{itemize}
-    \item representatividade na literatura de compressão de modelos;
-    \item complementaridade entre granularidades distintas de remoção;
-    \item viabilidade de implementação com as ferramentas disponíveis.
+    \item \textbf{P1 --- Importância calculada apenas a partir dos pesos:} o critério de
+          importância não utiliza dados de calibração nem gradientes. Neste trabalho, a
+          informação dependente de dados entra na decisão de poda exclusivamente pela
+          análise de sensibilidade por camada (Seção~\ref{sec:metodologia_poda_com}), cuja
+          contribuição se pretende medir; um critério-base que já utilizasse dados
+          misturaria as duas fontes de informação e impediria atribuir à alocação por
+          sensibilidade a diferença observada.
+    \item \textbf{P2 --- Aplicação \textit{one-shot}:} a poda é aplicada ao modelo
+          pré-treinado sem treinamento durante o processo, de modo que o efeito da remoção
+          seja medido separadamente do efeito do \textit{fine-tuning} de recuperação
+          (Seção~\ref{sec:metodologia_finetuning}).
+    \item \textbf{P3 --- Cobertura das granularidades:} o conjunto de estratégias inclui
+          uma de granularidade fina (parâmetros individuais) e uma de granularidade grossa
+          (unidades arquiteturais inteiras).
 \end{itemize}
+
+A aplicação desses critérios a alternativas recentes da literatura --- entre elas o
+SparseGPT \cite{Frantar2023}, o Wanda \cite{Sun2024}, a \textit{movement pruning}
+\cite{Sanh2020} e a poda de cabeças de atenção por importância estimada com gradientes
+\cite{Michel2019} --- é apresentada no Capítulo~\ref{chap:desenvolvimento}
+(Tabela~\ref{tab:candidatos_poda}).
 
 
 Em ambas as estratégias, são aplicadas funções de avaliação de importância de parâmetros,
@@ -220,9 +294,35 @@ acurácia em uma tarefa de classificação ---, decorre de ela ser uma métrica 
 pode ser medida diretamente sobre o corpus de avaliação, sem exigir o \textit{fine-tuning}
 do modelo em uma tarefa específica, procedimento que tornaria a comparação entre
 configurações dependente de um segundo treinamento. O procedimento de cálculo adotado é
-descrito no Capítulo~\ref{chap:desenvolvimento}.
+descrito no Capítulo~\ref{chap:desenvolvimento}.}
 
-\subsection*{Custo computacional}
+A \textit{perplexity} é medida sobre um corpus de avaliação, selecionado pelos seguintes
+critérios:
+
+\begin{itemize}
+    \item \textbf{D1 --- Resultado de referência:} \textit{perplexity} do modelo de
+          referência no corpus publicada em artigo científico; é a exigência do critério
+          C5 vista do lado do corpus.
+    \item \textbf{D2 --- Texto sem pré-processamento destrutivo:} o corpus preserva caixa,
+          pontuação, números e palavras raras, e mantém a continuidade dos documentos;
+          modelos com tokenização por subpalavras são pré-treinados sobre texto bruto e
+          seriam avaliados fora de sua distribuição em texto normalizado.
+    \item \textbf{D3 --- Divisão oficial:} partições oficiais de treino, validação e teste,
+          de modo que o \textit{fine-tuning} use o treino e a avaliação use o teste, sem
+          particionamento arbitrário.
+    \item \textbf{D4 --- Ausência de sobreposição com o pré-treinamento:} o corpus não
+          integra nem reproduz os dados de pré-treinamento do modelo; do contrário, a
+          \textit{perplexity} mediria em parte memorização.
+\end{itemize}
+
+Os critérios D2 e D3 dizem respeito apenas ao corpus; D1 e D4 dependem do modelo, e por
+isso modelo e corpus são selecionados em conjunto (Seção~\ref{sec:metodologia_modelo}).
+Havendo mais de um corpus que atenda a todos os critérios, adota-se o de menor conjunto de
+treino, pois é ele que determina o custo do \textit{fine-tuning}. A aplicação desses
+critérios a um conjunto de corpora candidatos é apresentada no
+Capítulo~\ref{chap:desenvolvimento} (Tabela~\ref{tab:candidatos_dataset}).
+
+\adicionadomarcelo{\subsection*{Custo computacional}
 
 O custo computacional é avaliado por meio de quatro indicadores complementares:
 
