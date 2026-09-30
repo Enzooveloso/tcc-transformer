@@ -156,6 +156,7 @@
 \usepackage{soul} 
 \newcommand{\alterar}[2][]{\todo[linecolor=black,backgroundcolor=orange!25,bordercolor=red,#1]{\textbf{Alterar}: #2}}
 \newcommand{\adicionadomarcelo}[1]{#1}
+\newcommand{\adicionarmarcelo}[1]{\textcolor{green}{[#1]}}
 \newcommand{\removido}[1]{#1}
 
 \newcommand{\mantido}[1]{#1}
@@ -165,6 +166,7 @@
 
 \newcommand{\comentmargin}[2][]{\todo[linecolor=blue,backgroundcolor=green!25,bordercolor=green,#1]{#2}}
 \newcommand{\comentline}[2][]{\todo[inline, linecolor=yellow,backgroundcolor=green!25,bordercolor=green,#1]{\textbf{Comentário}: #2}}
+\newcommand{\comentariolinha}[1]{\textcolor{red}{[#1]}}
 
 \newenvironment{BlocoRevisadoSemAlteracao}
 {
