@@ -463,26 +463,29 @@ critérios à poda por magnitude \cite{Han2015}, à poda estruturada por norma $
 \caption{Estratégias de poda candidatas e verificação dos critérios de seleção.}
 \label{tab:candidatos_poda}
 \footnotesize
-\begin{tabular}{l l l c c}
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{l l l c r c c}
 \hline
-\textbf{Estratégia} & \textbf{Granularidade} & \textbf{Critério de importância} & \textbf{P1} & \textbf{P2} \\
+\textbf{Estratégia} & \textbf{Granularidade} & \textbf{Critério de importância} & \textbf{Ano} & \textbf{Citações} & \textbf{P1} & \textbf{P2} \\
 \hline
-Magnitude                  & fina   & $|w|$ de cada peso                          & \checkmark & \checkmark \\
-Norma $L_1$                & grossa & norma $L_1$ dos pesos da unidade            & \checkmark & \checkmark \\
-SparseGPT                  & fina   & reconstrução com dados de calibração        & $\times$   & \checkmark \\
-Wanda                      & fina   & $|w|$ $\times$ norma das ativações          & $\times$   & \checkmark \\
-\textit{Movement pruning}  & fina   & movimento dos pesos no \textit{fine-tuning} & $\times$   & $\times$   \\
-Cabeças por gradiente      & grossa & gradiente da perda em relação à máscara     & $\times$   & \checkmark \\
+Magnitude                  & fina   & $|w|$ de cada peso                          & 2015 & 8.047 & \checkmark & \checkmark \\
+Norma $L_1$                & grossa & norma $L_1$ dos pesos da unidade            & 2017 & 4.214 & \checkmark & \checkmark \\
+SparseGPT                  & fina   & reconstrução com dados de calibração        & 2023 & 1.552 & $\times$   & \checkmark \\
+Wanda                      & fina   & $|w|$ $\times$ norma das ativações          & 2024 &   999 & $\times$   & \checkmark \\
+\textit{Movement pruning}  & fina   & movimento dos pesos no \textit{fine-tuning} & 2020 &   654 & $\times$   & $\times$   \\
+Cabeças por gradiente      & grossa & gradiente da perda em relação à máscara     & 2019 & 1.513 & $\times$   & \checkmark \\
 \hline
 \end{tabular}
 \par\smallskip
 \begin{minipage}{0.92\textwidth}\centering P1: importância calculada apenas a partir dos
 pesos; P2: aplicação \textit{one-shot} (critérios definidos na
 Seção~\ref{sec:metodologia_poda_sem}). P3 refere-se ao conjunto de estratégias e é
-discutido no texto.\end{minipage}\par\smallskip
+discutido no texto. Ano: ano de publicação do artigo que propôs a estratégia. Citações:
+citações desse artigo na base Semantic Scholar, indicador complementar de
+representatividade, que não integra os critérios.\end{minipage}\par\smallskip
 \textit{Fonte: Elaboração própria, com base em \citeonline{Han2015}, \citeonline{Li2017},
 \citeonline{Frantar2023}, \citeonline{Sun2024}, \citeonline{Sanh2020} e
-\citeonline{Michel2019}.}
+\citeonline{Michel2019}, e com dados da base Semantic Scholar (acesso em 3 out. 2026).}
 \end{table}
 
 As quatro alternativas caem em P1, pois todas estimam a importância com base em dados. O
@@ -499,6 +502,15 @@ sensibilidade introduz, e sua combinação com a alocação por sensibilidade fi
 escopo deste trabalho. Restam a poda por magnitude e a poda estruturada por norma $L_1$,
 que atendem a P1 e P2 e, juntas, atendem a P3: a primeira opera sobre pesos individuais e
 a segunda sobre unidades arquiteturais inteiras.
+
+% AJUSTE: revisão 30/09 — representatividade medida por citações, a pedido do orientador.
+Quanto ao indicador complementar de representatividade, os artigos que propuseram as duas
+estratégias adotadas são os mais citados entre as seis candidatas: 8.047 citações para
+\citeonline{Han2015} e 4.214 para \citeonline{Li2017}, contra 1.552 do SparseGPT, o
+terceiro (Semantic Scholar, acesso em 3 out. 2026). Como as citações se acumulam com o
+tempo, a diferença reflete em parte a antiguidade dos trabalhos --- as quatro alternativas
+foram publicadas entre 2019 e 2024. O dado reforça a condição de referência das duas
+estratégias na literatura de poda, sem substituir os critérios de seleção.
 
 \subsection{Método 1 --- Poda Não Estruturada por Magnitude}\label{subsec:metodo_magnitude}
 

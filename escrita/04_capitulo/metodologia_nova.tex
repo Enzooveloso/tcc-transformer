@@ -11,7 +11,9 @@ implementação das estratégias de poda sem otimização
 otimização (Seção~\ref{sec:metodologia_poda_com}); (iv) o \textit{fine-tuning} de
 recuperação (Seção~\ref{sec:metodologia_finetuning}); e (v) a definição das métricas de
 avaliação, do modo como são obtidas para cada modelo avaliado e do corpus sobre o qual são
-medidas (Seção~\ref{sec:metodologia_metricas})\comentline{teve também o uso das métricas para avaliar o modelo}.
+medidas (Seção~\ref{sec:metodologia_metricas}).
+% AJUSTE: revisão 24/09 — comentário "teve também o uso das métricas para avaliar o
+% modelo" atendido pelo item (v) acima; marcação removida em 03/10.
 O modelo selecionado, o \textit{dataset} empregado e as configurações de poda são descritos
 no Capítulo~\ref{chap:desenvolvimento}.
 
@@ -68,7 +70,9 @@ Para a seleção do modelo de referência, foram adotados os seguintes critério
           a biblioteca PyTorch, dispensando a implementação própria da arquitetura.
 \end{itemize}
 
-\comentline{Sobre os critérios de escolha: refinar para deixar critérios mais objetivos, por exemplo, o que significa ''ser um LLM representativo''}
+% AJUSTE: revisão 24/09 — comentário "refinar para deixar critérios mais objetivos
+% (o que significa ser um LLM representativo)" atendido pelos critérios C1--C6;
+% marcação removida em 03/10.
 
 Os critérios C1 a C4 e C6 dizem respeito apenas ao modelo. O critério C5, ao contrário,
 depende também do corpus de avaliação, cuja seleção segue critérios próprios
@@ -95,7 +99,9 @@ de modelos de linguagem, como GPT-2, OPT, Pythia, Llama e BERT. O modelo selecio
 estabelecidos, e a versão específica obtida na plataforma, são apresentados no
 Capítulo~\ref{chap:desenvolvimento}.
 
-\comentline{Sobre a escolha do modelo: é importante listar outros candidatos, se possível adicionar uma tabela para mostrar em qual requisito os outros candidatos não atendem.}
+% AJUSTE: revisão 24/09 — comentário "listar outros candidatos, com tabela de
+% requisitos" atendido pela Tabela~tab:candidatos_modelo (Desenvolvimento);
+% marcação removida em 03/10.
 
 % -------------------------------------------------------
 \section{Implementação das Estratégias de Poda sem Otimização}\label{sec:metodologia_poda_sem}
@@ -108,7 +114,9 @@ modelo pré-treinado, eliminando pesos ou estruturas avaliadas como menos releva
 desempenho preditivo. Serão avaliadas duas estratégias de poda clássicas, escolhidas por
 representarem os dois extremos do espectro de granularidade da poda neural:
 
-\comentline{Por que a escolha dessas estratégias de poda, considerando que existem outras opções? Justificar por que poda por magnitude e poda de cabeças. Foi justificado logo a frente}
+% AJUSTE: revisão 24/09 — comentário "por que essas estratégias, considerando que
+% existem outras opções?" atendido pelos critérios P1--P3 e pela
+% Tabela~tab:candidatos_poda (Desenvolvimento); marcação removida em 03/10.
 
 \begin{itemize}
     \item \textbf{Poda não estruturada --- poda por magnitude:} remove parâmetros
@@ -155,16 +163,38 @@ três critérios:
           seja medido separadamente do efeito do \textit{fine-tuning} de recuperação
           (Seção~\ref{sec:metodologia_finetuning}).
     \item \textbf{P3 --- Cobertura das granularidades:} o conjunto de estratégias inclui
-          uma de granularidade fina (parâmetros individuais) e uma de granularidade grossa
-          (unidades arquiteturais inteiras).
+          uma de granularidade fina, que remove parâmetros individuais, e uma de
+          granularidade grossa, que remove unidades arquiteturais inteiras.
 \end{itemize}
 
-% MERGE 03/10: os três comentários abaixo (revisão de 30/09, commit b6d25a5) foram feitos
-% sobre os critérios antigos (representatividade, complementaridade, viabilidade), já
-% substituídos por P1--P3 no commit 1777e25. Mantidos até a confirmação do orientador.
-\comentline{[Sobre o antigo critério ``representatividade na literatura''] ficou genérico, adicionar um mecanismo mais concreto de definição de representatividade (importância) das estratégias.  Por exemplo, maior número de citação, ou outra avaliação de importância}
-\comentline{[Sobre o antigo critério ``complementaridade entre granularidades''] explicar melhor como as estratégias se completam. Quais características que se completam.}
-\comentline{[Sobre o antigo critério ``viabilidade de implementação''] deixar mais claro sobre a viabilidade. Pode citar exemplos de modelos que seriam inviáveis}
+% AJUSTE: revisão 30/09 — três comentários do orientador sobre os critérios antigos
+% (representatividade, complementaridade, viabilidade), já substituídos por P1--P3:
+% (i) complementaridade: P3 ganha o parágrafo abaixo, que diz o que cada granularidade
+% oferece e por que as duas juntas importam; (ii) representatividade: passa a ser medida
+% pelo número de citações, como indicador complementar (mesmo papel dos downloads em C1);
+% (iii) viabilidade: deixou de ser critério porque não distinguia as candidatas; a
+% restrição de tempo que limita o trabalho a duas estratégias consta da
+% Tabela~tab:decisoes_metodologicas (Desenvolvimento).
+O critério P3 decorre de as duas granularidades oferecerem vantagens opostas
+(Seção~\ref{sec:pruning}, Figura~\ref{fig:nao_estruturada_vs_estruturada}). A poda de
+granularidade fina alcança, em geral, taxas de compressão elevadas com perda reduzida de
+desempenho preditivo \cite{Blalock2020}; os pesos removidos, porém, são apenas anulados:
+as matrizes conservam suas dimensões, o \textit{hardware} convencional continua a executar
+as multiplicações por zero, e a redução do número de parâmetros não se converte em redução
+de tempo nem de energia. A poda de granularidade grossa produz matrizes menores e densas,
+o que reduz de fato o custo de inferência em \textit{hardware} convencional \cite{Li2017},
+ao preço de uma perda potencialmente maior de desempenho preditivo para uma mesma taxa de
+compressão \cite{Blalock2020}. Uma estratégia preserva melhor o desempenho preditivo; a
+outra converte a compressão em economia efetiva de tempo e de energia. Avaliá-las sob as
+mesmas condições permite medir esse compromisso, que nenhuma das duas revelaria
+isoladamente e que constitui uma das perguntas do trabalho
+(Seção~\ref{sec:visao_geral}).
+
+Como indicador complementar de representatividade, registra-se para cada estratégia
+candidata o número de citações do artigo que a propôs, na base Semantic Scholar. O
+indicador não integra os critérios de seleção: como as citações se acumulam ao longo do
+tempo, ele favorece trabalhos mais antigos e não distingue a relevância de propostas
+recentes.
 
 A aplicação desses critérios a alternativas recentes da literatura --- entre elas o
 SparseGPT \cite{Frantar2023}, o Wanda \cite{Sun2024}, a \textit{movement pruning}
