@@ -4,29 +4,57 @@
 
 \chapter{Metodologia}\label{chap:metodologia}
 
-Este capítulo apresenta a metodologia adotada neste trabalho. Ela está organizada em cinco
-etapas: (i) a seleção do modelo de referência (Seção~\ref{sec:metodologia_modelo}); (ii) a
-implementação das estratégias de poda sem otimização
-(Seção~\ref{sec:metodologia_poda_sem}); (iii) a implementação da estratégia de poda com
-otimização (Seção~\ref{sec:metodologia_poda_com}); (iv) o \textit{fine-tuning} de
-recuperação (Seção~\ref{sec:metodologia_finetuning}); e (v) a definição das métricas de
-avaliação, do modo como são obtidas para cada modelo avaliado e da base de dados sobre a qual são
-medidas (Seção~\ref{sec:metodologia_metricas}).
+% AJUSTE: revisão 30/09 — o orientador propôs organizar Metodologia e Desenvolvimento nas
+% mesmas etapas numeradas, a Metodologia genérica e o Desenvolvimento concreto. As cinco
+% etapas anteriores passam a quatro: a base de dados e as métricas, antes uma quinta
+% etapa, integram a Etapa 1, onde são aplicadas pela primeira vez.
+Este capítulo apresenta a metodologia adotada neste trabalho, organizada em quatro etapas
+sequenciais:
+
+\begin{itemize}
+    \item \textbf{Etapa 1 --- Modelo de Referência} (Seção~\ref{sec:metodologia_modelo}):
+          seleção do modelo de referência e da base de dados sobre a qual ele é avaliado,
+          e definição das métricas registradas para esse modelo e para todos os modelos
+          podados;
+    \item \textbf{Etapa 2 --- Poda sem Otimização} (Seção~\ref{sec:metodologia_poda_sem}):
+          aplicação de estratégias clássicas de poda ao modelo de referência;
+    \item \textbf{Etapa 3 --- Poda com Otimização} (Seção~\ref{sec:metodologia_poda_com}):
+          aplicação das mesmas estratégias combinadas a uma técnica de otimização, que
+          redistribui a poda entre as camadas do modelo;
+    \item \textbf{Etapa 4 --- \textit{Fine-tuning} de Recuperação}
+          (Seção~\ref{sec:metodologia_finetuning}): retreinamento dos modelos podados, para
+          medir quanto da degradação causada pela poda pode ser recuperada.
+\end{itemize}
+
+Cada etapa é descrita aqui de forma genérica: o que nela se faz e os critérios que orientam
+suas decisões. As decisões concretas --- o modelo e a base de dados selecionados, as
+configurações de poda e os parâmetros do retreinamento --- são apresentadas no
+Capítulo~\ref{chap:desenvolvimento}, organizado nas mesmas quatro etapas, na mesma ordem.
 % AJUSTE: revisão 24/09 — comentário "teve também o uso das métricas para avaliar o
-% modelo" atendido pelo item (v) acima; marcação removida em 03/10.
-O modelo selecionado, a base de dados empregada e as configurações de poda são descritos
-no Capítulo~\ref{chap:desenvolvimento}.
+% modelo" atendido; desde 03/10 as métricas integram a Etapa 1.
 
 % -------------------------------------------------------
-\section{Seleção do Modelo de Referência}\label{sec:metodologia_modelo}
+% AJUSTE: revisão 30/09 — a seção vira a Etapa 1 e reúne as três definições de que a
+% etapa depende: modelo, base de dados (antes na seção de métricas) e métricas (antes a
+% quinta etapa). Abertura segundo o esboço do orientador.
+\section{Etapa 1 --- Modelo de Referência}\label{sec:metodologia_modelo}
 % -------------------------------------------------------
 
+Na primeira etapa, seleciona-se o modelo de referência (\textit{baseline}): a versão
+original de um modelo de linguagem de grande escala (\textit{Large Language Model} ---
+LLM), antes de qualquer processo de poda. O modelo é executado sem nenhuma modificação e
+avaliado sobre uma base de dados, registrando-se métricas de desempenho preditivo, de custo
+computacional e de consumo de energia. Os valores obtidos constituem o referencial de
+comparação de todo o trabalho: as métricas de cada modelo podado nas etapas seguintes são
+comparadas às desse modelo original, o que permite mensurar a perda de desempenho e o
+ganho de eficiência introduzidos pela compressão.
 
+A etapa depende, portanto, de três definições, apresentadas a seguir: o modelo
+(Seção~\ref{subsec:metodologia_selecao_modelo}), a base de dados sobre a qual ele é
+avaliado (Seção~\ref{subsec:metodologia_base}) e as métricas registradas
+(Seção~\ref{sec:metodologia_metricas}).
 
-O modelo de referência (\textit{baseline}) corresponde à versão original do modelo de linguagem
-de grande escala (\textit{Large Language Model} --- LLM) antes de qualquer processo de poda.
-Ele serve como padrão para mensurar a perda de desempenho introduzida pela compressão: todas as
-métricas dos modelos podados são comparadas às métricas desse modelo original.
+\subsection{Seleção do Modelo}\label{subsec:metodologia_selecao_modelo}
 
 Para a seleção do modelo de referência, foram adotados os seguintes critérios:
 
@@ -76,11 +104,10 @@ Para a seleção do modelo de referência, foram adotados os seguintes critério
 
 Os critérios C1 a C4 e C6 dizem respeito apenas ao modelo. O critério C5, ao contrário,
 depende também da base de dados de avaliação, cuja seleção segue critérios próprios
-(Seção~\ref{sec:metodologia_metricas}), dois dos quais --- D1 e D4 --- dependem, por sua
+(Seção~\ref{subsec:metodologia_base}), dois dos quais --- D1 e D4 --- dependem, por sua
 vez, do modelo. Por essa razão, modelo e base de dados são selecionados em conjunto: um
 par formado por modelo e base de dados é admissível quando o modelo atende a C1--C6 e a
-base de dados atende a D1--D4
-em relação a esse modelo.
+base de dados atende a D1--D4 em relação a esse modelo.
 
 Havendo mais de um candidato que atenda simultaneamente a todos os critérios, adota-se o
 de menor número de parâmetros: as varreduras experimentais deste trabalho exigem um grande
@@ -104,10 +131,139 @@ Capítulo~\ref{chap:desenvolvimento}.
 % requisitos" atendido pela Tabela~tab:candidatos_modelo (Desenvolvimento);
 % marcação removida em 03/10.
 
+% AJUSTE: revisão 30/09 — critérios da base de dados saem da seção de métricas e vêm
+% para a Etapa 1, ao lado dos critérios do modelo, com os quais são aplicados em conjunto.
+\subsection{Seleção da Base de Dados}\label{subsec:metodologia_base}
+
+O modelo de referência e todos os modelos podados nas etapas seguintes são avaliados sobre
+uma mesma base de dados --- a coleção de textos sobre a qual se mede o desempenho dos
+modelos ---, selecionada pelos seguintes critérios:
+
+\begin{itemize}
+    \item \textbf{D1 --- Resultado de referência:} \textit{perplexity} do modelo de
+          referência na base de dados publicada em artigo científico; é a exigência do
+          critério C5 vista do lado da base de dados.
+    \item \textbf{D2 --- Texto sem pré-processamento destrutivo:} a base de dados preserva caixa,
+          pontuação, números e palavras raras, e mantém a continuidade dos documentos;
+          modelos com tokenização por subpalavras são pré-treinados sobre texto bruto e
+          seriam avaliados fora de sua distribuição em texto normalizado.
+    \item \textbf{D3 --- Divisão oficial:} partições oficiais de treino, validação e teste,
+          de modo que o \textit{fine-tuning} use o treino e a avaliação use o teste, sem
+          particionamento arbitrário.
+    \item \textbf{D4 --- Ausência de sobreposição com o pré-treinamento:} a base de dados não
+          integra nem reproduz os dados de pré-treinamento do modelo; do contrário, a
+          \textit{perplexity} mediria em parte memorização.
+\end{itemize}
+
+Os critérios D2 e D3 dizem respeito apenas à base de dados; D1 e D4 dependem do modelo, e
+por isso modelo e base de dados são selecionados em conjunto (Seção~\ref{subsec:metodologia_selecao_modelo}).
+Havendo mais de uma base de dados que atenda a todos os critérios, adota-se a de menor conjunto de
+treino, pois é ele que determina o custo do \textit{fine-tuning}. A aplicação desses
+critérios a um conjunto de bases de dados candidatas é apresentada no
+Capítulo~\ref{chap:desenvolvimento} (Tabela~\ref{tab:candidatos_dataset}).
+
+% AJUSTE: reunião 13/05 — reescrita completa da Seção 3.4 (métricas explicadas em detalhe)
+% AJUSTE: revisão 30/09 — deixa de ser a quinta etapa e passa a integrar a Etapa 1.
+\subsection{Métricas de Avaliação}\label{sec:metodologia_metricas}
+
+\adicionadomarcelo{As métricas de avaliação são organizadas em três dimensões: desempenho preditivo, custo
+computacional e impacto ambiental. Elas são registradas pelo mesmo procedimento, e sobre a
+mesma base de dados, para o modelo de referência e para cada modelo podado nas Etapas 2 a
+4. Para cada métrica, descreve-se o que ela representa e
+como é obtida operacionalmente.
+
+\subsubsection*{Desempenho preditivo}
+
+Como o modelo de referência é um modelo de linguagem autorregressivo, a métrica de
+desempenho preditivo adotada é a \textit{perplexity}, padrão para essa classe de modelos.
+Ela quantifica o grau de ``surpresa'' do modelo diante de cada \textit{token} do conjunto
+de avaliação, constituindo uma medida da qualidade da modelagem probabilística da
+linguagem \cite{Goodfellow2016}. Valores mais baixos de \textit{perplexity} indicam melhor
+capacidade preditiva.
+
+A adoção da \textit{perplexity}, em lugar de métricas de tarefas descendentes --- como a
+acurácia em uma tarefa de classificação ---, decorre de ela ser uma métrica intrínseca:
+pode ser medida diretamente sobre a base de dados de avaliação, sem exigir o \textit{fine-tuning}
+do modelo em uma tarefa específica, procedimento que tornaria a comparação entre
+configurações dependente de um segundo treinamento. O procedimento de cálculo adotado é
+descrito no Capítulo~\ref{chap:desenvolvimento}.}
+
+\adicionadomarcelo{\subsubsection*{Custo computacional}
+
+O custo computacional é avaliado por meio de quatro indicadores complementares:
+
+\begin{itemize}
+    \item \textbf{Número de parâmetros remanescentes:} contagem direta dos tensores de pesos
+          não-zerados (no caso de poda não estruturada) ou existentes (no caso de poda
+          estruturada) no modelo após a aplicação da técnica;
+
+    \item \textbf{Operações de ponto flutuante (FLOPs):} contagem das operações matemáticas
+          necessárias para uma inferência completa, obtida por análise estática do grafo
+          computacional do modelo. Bibliotecas específicas --- como \texttt{thop}, em
+          ambiente PyTorch --- percorrem cada camada do modelo e acumulam as operações
+          correspondentes. A automação, porém, é parcial: a contagem cobre apenas os tipos
+          de camada previstos no catálogo da ferramenta, de modo que camadas fora dele
+          exigem o registro de regras de contagem próprias, sob pena de serem silenciosamente
+          ignoradas. O tratamento efetivamente necessário no modelo adotado, bem como as
+          omissões remanescentes, são detalhados no Capítulo~\ref{chap:desenvolvimento};
+
+    \item \textbf{Tempo de inferência:} medido empiricamente, registrando o tempo decorrido
+          durante o processamento de uma entrada representativa em condições controladas de
+          \textit{hardware}. Múltiplas medições são agregadas por meio de média e
+          desvio-padrão para mitigar a variância natural de execução;
+
+    \item \textbf{Tamanho do modelo:} avaliado em duas dimensões --- espaço ocupado em disco
+          após serialização do estado do modelo e consumo de memória durante a inferência,
+          este último registrado por ferramentas de \textit{profiling} do PyTorch.
+\end{itemize}
+
+\subsubsection*{Impacto ambiental}
+
+O impacto ambiental é mensurado por meio de dois indicadores:
+
+\begin{itemize}
+    \item \textbf{Consumo energético:} estimado por meio de ferramentas de monitoramento do
+          uso de \textit{hardware} (CPU e GPU) durante a execução dos experimentos. A
+          biblioteca CodeCarbon \cite{CodeCarbon2023} integra leituras periódicas de consumo
+          elétrico dos componentes, registrando a energia total consumida (em kWh) durante
+          o intervalo de inferência;
+
+    \item \textbf{Emissões equivalentes de CO\textsubscript{2}:} calculadas a partir do
+          consumo energético registrado, multiplicado por um fator de intensidade carbônica
+          da matriz energética da região onde os experimentos são executados. A biblioteca
+          CodeCarbon mantém base desses fatores e realiza essa conversão automaticamente.
+          Cabe uma ressalva sobre o alcance desse indicador: como o fator de intensidade
+          carbônica depende da localidade em que o código executa, ele não é controlado pelo
+          experimento e pode variar entre execuções. As emissões devem, por isso, ser lidas
+          como aproximações de ordem de grandeza, e a comparação entre configurações
+          apoia-se no consumo energético, não nas emissões dele derivadas.
+\end{itemize}
+
+% AJUSTE: revisão 30/09 — esboço do orientador (Etapas 1 e 2 da Metodologia e do
+% Desenvolvimento) incorporado às aberturas das etapas nos dois capítulos; o \comentline
+% com o esboço foi removido em 03/10 (texto original no commit b6d25a5).
+
+
+
+
+
+
+% Todas as métricas são calculadas tanto para o modelo de referência quanto para cada
+% configuração de modelo podado, de modo que os resultados expressem ganhos ou perdas
+% proporcionais à compressão introduzida, conforme detalhado a seguir.
+}
+
 % -------------------------------------------------------
-\section{Implementação das Estratégias de Poda sem Otimização}\label{sec:metodologia_poda_sem}
+\section{Etapa 2 --- Poda sem Otimização}\label{sec:metodologia_poda_sem}
 % -------------------------------------------------------
 
+% AJUSTE: revisão 30/09 — abertura da Etapa 2 segundo o esboço do orientador.
+Na segunda etapa, aplicam-se ao modelo de referência estratégias clássicas de poda, sem
+nenhuma técnica de otimização. Cada estratégia, em cada taxa de poda avaliada, é aplicada
+de forma independente e sempre a partir do modelo de referência original, nunca de um
+modelo já podado, de modo que o resultado de uma configuração não dependa das anteriores.
+Os modelos podados são avaliados pelas mesmas métricas e sobre a mesma base de dados da
+Etapa 1 (Seção~\ref{sec:metodologia_modelo}).
 
 % AJUSTE: reunião 13/05 — duas estratégias (magnitude + estruturada), "avaliadas" em vez de "consideradas"
 \adicionadomarcelo{As estratégias de poda sem otimização têm por objetivo reduzir o número de parâmetros de um
@@ -224,7 +380,7 @@ implementação, são apresentados no Capítulo~\ref{chap:desenvolvimento}.
 % (Knowledge Distillation) são nomeados; (iii) "orçamento de poda" e "taxa-sonda" são
 % definidos na primeira ocorrência; (iv) a métrica do perfil (perplexity) é explicitada;
 % (v) "orienta" e "a hipótese que ela investiga" saem do texto.
-\section{Implementação da Estratégia de Poda com Otimização}\label{sec:metodologia_poda_com}
+\section{Etapa 3 --- Poda com Otimização}\label{sec:metodologia_poda_com}
 % -------------------------------------------------------
 
 Esta é a etapa central do trabalho. O objetivo é investigar se a combinação de uma
@@ -263,7 +419,7 @@ otimização em uma única variável: a distribuição do orçamento de poda ent
 Mantidos o modelo, o critério de importância, o orçamento e a ausência de treinamento,
 qualquer diferença de desempenho entre os dois pode ser atribuída a essa distribuição.
 
-\subsection*{Alternativas de estratégias de otimização consideradas e descartadas}
+\subsection{Alternativas de Estratégias de Otimização Consideradas e Descartadas}
 
 Quatro alternativas foram consideradas e descartadas, cada uma por deixar de atender a pelo
 menos um dos critérios. Elas não integram o escopo experimental, mas delimitam o alcance
@@ -295,7 +451,7 @@ das conclusões e constituem desdobramentos para trabalhos futuros:
           separado dele.
 \end{itemize}
 
-\subsection*{Técnica adotada: análise de sensibilidade por camada}
+\subsection{Técnica Adotada: Análise de Sensibilidade por Camada}
 
 A técnica de otimização adotada neste trabalho, única entre as consideradas que atende aos
 três critérios, é a \textbf{análise de sensibilidade por camada}. Em vez de aplicar a
@@ -331,10 +487,10 @@ otimização.
 % AJUSTE: revisão 30/09 — o orientador não entendeu como o fine-tuning é feito; o
 % procedimento passa a ser descrito, e "lacuna", "orçamento de retreinamento limitado"
 % e "dessa medição" são explicitados. Sai o "Registre-se".
-\section{\textit{Fine-tuning} de Recuperação}\label{sec:metodologia_finetuning}
+\section{Etapa 4 --- \textit{Fine-tuning} de Recuperação}\label{sec:metodologia_finetuning}
 % -------------------------------------------------------
 
-As etapas anteriores operam em regime \textit{one-shot}: o modelo é podado e avaliado
+As Etapas 2 e 3 operam em regime \textit{one-shot}: o modelo é podado e avaliado
 imediatamente, sem nenhum treinamento após a poda. Esse regime é deliberado, pois mede o
 dano causado pela poda sem que nenhuma recuperação posterior o atenue. Ele difere, porém,
 do procedimento original das duas estratégias adotadas: tanto \citeonline{Han2015} quanto
@@ -378,147 +534,6 @@ economia obtida a cada inferência.
 
 O protocolo concreto --- otimizador, número de passos, hiperparâmetros e configurações
 submetidas ao retreinamento --- é apresentado no Capítulo~\ref{chap:desenvolvimento}.
-
-% -------------------------------------------------------
-% AJUSTE: reunião 13/05 — reescrita completa da Seção 3.4 (métricas explicadas em detalhe)
-\section{Métricas de Avaliação}\label{sec:metodologia_metricas}
-% -------------------------------------------------------
-
-\adicionadomarcelo{As métricas de avaliação são organizadas em três dimensões: desempenho preditivo, custo
-computacional e impacto ambiental. Para cada métrica, descreve-se o que ela representa e
-como é obtida operacionalmente.
-
-\subsection*{Desempenho preditivo}
-
-Como o modelo de referência é um modelo de linguagem autorregressivo, a métrica de
-desempenho preditivo adotada é a \textit{perplexity}, padrão para essa classe de modelos.
-Ela quantifica o grau de ``surpresa'' do modelo diante de cada \textit{token} do conjunto
-de avaliação, constituindo uma medida da qualidade da modelagem probabilística da
-linguagem \cite{Goodfellow2016}. Valores mais baixos de \textit{perplexity} indicam melhor
-capacidade preditiva.
-
-A adoção da \textit{perplexity}, em lugar de métricas de tarefas descendentes --- como a
-acurácia em uma tarefa de classificação ---, decorre de ela ser uma métrica intrínseca:
-pode ser medida diretamente sobre a base de dados de avaliação, sem exigir o \textit{fine-tuning}
-do modelo em uma tarefa específica, procedimento que tornaria a comparação entre
-configurações dependente de um segundo treinamento. O procedimento de cálculo adotado é
-descrito no Capítulo~\ref{chap:desenvolvimento}.}
-
-A \textit{perplexity} é medida sobre uma base de dados de avaliação --- a coleção de textos
-sobre a qual o modelo é avaliado ---, selecionada pelos seguintes critérios:
-
-\begin{itemize}
-    \item \textbf{D1 --- Resultado de referência:} \textit{perplexity} do modelo de
-          referência na base de dados publicada em artigo científico; é a exigência do
-          critério C5 vista do lado da base de dados.
-    \item \textbf{D2 --- Texto sem pré-processamento destrutivo:} a base de dados preserva caixa,
-          pontuação, números e palavras raras, e mantém a continuidade dos documentos;
-          modelos com tokenização por subpalavras são pré-treinados sobre texto bruto e
-          seriam avaliados fora de sua distribuição em texto normalizado.
-    \item \textbf{D3 --- Divisão oficial:} partições oficiais de treino, validação e teste,
-          de modo que o \textit{fine-tuning} use o treino e a avaliação use o teste, sem
-          particionamento arbitrário.
-    \item \textbf{D4 --- Ausência de sobreposição com o pré-treinamento:} a base de dados não
-          integra nem reproduz os dados de pré-treinamento do modelo; do contrário, a
-          \textit{perplexity} mediria em parte memorização.
-\end{itemize}
-
-Os critérios D2 e D3 dizem respeito apenas à base de dados; D1 e D4 dependem do modelo, e
-por isso modelo e base de dados são selecionados em conjunto (Seção~\ref{sec:metodologia_modelo}).
-Havendo mais de uma base de dados que atenda a todos os critérios, adota-se a de menor conjunto de
-treino, pois é ele que determina o custo do \textit{fine-tuning}. A aplicação desses
-critérios a um conjunto de bases de dados candidatas é apresentada no
-Capítulo~\ref{chap:desenvolvimento} (Tabela~\ref{tab:candidatos_dataset}).
-
-\adicionadomarcelo{\subsection*{Custo computacional}
-
-O custo computacional é avaliado por meio de quatro indicadores complementares:
-
-\begin{itemize}
-    \item \textbf{Número de parâmetros remanescentes:} contagem direta dos tensores de pesos
-          não-zerados (no caso de poda não estruturada) ou existentes (no caso de poda
-          estruturada) no modelo após a aplicação da técnica;
-
-    \item \textbf{Operações de ponto flutuante (FLOPs):} contagem das operações matemáticas
-          necessárias para uma inferência completa, obtida por análise estática do grafo
-          computacional do modelo. Bibliotecas específicas --- como \texttt{thop}, em
-          ambiente PyTorch --- percorrem cada camada do modelo e acumulam as operações
-          correspondentes. A automação, porém, é parcial: a contagem cobre apenas os tipos
-          de camada previstos no catálogo da ferramenta, de modo que camadas fora dele
-          exigem o registro de regras de contagem próprias, sob pena de serem silenciosamente
-          ignoradas. O tratamento efetivamente necessário no modelo adotado, bem como as
-          omissões remanescentes, são detalhados no Capítulo~\ref{chap:desenvolvimento};
-
-    \item \textbf{Tempo de inferência:} medido empiricamente, registrando o tempo decorrido
-          durante o processamento de uma entrada representativa em condições controladas de
-          \textit{hardware}. Múltiplas medições são agregadas por meio de média e
-          desvio-padrão para mitigar a variância natural de execução;
-
-    \item \textbf{Tamanho do modelo:} avaliado em duas dimensões --- espaço ocupado em disco
-          após serialização do estado do modelo e consumo de memória durante a inferência,
-          este último registrado por ferramentas de \textit{profiling} do PyTorch.
-\end{itemize}
-
-\subsection*{Impacto ambiental}
-
-O impacto ambiental é mensurado por meio de dois indicadores:
-
-\begin{itemize}
-    \item \textbf{Consumo energético:} estimado por meio de ferramentas de monitoramento do
-          uso de \textit{hardware} (CPU e GPU) durante a execução dos experimentos. A
-          biblioteca CodeCarbon \cite{CodeCarbon2023} integra leituras periódicas de consumo
-          elétrico dos componentes, registrando a energia total consumida (em kWh) durante
-          o intervalo de inferência;
-
-    \item \textbf{Emissões equivalentes de CO\textsubscript{2}:} calculadas a partir do
-          consumo energético registrado, multiplicado por um fator de intensidade carbônica
-          da matriz energética da região onde os experimentos são executados. A biblioteca
-          CodeCarbon mantém base desses fatores e realiza essa conversão automaticamente.
-          Cabe uma ressalva sobre o alcance desse indicador: como o fator de intensidade
-          carbônica depende da localidade em que o código executa, ele não é controlado pelo
-          experimento e pode variar entre execuções. As emissões devem, por isso, ser lidas
-          como aproximações de ordem de grandeza, e a comparação entre configurações
-          apoia-se no consumo energético, não nas emissões dele derivadas.
-\end{itemize}
-
-
-\comentline{
-
-\# \textbf{Metodologia}
-
-\#\# \textbf{Etapa 1}
-
-Essa etapa escolhe-se o modelo de referência. Esse modelo é executado sem qualquer modificação e avaliado em uma base de dados (dataset ou corpus). registrando-se as métricas para avaliar a qualidade da resposta do modelo e uma estimativa do consumo de energia (refinar isso). O resultado desse modelo é o referencial de comparação para verificar o desempenho dos demais modelos podados (comprimidos).
-
-\#\# \textbf{Etapa 2}
-
-A segunda etapa aplica as estratégias poda, de forma independente e sempre a partir do modelo denso original.
-
-
----
-
-\# \textbf{Desenvolvimento}
-
-\#\# \textbf{Etapa 1}
-
-O modelo GPT-2 \textit{small} foi selecionado como modelo de referência. Foi usado uma versão pré-treinada, obtida no HuggingFace e executado sem qualquer modificação e avaliado na base de dados do WikiText-2, registrando-se as métricas: perplexity, contagem de parâmetros, tamanho em memória, FLOPs, tempo de inferência e consumo de energia. Para registrar as métricas usou-se a biblioteca Pytorch da linguagem Python (ou outra biblioteca utilizada).
-
-\#\# \textbf{Etapa 2}
-
-Na \textbf{segunda etapa} aplicou-se duas estratégias clássicas de poda: a poda não estruturada por magnitude \cite{Han2015} e a poda estruturada por norma $L_1$ \cite{Li2017}, esta última adaptada ao \textit{Transformer}. Para cada estratégia, varre-se toda a faixa de
-esparsidade, de 10\% a 90\% em passos de 10 pontos percentuais, e sob dois escopos de alocação distintos. A escolha dessas duas estratégias é deliberada: elas ocupam os dois extremos do espectro de granularidade e, como se verá, comportam-se de forma oposta quanto ao impacto real sobre o \textit{hardware}.
-
-}
-
-
-
-
-
-
-% Todas as métricas são calculadas tanto para o modelo de referência quanto para cada
-% configuração de modelo podado, de modo que os resultados expressem ganhos ou perdas
-% proporcionais à compressão introduzida, conforme detalhado a seguir.
-}
 
 % -------------------------------------------------------
 % AJUSTE: reunião 13/05 — reescrita completa da Seção 3.5 (como medir e analisar energia)

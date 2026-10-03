@@ -11,13 +11,20 @@
 
 % AJUSTE: revisão 30/09 — sai a frase de abertura que retomava o capítulo anterior; a
 % referência aos critérios passa para a frase seguinte, que ficaria sem antecedente.
+% AJUSTE: revisão 30/09 — o capítulo passa a seguir as mesmas quatro etapas da
+% Metodologia, na mesma ordem e com os mesmos nomes (esboço do orientador). Base de dados
+% e métricas entram na Etapa 1; parâmetros podáveis, na Etapa 2. A antiga subseção "As
+% Quatro Etapas Centrais" foi distribuída pelas aberturas das etapas.
 Este capítulo descreve as decisões concretas que decorrem dos critérios estabelecidos no
-Capítulo~\ref{chap:metodologia} e o experimento tal como foi efetivamente implementado: a base de dados e o
-modelo selecionados, quais parâmetros são considerados podáveis, como cada estratégia de
-poda foi implementada, como o perfil de sensibilidade é levantado e convertido em taxas
-por camada, o protocolo de \textit{fine-tuning} de recuperação, o \textit{framework} e as
-bibliotecas empregadas, a organização do \textit{pipeline} experimental, as métricas
-coletadas, o ambiente de execução e as limitações reconhecidas.
+Capítulo~\ref{chap:metodologia} e o experimento tal como foi efetivamente implementado.
+Após uma visão geral (Seção~\ref{sec:visao_geral}), o capítulo segue as mesmas quatro
+etapas da metodologia, na mesma ordem: Etapa 1 --- Modelo de Referência
+(Seção~\ref{sec:etapa1}); Etapa 2 --- Poda sem Otimização (Seção~\ref{sec:metodos_poda});
+Etapa 3 --- Poda com Otimização (Seção~\ref{sec:estrategia_otimizada}); e Etapa 4 ---
+\textit{Fine-tuning} de Recuperação (Seção~\ref{sec:finetuning}). As seções finais tratam
+de aspectos comuns a todas as etapas: o \textit{framework} e as bibliotecas empregadas, a
+organização do \textit{pipeline} experimental, o ambiente de execução e as limitações
+reconhecidas.
 
 \section{Visão Geral}\label{sec:visao_geral}
 
@@ -41,39 +48,6 @@ sejam avaliados exatamente pelo mesmo conjunto de métricas, na mesma base de da
 comparação seja interpretável, e é o princípio que organiza todo o desenvolvimento
 descrito adiante.
 
-\subsection{As Quatro Etapas Centrais}\label{subsec:quatro_etapas}
-
-O experimento é organizado em quatro etapas sequenciais, cada uma com papel distinto.
-
-A \textbf{primeira etapa} estabelece o modelo de referência. O GPT-2 \textit{small}
-pré-treinado é carregado sem qualquer modificação e avaliado no conjunto de teste do
-WikiText-2, registrando-se o vetor completo de métricas --- perplexity, contagem de
-parâmetros, tamanho em memória, FLOPs, tempo de inferência e consumo de energia. Esse
-modelo denso é o referencial absoluto contra o qual todas as configurações comprimidas
-serão comparadas.
-
-A \textbf{segunda etapa} aplica as duas estratégias clássicas de poda, de forma
-independente e sempre a partir do modelo denso original: a poda não estruturada por
-magnitude \cite{Han2015} e a poda estruturada por norma $L_1$ \cite{Li2017}, esta última
-adaptada ao \textit{Transformer}. Para cada estratégia, varre-se toda a faixa de
-esparsidade, de 10\% a 90\% em passos de 10 pontos percentuais, e sob dois escopos de
-alocação distintos. A escolha dessas duas estratégias é deliberada: elas ocupam os dois
-extremos do espectro de granularidade e, como se verá, comportam-se de forma oposta quanto
-ao impacto real sobre o \textit{hardware}.
-
-A \textbf{terceira etapa} introduz a estratégia otimizada proposta, que constitui a
-contribuição central do trabalho: a análise de sensibilidade por camada. Ela se divide em
-duas fases. Na primeira, levanta-se o perfil de sensibilidade do modelo, podando uma
-camada de cada vez e medindo a degradação resultante. Na segunda, esse perfil é convertido
-em uma alocação não uniforme de taxas por camada, que é então avaliada nos mesmos níveis
-de orçamento das varreduras ingênuas.
-
-A \textbf{quarta etapa} aplica o \textit{fine-tuning} de recuperação. Todas as etapas
-anteriores operam em regime \textit{one-shot}, isto é, podam e medem sem retreinamento, de
-modo a isolar o dano causado pela poda. Esta etapa reintroduz o retreinamento --- como
-fazem tanto \citeonline{Han2015} quanto \citeonline{Li2017} --- e mede quanto da
-degradação é recuperável.
-
 \subsection{Discussão das Decisões Metodológicas}\label{subsec:discussao_decisoes}
 
 Todo desenho experimental implica escolhas que condicionam o escopo dos resultados. A
@@ -94,13 +68,13 @@ em maior profundidade as que são mais críticas para a interpretação dos resu
 Base de dados
 & WikiText-103, Penn Treebank, OpenWebText, The Pile
 & \textbf{WikiText-2}
-& Atende aos quatro critérios da Seção~\ref{sec:metodologia_metricas}; entre os que
+& Atende aos quatro critérios da Seção~\ref{subsec:metodologia_base}; entre os que
   atendem, tem o menor conjunto de treino (Tabela~\ref{tab:candidatos_dataset}). \\
 
 Modelo
 & GPT-2 \textit{medium}/\textit{large}/XL, DistilGPT2, OPT-125M, Pythia-160M, BERT, Llama 2
 & \textbf{GPT-2 \textit{small}}
-& Atende aos seis critérios da Seção~\ref{sec:metodologia_modelo} e forma com o
+& Atende aos seis critérios da Seção~\ref{subsec:metodologia_selecao_modelo} e forma com o
   WikiText-2 um par que atende a D1--D4; entre os que atendem, é o de menor número de
   parâmetros (Tabela~\ref{tab:candidatos_modelo}). \\
 
@@ -139,128 +113,25 @@ Ambiente
 \textit{Fonte: Elaboração própria.}
 \end{table}
 
-\section{Base de Dados}\label{sec:dataset}
+\section{Etapa 1 --- Modelo de Referência}\label{sec:etapa1}
 
-\subsection{O WikiText-2}\label{subsec:wikitext2}
+Na primeira etapa, o GPT-2 \textit{small} \cite{Radford2019} foi selecionado como modelo
+de referência. Utilizou-se a versão pré-treinada disponibilizada na plataforma Hugging
+Face, executada sem nenhuma modificação e avaliada no conjunto de teste da base de dados
+WikiText-2 \cite{Merity2017}. Registraram-se a \textit{perplexity}, a contagem de
+parâmetros, o tamanho em memória, os FLOPs, o tempo de inferência e o consumo de energia:
+as três primeiras métricas foram obtidas com a biblioteca PyTorch; os FLOPs, com a
+biblioteca \texttt{thop}; o tempo de inferência, com o temporizador \texttt{perf\_counter}
+da linguagem Python; e o consumo de energia, com a biblioteca CodeCarbon
+(Tabela~\ref{tab:metricas}). O modelo de referência obteve \textit{perplexity} de 25,17
+(Tabela~\ref{tab:gpt2_config}), valor contra o qual são comparadas todas as configurações
+podadas das etapas seguintes. As subseções a seguir apresentam a seleção do modelo
+(Seção~\ref{sec:modelo}), a seleção da base de dados (Seção~\ref{sec:dataset}) e as
+métricas registradas (Seção~\ref{sec:metricas}).
 
-O WikiText-2 é uma base de dados de língua inglesa extraída de artigos verificados da
-Wikipédia, proposta por \citeonline{Merity2017}, com \textit{perplexity} do GPT-2 nessa base
-de dados reportada por \citeonline{Radford2019}. Diferentemente de bases de dados construídas a partir de
-frases isoladas, o WikiText preserva a estrutura
-original dos artigos --- parágrafos completos, pontuação e capitalização mantidas ---, o
-que o torna adequado para medir a capacidade de um modelo de acompanhar contexto ao longo
-de textos extensos.
+\subsection{Seleção do Modelo}\label{sec:modelo}
 
-Emprega-se especificamente a variante \texttt{wikitext-2-raw-v1}, na qual o texto não
-sofre substituição de palavras raras por um marcador genérico. Essa escolha é necessária
-porque o GPT-2 utiliza tokenização por \textit{subwords}, capaz de representar palavras
-fora do vocabulário decompondo-as em fragmentos; a variante processada anularia essa
-capacidade e distorceria a perplexity medida.
-
-\subsection{Justificativa da Escolha}\label{subsec:dataset_justificativa}
-
-A Seção~\ref{sec:metodologia_metricas} estabeleceu quatro critérios objetivos (D1 a D4)
-para a seleção da base de dados de avaliação. A Tabela~\ref{tab:candidatos_dataset} aplica esses
-critérios a cinco candidatos: o WikiText-2 e o WikiText-103 \cite{Merity2017}, o Penn
-Treebank \cite{Merity2017}, o OpenWebText \cite{Gokaslan2019} e The Pile \cite{Gao2020}.
-Como D1 e D4 dependem do modelo, a tabela os verifica para a família GPT-2, adotada na
-Seção~\ref{sec:modelo}; a verificação recíproca, para os demais candidatos a modelo,
-consta na Tabela~\ref{tab:candidatos_modelo}.
-
-\begin{table}[htb]
-\centering
-\caption{Candidatas a base de dados de avaliação e verificação dos critérios de seleção.}
-\label{tab:candidatos_dataset}
-\footnotesize
-\begin{tabular}{l r c c c c}
-\hline
-\textbf{Base de dados} & \textbf{Treino} & \textbf{D1} & \textbf{D2} & \textbf{D3} & \textbf{D4} \\
-\hline
-WikiText-2    & 2,1 mi \textit{tokens}   & \checkmark & \checkmark & \checkmark & \checkmark \\
-WikiText-103  & 103,2 mi \textit{tokens} & \checkmark & \checkmark & \checkmark & \checkmark \\
-Penn Treebank & 0,93 mi \textit{tokens}  & \checkmark & $\times$   & \checkmark & \checkmark \\
-OpenWebText   & 39,8 GB                  & ---        & \checkmark & $\times$   & $\times$   \\
-The Pile      & 825 GiB                  & \checkmark & \checkmark & \checkmark & $\times$   \\
-\hline
-\end{tabular}
-\par\smallskip
-\begin{minipage}{0.92\textwidth}\centering D1: resultado de referência; D2: texto sem
-pré-processamento destrutivo; D3: divisão oficial; D4: ausência de sobreposição com o
-pré-treinamento (critérios definidos na Seção~\ref{sec:metodologia_metricas}). D1 e D4
-verificados para a família GPT-2. ---: não verificado, candidato já eliminado por outro
-critério.\end{minipage}\par\smallskip
-\textit{Fonte: Elaboração própria, com dados de \citeonline{Merity2017},
-\citeonline{Radford2019}, \citeonline{Gao2020} e da plataforma Hugging Face (acesso em 28
-set. 2026).}
-\end{table}
-
-Dos cinco candidatos, três não atendem a todos os critérios. O Penn Treebank cai em D2: na
-versão usual, as palavras estão em caixa baixa, a pontuação foi removida e o vocabulário
-foi limitado a 10 mil palavras \cite{Merity2017}, ao passo que o WikiText mantém pontuação,
-caixa original e números \cite{Merity2017}, e a variante \textit{raw} adotada neste
-trabalho não substitui palavras raras. O OpenWebText cai em D3, pois é distribuído com uma
-única partição, de treino, sem divisão oficial em validação e teste (8.013.769 documentos,
-39,8 GB, verificado na plataforma Hugging Face); e em D4, por ser uma reprodução aberta do
-WebText, a base de dados de pré-treinamento do GPT-2 \cite{Gokaslan2019}. The Pile atende a D1 ---
-\citeonline{Gao2020} avaliam as quatro variantes do GPT-2 em seu conjunto de teste, com a
-\textit{perplexity} convertida em bits por \textit{byte} --- e a D3, por dispor de
-partições oficiais de treino, validação e teste --- validação e teste com cerca de 0,1\% dos
-dados cada, mais de 1 GiB cada \cite{Gao2020}; cai em D4 porque inclui o OpenWebText2 (62,77
-GiB), construído pelo mesmo método do WebText, com votos no Reddit como filtro de qualidade
-dos links \cite{Gao2020}. Em sentido oposto, os autores do GPT-2 removeram do WebText todos
-os documentos da Wikipédia justamente para evitar sobreposição com conjuntos de avaliação
-\cite{Radford2019}; a sobreposição de 8-gramas medida por eles entre os conjuntos de teste e
-o treino do WebText é de 1,63\% no WikiText-2, 2,42\% no WikiText-103 e 0,88\% no Penn
-Treebank (Tabela 6 de \citeonline{Radford2019}).
-
-Restam dois candidatos que atendem a todos os critérios: o WikiText-2 e o WikiText-103.
-Ambos compartilham os mesmos conjuntos de validação e teste, com 217.646 e 245.569
-\textit{tokens}, respectivamente \cite{Merity2017}; diferem apenas no conjunto de treino,
-cerca de 49 vezes maior no WikiText-103. Como o conjunto de teste é o mesmo, a avaliação de
-\textit{perplexity} é idêntica nos dois; a diferença está inteiramente no custo do
-\textit{fine-tuning}, determinado pelo treino. Com a vazão medida na
-Seção~\ref{subsec:justificativa_gpt2} --- uma época sobre o treino do WikiText-2 em cerca de
-4,6 minutos ---, uma época sobre o WikiText-103 levaria cerca de 3,8 horas por
-\textit{fine-tuning}, e os sete \textit{fine-tunings} da campanha passariam de cerca de 31
-minutos para cerca de 25 horas (estimativa proporcional ao número de \textit{tokens} de
-treino). Aplica-se, então, a regra de desempate da Seção~\ref{sec:metodologia_metricas}:
-adota-se o de menor conjunto de treino, o WikiText-2.
-
-Registre-se que a base de dados é parametrizável na implementação: a substituição pelo
-WikiText-103, de mesma natureza e cerca de cinquenta vezes maior, exige apenas a alteração
-de um argumento de linha de comando. Essa flexibilidade foi mantida deliberadamente para
-que trabalhos futuros possam verificar a generalidade dos resultados sem reescrever o
-código.
-
-\subsection{Pré-processamento e Tokenização}\label{subsec:preprocessamento}
-
-O pré-processamento é intencionalmente mínimo, para que a perplexity medida reflita a
-base de dados e não decisões de limpeza. As linhas do conjunto são unidas por quebra dupla,
-preservando a separação entre parágrafos tal como na base de dados original, e o texto resultante
-é tokenizado como um fluxo contínuo único.
-
-A tokenização emprega o tokenizador original do GPT-2, baseado no algoritmo BPE
-(\textit{Byte Pair Encoding}), com vocabulário de 50.257 \textit{tokens}. Manter o
-tokenizador original é indispensável: os \textit{embeddings} do modelo foram aprendidos
-para esse vocabulário específico, e qualquer substituição invalidaria os pesos
-pré-treinados.
-
-\subsection{Divisão dos Dados}\label{subsec:divisao_dados}
-
-Adota-se a divisão oficial da base de dados. O \textbf{conjunto de teste} é utilizado em todas as
-medições de perplexity reportadas, tanto do modelo denso quanto de todas as configurações
-comprimidas. O \textbf{conjunto de treinamento} é utilizado exclusivamente na etapa de
-\textit{fine-tuning} de recuperação (Seção~\ref{sec:finetuning}). O \textbf{conjunto de
-validação} é empregado apenas para acompanhar a evolução do treinamento ao longo dos
-passos, quando essa curva é solicitada, e nunca para selecionar resultados reportados.
-
-Essa separação estrita importa: como as varreduras \textit{one-shot} não realizam
-treinamento algum, elas não têm contato com o conjunto de treinamento, e a perplexity de
-teste é uma medida limpa do dano causado pela poda.
-
-\section{Modelo de Referência}\label{sec:modelo}
-
-\subsection{O GPT-2 \textit{small}}\label{subsec:gpt2small}
+\subsubsection{O GPT-2 \textit{small}}\label{subsec:gpt2small}
 
 O modelo de referência é o GPT-2 \textit{small}, proposto por \citeonline{Radford2019} e
 descrito na Seção~\ref{subsec:llm_gpt2}. Trata-se de um modelo autorregressivo composto
@@ -294,9 +165,9 @@ Perplexity no WikiText-2 (teste) & 25,17 \\
 \textit{Fonte: Elaboração própria.}
 \end{table}
 
-\subsection{Justificativa da Escolha}\label{subsec:justificativa_gpt2}
+\subsubsection{Justificativa da Escolha}\label{subsec:justificativa_gpt2}
 
-A Seção~\ref{sec:metodologia_modelo} estabeleceu seis critérios objetivos (C1 a C6) para a
+A Seção~\ref{subsec:metodologia_selecao_modelo} estabeleceu seis critérios objetivos (C1 a C6) para a
 seleção do modelo de referência. A Tabela~\ref{tab:candidatos_modelo} aplica esses
 critérios a nove candidatos: as quatro variantes do GPT-2 \cite{Radford2019}, o
 DistilGPT2 \cite{Sanh2019}, o OPT-125M \cite{Zhang2022}, o Pythia-160M
@@ -304,7 +175,7 @@ DistilGPT2 \cite{Sanh2019}, o OPT-125M \cite{Zhang2022}, o Pythia-160M
 candidatos compreendem as quatro variantes da família GPT-2; três modelos abertos de porte
 próximo ao do GPT-2 \textit{small}; e dois modelos de classes distintas, incluídos para
 verificar os limites dos critérios: um codificador e um modelo com bilhões de parâmetros.
-Como a seleção é conjunta (Seção~\ref{sec:metodologia_modelo}), a tabela verifica também
+Como a seleção é conjunta (Seção~\ref{subsec:metodologia_selecao_modelo}), a tabela verifica também
 o critério D4 de cada candidato em relação ao WikiText-2.
 \todo[inline]{Avaliar a inclusão de modelos pequenos posteriores a 2023 (por exemplo,
 SmolLM2, Qwen2.5-0.5B, Llama 3.2 1B), que a banca pode questionar.}
@@ -333,9 +204,9 @@ Llama 2 7B            & 6,74B & 107,8 & 34,6    & \checkmark & $\times$   & $\ti
 \par\smallskip
 \begin{minipage}{0.92\textwidth}\centering C1: arquitetura decodificadora autorregressiva; C2: pesos abertos; C3: viabilidade
 do \textit{fine-tuning}; C4: modelo original; C5: resultado de referência publicado; C6:
-implementação disponível (critérios definidos na Seção~\ref{sec:metodologia_modelo}); D4:
+implementação disponível (critérios definidos na Seção~\ref{subsec:metodologia_selecao_modelo}); D4:
 ausência de sobreposição entre o pré-treinamento e o WikiText-2
-(Seção~\ref{sec:metodologia_metricas}). ---: não verificado, candidato já eliminado por
+(Seção~\ref{subsec:metodologia_base}). ---: não verificado, candidato já eliminado por
 outro critério. Mem.\ FT: memória mínima para o \textit{fine-tuning} completo, a 16 bytes
 por parâmetro. Downl.: \textit{downloads} acumulados na plataforma Hugging Face, em
 milhões.\end{minipage}\par\smallskip
@@ -392,7 +263,7 @@ Restam três
 candidatos que atendem a todos os critérios: as variantes \textit{small},
 \textit{medium} e \textit{large} do GPT-2, esta última com margem estreita em C3 --- dos
 12,4 GB estimados, restam cerca de 3,6 GB para as ativações. Aplica-se, então, a regra de
-desempate da Seção~\ref{sec:metodologia_modelo}: entre os candidatos que atendem a todos os
+desempate da Seção~\ref{subsec:metodologia_selecao_modelo}: entre os candidatos que atendem a todos os
 critérios, adota-se o de menor número de parâmetros. O GPT-2 \textit{medium} e o
 \textit{large} têm, respectivamente, cerca de 2,9 e 6,2 vezes mais parâmetros que o
 \textit{small}; a diferença é relevante porque a campanha experimental deste trabalho
@@ -419,39 +290,230 @@ pertinente: as conclusões da literatura de poda foram estabelecidas majoritaria
 redes convolucionais, e não é evidente que se transfiram para modelos com esse perfil de
 parâmetros.
 
-\subsection{Parâmetros Podáveis}\label{subsec:parametros_podaveis}
+\subsection{Seleção da Base de Dados}\label{sec:dataset}
 
-Uma decisão de implementação que condiciona todos os resultados é a definição de quais
-parâmetros são elegíveis à poda. Adotam-se, por convenção consolidada na literatura,
-apenas as matrizes de peso das projeções lineares internas aos blocos
-\textit{Transformer}, a saber, quatro por bloco:
+\subsubsection{O WikiText-2}\label{subsec:wikitext2}
 
-\begin{itemize}
-    \item \texttt{attn.c\_attn} --- projeção que produz consulta, chave e valor;
-    \item \texttt{attn.c\_proj} --- projeção de saída da atenção;
-    \item \texttt{mlp.c\_fc} --- primeira transformação linear do MLP;
-    \item \texttt{mlp.c\_proj} --- segunda transformação linear do MLP.
-\end{itemize}
+O WikiText-2 é uma base de dados de língua inglesa extraída de artigos verificados da
+Wikipédia, proposta por \citeonline{Merity2017}, com \textit{perplexity} do GPT-2 nessa base
+de dados reportada por \citeonline{Radford2019}. Diferentemente de bases de dados construídas a partir de
+frases isoladas, o WikiText preserva a estrutura
+original dos artigos --- parágrafos completos, pontuação e capitalização mantidas ---, o
+que o torna adequado para medir a capacidade de um modelo de acompanhar contexto ao longo
+de textos extensos.
 
-Com 12 blocos, são 48 matrizes podáveis. Ficam deliberadamente fora do escopo da poda:
+Emprega-se especificamente a variante \texttt{wikitext-2-raw-v1}, na qual o texto não
+sofre substituição de palavras raras por um marcador genérico. Essa escolha é necessária
+porque o GPT-2 utiliza tokenização por \textit{subwords}, capaz de representar palavras
+fora do vocabulário decompondo-as em fragmentos; a variante processada anularia essa
+capacidade e distorceria a perplexity medida.
 
-\begin{itemize}
-    \item as matrizes de \textit{embedding} de \textit{token} (\texttt{wte}) e de posição
-          (\texttt{wpe}), que codificam o vocabulário e não representam computação
-          repetida a cada camada;
-    \item a cabeça de linguagem (\texttt{lm\_head}), que no GPT-2 compartilha pesos com
-          \texttt{wte} --- podá-la corromperia os \textit{embeddings};
-    \item vieses e parâmetros de normalização de camada, que são numericamente baratos e
-          desproporcionalmente sensíveis.
-\end{itemize}
+\subsubsection{Justificativa da Escolha}\label{subsec:dataset_justificativa}
 
-Essa restrição tem consequência direta na leitura dos resultados: quando se afirma que uma
-configuração tem 50\% de esparsidade, trata-se de 50\% das matrizes podáveis, não do
-modelo inteiro. Como os \textit{embeddings} do GPT-2 concentram parcela expressiva dos
-parâmetros, a esparsidade sobre o total é sempre menor que a esparsidade sobre o conjunto
-podável, e as duas grandezas são reportadas separadamente.
+A Seção~\ref{subsec:metodologia_base} estabeleceu quatro critérios objetivos (D1 a D4)
+para a seleção da base de dados de avaliação. A Tabela~\ref{tab:candidatos_dataset} aplica esses
+critérios a cinco candidatos: o WikiText-2 e o WikiText-103 \cite{Merity2017}, o Penn
+Treebank \cite{Merity2017}, o OpenWebText \cite{Gokaslan2019} e The Pile \cite{Gao2020}.
+Como D1 e D4 dependem do modelo, a tabela os verifica para a família GPT-2, adotada na
+Seção~\ref{sec:modelo}; a verificação recíproca, para os demais candidatos a modelo,
+consta na Tabela~\ref{tab:candidatos_modelo}.
 
-\section{Métodos de Poda da Literatura}\label{sec:metodos_poda}
+\begin{table}[htb]
+\centering
+\caption{Candidatas a base de dados de avaliação e verificação dos critérios de seleção.}
+\label{tab:candidatos_dataset}
+\footnotesize
+\begin{tabular}{l r c c c c}
+\hline
+\textbf{Base de dados} & \textbf{Treino} & \textbf{D1} & \textbf{D2} & \textbf{D3} & \textbf{D4} \\
+\hline
+WikiText-2    & 2,1 mi \textit{tokens}   & \checkmark & \checkmark & \checkmark & \checkmark \\
+WikiText-103  & 103,2 mi \textit{tokens} & \checkmark & \checkmark & \checkmark & \checkmark \\
+Penn Treebank & 0,93 mi \textit{tokens}  & \checkmark & $\times$   & \checkmark & \checkmark \\
+OpenWebText   & 39,8 GB                  & ---        & \checkmark & $\times$   & $\times$   \\
+The Pile      & 825 GiB                  & \checkmark & \checkmark & \checkmark & $\times$   \\
+\hline
+\end{tabular}
+\par\smallskip
+\begin{minipage}{0.92\textwidth}\centering D1: resultado de referência; D2: texto sem
+pré-processamento destrutivo; D3: divisão oficial; D4: ausência de sobreposição com o
+pré-treinamento (critérios definidos na Seção~\ref{subsec:metodologia_base}). D1 e D4
+verificados para a família GPT-2. ---: não verificado, candidato já eliminado por outro
+critério.\end{minipage}\par\smallskip
+\textit{Fonte: Elaboração própria, com dados de \citeonline{Merity2017},
+\citeonline{Radford2019}, \citeonline{Gao2020} e da plataforma Hugging Face (acesso em 28
+set. 2026).}
+\end{table}
+
+Dos cinco candidatos, três não atendem a todos os critérios. O Penn Treebank cai em D2: na
+versão usual, as palavras estão em caixa baixa, a pontuação foi removida e o vocabulário
+foi limitado a 10 mil palavras \cite{Merity2017}, ao passo que o WikiText mantém pontuação,
+caixa original e números \cite{Merity2017}, e a variante \textit{raw} adotada neste
+trabalho não substitui palavras raras. O OpenWebText cai em D3, pois é distribuído com uma
+única partição, de treino, sem divisão oficial em validação e teste (8.013.769 documentos,
+39,8 GB, verificado na plataforma Hugging Face); e em D4, por ser uma reprodução aberta do
+WebText, a base de dados de pré-treinamento do GPT-2 \cite{Gokaslan2019}. The Pile atende a D1 ---
+\citeonline{Gao2020} avaliam as quatro variantes do GPT-2 em seu conjunto de teste, com a
+\textit{perplexity} convertida em bits por \textit{byte} --- e a D3, por dispor de
+partições oficiais de treino, validação e teste --- validação e teste com cerca de 0,1\% dos
+dados cada, mais de 1 GiB cada \cite{Gao2020}; cai em D4 porque inclui o OpenWebText2 (62,77
+GiB), construído pelo mesmo método do WebText, com votos no Reddit como filtro de qualidade
+dos links \cite{Gao2020}. Em sentido oposto, os autores do GPT-2 removeram do WebText todos
+os documentos da Wikipédia justamente para evitar sobreposição com conjuntos de avaliação
+\cite{Radford2019}; a sobreposição de 8-gramas medida por eles entre os conjuntos de teste e
+o treino do WebText é de 1,63\% no WikiText-2, 2,42\% no WikiText-103 e 0,88\% no Penn
+Treebank (Tabela 6 de \citeonline{Radford2019}).
+
+Restam dois candidatos que atendem a todos os critérios: o WikiText-2 e o WikiText-103.
+Ambos compartilham os mesmos conjuntos de validação e teste, com 217.646 e 245.569
+\textit{tokens}, respectivamente \cite{Merity2017}; diferem apenas no conjunto de treino,
+cerca de 49 vezes maior no WikiText-103. Como o conjunto de teste é o mesmo, a avaliação de
+\textit{perplexity} é idêntica nos dois; a diferença está inteiramente no custo do
+\textit{fine-tuning}, determinado pelo treino. Com a vazão medida na
+Seção~\ref{subsec:justificativa_gpt2} --- uma época sobre o treino do WikiText-2 em cerca de
+4,6 minutos ---, uma época sobre o WikiText-103 levaria cerca de 3,8 horas por
+\textit{fine-tuning}, e os sete \textit{fine-tunings} da campanha passariam de cerca de 31
+minutos para cerca de 25 horas (estimativa proporcional ao número de \textit{tokens} de
+treino). Aplica-se, então, a regra de desempate da Seção~\ref{subsec:metodologia_base}:
+adota-se o de menor conjunto de treino, o WikiText-2.
+
+Registre-se que a base de dados é parametrizável na implementação: a substituição pelo
+WikiText-103, de mesma natureza e cerca de cinquenta vezes maior, exige apenas a alteração
+de um argumento de linha de comando. Essa flexibilidade foi mantida deliberadamente para
+que trabalhos futuros possam verificar a generalidade dos resultados sem reescrever o
+código.
+
+\subsubsection{Pré-processamento e Tokenização}\label{subsec:preprocessamento}
+
+O pré-processamento é intencionalmente mínimo, para que a perplexity medida reflita a
+base de dados e não decisões de limpeza. As linhas do conjunto são unidas por quebra dupla,
+preservando a separação entre parágrafos tal como na base de dados original, e o texto resultante
+é tokenizado como um fluxo contínuo único.
+
+A tokenização emprega o tokenizador original do GPT-2, baseado no algoritmo BPE
+(\textit{Byte Pair Encoding}), com vocabulário de 50.257 \textit{tokens}. Manter o
+tokenizador original é indispensável: os \textit{embeddings} do modelo foram aprendidos
+para esse vocabulário específico, e qualquer substituição invalidaria os pesos
+pré-treinados.
+
+\subsubsection{Divisão dos Dados}\label{subsec:divisao_dados}
+
+Adota-se a divisão oficial da base de dados. O \textbf{conjunto de teste} é utilizado em todas as
+medições de perplexity reportadas, tanto do modelo denso quanto de todas as configurações
+comprimidas. O \textbf{conjunto de treinamento} é utilizado exclusivamente na etapa de
+\textit{fine-tuning} de recuperação (Seção~\ref{sec:finetuning}). O \textbf{conjunto de
+validação} é empregado apenas para acompanhar a evolução do treinamento ao longo dos
+passos, quando essa curva é solicitada, e nunca para selecionar resultados reportados.
+
+Essa separação estrita importa: como as varreduras \textit{one-shot} não realizam
+treinamento algum, elas não têm contato com o conjunto de treinamento, e a perplexity de
+teste é uma medida limpa do dano causado pela poda.
+
+\subsection{Métricas de Avaliação}\label{sec:metricas}
+
+Toda configuração --- o modelo denso, as podadas pelos métodos da literatura e as podadas
+pela estratégia otimizada --- é avaliada pelo mesmo conjunto de métricas, cobrindo as três
+dimensões definidas na Seção~\ref{sec:metodologia_metricas}. A
+Tabela~\ref{tab:metricas} as resume.
+
+\begin{table}[htb]
+\centering
+\caption{Métricas de avaliação coletadas para cada configuração.}
+\label{tab:metricas}
+\small
+\begin{tabular}{p{3.2cm} p{6.1cm} p{1.7cm} p{2.2cm}}
+\hline
+\textbf{Métrica} & \textbf{O que mede} & \textbf{Unidade} & \textbf{Ferramenta} \\
+\hline
+Perplexity & Qualidade da modelagem da linguagem; quanto menor, melhor & --- & PyTorch \\
+Parâmetros totais & Parâmetros existentes na arquitetura & unidades & PyTorch \\
+Parâmetros não nulos & Parâmetros efetivamente diferentes de zero & unidades & PyTorch \\
+Esparsidade real & Fração de parâmetros podáveis eliminados & \% & PyTorch \\
+Tamanho do modelo & Memória ocupada pelos parâmetros & MB & PyTorch \\
+FLOPs & Operações de ponto flutuante por inferência & FLOPs & \texttt{thop} \\
+Tempo de inferência & Tempo médio de uma passagem direta & ms & \texttt{perf\_counter} \\
+Energia consumida & Energia gasta durante a avaliação & kWh & \texttt{CodeCarbon} \\
+Emissões de $CO_2$ & Emissões equivalentes ao consumo & kg & \texttt{CodeCarbon} \\
+\hline
+\end{tabular}\\
+\textit{Fonte: Elaboração própria.}
+\end{table}
+
+\subsubsection{Perplexity}\label{subsec:metrica_perplexity}
+
+A perplexity é a métrica de desempenho preditivo adotada. Ela é calculada pelo método da
+janela deslizante, padrão para modelos autorregressivos: o fluxo de \textit{tokens} do
+conjunto de teste é percorrido em janelas do tamanho máximo de contexto do modelo, com
+passo menor que a janela, de modo que cada \textit{token} seja previsto dispondo de
+contexto anterior substancial. Apenas os \textit{tokens} ainda não avaliados contribuem
+para a perda em cada janela; os demais entram como contexto.
+
+Emprega-se janela de 1.024 \textit{tokens} com passo de 512. Passos menores produzem
+estimativas mais precisas ao custo de mais computação; o valor adotado é o compromisso
+usual na literatura, e é mantido idêntico em todas as configurações avaliadas.
+
+\subsubsection{Custo Computacional}\label{subsec:metrica_custo}
+
+A contagem de \textbf{parâmetros} é reportada em duas formas complementares. O total
+reflete o que existe na arquitetura; a contagem de não nulos reflete o que sobrou depois da
+poda. Na poda não estruturada as duas divergem --- há zeros, mas a arquitetura é a mesma
+---, enquanto na poda estruturada elas coincidem, pois o que foi removido deixou de
+existir. Essa divergência é, por si só, um resultado: ela evidencia a diferença entre
+compressão contábil e compressão física.
+
+A \textbf{esparsidade real} reportada nas tabelas é sempre calculada sobre o conjunto
+podável, mas a natureza do cálculo acompanha a estratégia: na poda por magnitude é a fração
+de pesos anulados nas 48 matrizes; na poda estruturada é a fração de parâmetros que
+deixaram de existir nas mesmas projeções, vieses incluídos, já que a remoção de uma
+estrutura elimina também o viés que lhe corresponde. As duas grandezas medem a mesma coisa
+--- quanto do conjunto podável foi eliminado ---, mas não são idênticas em denominador, e
+diferenças na segunda casa decimal entre estratégias não devem ser interpretadas.
+
+Os \textbf{FLOPs} são contabilizados por análise do grafo computacional. Registre-se uma
+particularidade da implementação: as projeções internas do GPT-2 não são camadas lineares
+convencionais, e sim um tipo específico de camada que a ferramenta de contagem não
+reconhece por padrão. Sem tratamento, a contagem ignoraria justamente as matrizes que a
+poda modifica, e a métrica sairia constante. Foi necessário, portanto, registrar uma regra
+de contagem própria para esse tipo de camada. Reconhece-se uma limitação remanescente: as
+multiplicações de matriz internas ao mecanismo de atenção não são contabilizadas pela
+ferramenta em nenhuma configuração. Como a omissão é idêntica para todas as estratégias,
+as comparações permanecem válidas. A implementação prevê ainda um estimador analítico de
+reserva --- duas operações por parâmetro não pertencente aos \textit{embeddings}, por
+\textit{token} processado ---, acionado apenas se a contagem pelo grafo falhar. Todos os
+valores reportados no Capítulo~\ref{chap:resultados} provêm da contagem pelo grafo, o que
+se verifica pelo fato de os FLOPs variarem com a poda estruturada; o estimador de reserva
+produziria uma grandeza de natureza diferente e não deve ser misturado a eles.
+
+O \textbf{tempo de inferência} é medido sobre uma entrada representativa de 512
+\textit{tokens}, com execuções de aquecimento descartadas --- para mitigar efeitos de
+inicialização da GPU --- seguidas de execuções cronometradas, das quais se reporta média e
+desvio-padrão.
+
+\subsubsection{Impacto Ambiental}\label{subsec:metrica_energia}
+
+O consumo de \textbf{energia} é medido com o \texttt{CodeCarbon}, que monitora o
+\textit{hardware} durante a execução do bloco de avaliação e reporta a energia consumida em
+quilowatts-hora. As \textbf{emissões de $CO_2$} são estimadas a partir desse consumo e da
+intensidade de carbono da rede elétrica onde o código executa.
+
+Sobre esta última métrica cabe uma ressalva importante, identificada durante os
+experimentos: a intensidade de carbono utilizada varia conforme a sessão de execução. Em
+consequência, as emissões não são comparáveis entre execuções realizadas em sessões
+distintas, e a análise dos resultados apoia-se no consumo de energia, não nas emissões
+derivadas dele.
+
+\section{Etapa 2 --- Poda sem Otimização}\label{sec:metodos_poda}
+
+Na segunda etapa, aplicaram-se duas estratégias clássicas de poda: a poda não estruturada
+por magnitude \cite{Han2015} e a poda estruturada por norma $L_1$ \cite{Li2017}, esta
+última adaptada ao \textit{Transformer}. Cada estratégia foi aplicada de forma
+independente e sempre a partir do modelo de referência original, em toda a faixa de
+esparsidade --- de 10\% a 90\%, em passos de 10 pontos percentuais --- e sob dois escopos
+de alocação distintos. A escolha dessas duas estratégias é deliberada: elas ocupam os dois
+extremos do espectro de granularidade e, como se verá, comportam-se de forma oposta quanto
+ao impacto real sobre o \textit{hardware}.
+
+\subsection{Seleção das Estratégias}\label{subsec:selecao_estrategias}
 
 A Seção~\ref{sec:metodologia_poda_sem} estabeleceu três critérios (P1 a P3) para a escolha
 das estratégias de poda sem otimização. A Tabela~\ref{tab:candidatos_poda} aplica esses
@@ -511,6 +573,38 @@ terceiro (Semantic Scholar, acesso em 3 out. 2026). Como as citações se acumul
 tempo, a diferença reflete em parte a antiguidade dos trabalhos --- as quatro alternativas
 foram publicadas entre 2019 e 2024. O dado reforça a condição de referência das duas
 estratégias na literatura de poda, sem substituir os critérios de seleção.
+
+\subsection{Parâmetros Podáveis}\label{subsec:parametros_podaveis}
+
+Uma decisão de implementação que condiciona todos os resultados é a definição de quais
+parâmetros são elegíveis à poda. Adotam-se, por convenção consolidada na literatura,
+apenas as matrizes de peso das projeções lineares internas aos blocos
+\textit{Transformer}, a saber, quatro por bloco:
+
+\begin{itemize}
+    \item \texttt{attn.c\_attn} --- projeção que produz consulta, chave e valor;
+    \item \texttt{attn.c\_proj} --- projeção de saída da atenção;
+    \item \texttt{mlp.c\_fc} --- primeira transformação linear do MLP;
+    \item \texttt{mlp.c\_proj} --- segunda transformação linear do MLP.
+\end{itemize}
+
+Com 12 blocos, são 48 matrizes podáveis. Ficam deliberadamente fora do escopo da poda:
+
+\begin{itemize}
+    \item as matrizes de \textit{embedding} de \textit{token} (\texttt{wte}) e de posição
+          (\texttt{wpe}), que codificam o vocabulário e não representam computação
+          repetida a cada camada;
+    \item a cabeça de linguagem (\texttt{lm\_head}), que no GPT-2 compartilha pesos com
+          \texttt{wte} --- podá-la corromperia os \textit{embeddings};
+    \item vieses e parâmetros de normalização de camada, que são numericamente baratos e
+          desproporcionalmente sensíveis.
+\end{itemize}
+
+Essa restrição tem consequência direta na leitura dos resultados: quando se afirma que uma
+configuração tem 50\% de esparsidade, trata-se de 50\% das matrizes podáveis, não do
+modelo inteiro. Como os \textit{embeddings} do GPT-2 concentram parcela expressiva dos
+parâmetros, a esparsidade sobre o total é sempre menor que a esparsidade sobre o conjunto
+podável, e as duas grandezas são reportadas separadamente.
 
 \subsection{Método 1 --- Poda Não Estruturada por Magnitude}\label{subsec:metodo_magnitude}
 
@@ -590,13 +684,16 @@ Cada nível parte de um modelo recarregado do zero, e não do modelo podado no n
 anterior. Sem esse cuidado, a poda seria cumulativa e os níveis deixariam de ser
 independentes entre si.
 
-\section{Estratégia Otimizada: Sensibilidade por Camada}\label{sec:estrategia_otimizada}
+\section{Etapa 3 --- Poda com Otimização}\label{sec:estrategia_otimizada}
 
-Os métodos descritos até aqui compartilham uma limitação: nenhum deles mede o quanto cada
-camada realmente importa. O escopo uniforme trata todas as camadas como intercambiáveis; o
+Na terceira etapa, aplicou-se a técnica de otimização selecionada na
+Seção~\ref{sec:metodologia_poda_com} --- a análise de sensibilidade por camada ---, que
+constitui a contribuição central do trabalho. Ela responde a uma limitação comum aos
+métodos da Etapa 2: nenhum deles mede o quanto cada camada realmente importa. O escopo uniforme trata todas as camadas como intercambiáveis; o
 escopo global decide com base na magnitude dos pesos, que é um \textit{proxy} de
 importância, não uma medida dela. A estratégia proposta substitui esse \textit{proxy} por
-uma medição direta, em duas fases.
+uma medição direta, em duas fases, e é avaliada nos mesmos orçamentos de poda das
+varreduras da Etapa 2.
 
 \subsection{Fase 1 --- Perfil de Sensibilidade}\label{subsec:fase1}
 
@@ -677,13 +774,16 @@ robustas em vez de produzir divisão por zero. Nos perfis efetivamente levantado
 trabalho o piso não foi acionado: a menor degradação observada é de 0,0346, duas ordens de
 grandeza acima dele.
 
-\section{\textit{Fine-tuning} de Recuperação}\label{sec:finetuning}
+% AJUSTE: revisão 30/09 — "fecha essa lacuna", marcado pelo orientador na Metodologia,
+% aparecia também aqui; reescrito do mesmo modo.
+\section{Etapa 4 --- \textit{Fine-tuning} de Recuperação}\label{sec:finetuning}
 
-Todas as etapas anteriores operam em regime \textit{one-shot}. Esse regime isola o dano
-causado pela poda, mas não corresponde ao procedimento da literatura: tanto
-\citeonline{Han2015} quanto \citeonline{Li2017} retreinam o modelo após podá-lo. Esta
-etapa fecha essa lacuna, medindo, para cada configuração, a perplexity antes e depois do
-retreinamento.
+As Etapas 2 e 3 operam em regime \textit{one-shot}, isto é, podam e avaliam sem
+retreinamento, de modo a isolar o dano causado pela poda. Esse regime, porém, não
+corresponde ao procedimento da literatura: tanto \citeonline{Han2015} quanto
+\citeonline{Li2017} retreinam o modelo após podá-lo. Na quarta etapa, esse retreinamento
+foi incorporado ao experimento: para cada configuração, mediu-se a perplexity antes e
+depois do \textit{fine-tuning}, o que indica quanto da degradação é recuperável.
 
 Duas decisões de implementação merecem registro por afetarem a validade dos resultados.
 
@@ -856,99 +956,6 @@ rotina de avaliação, o que garante a simetria necessária às comparações.}
 Como indica a linha tracejada da figura, as varreduras \textit{one-shot} contornam a etapa
 de \textit{fine-tuning} e vão direto à avaliação. Essa bifurcação é o que permite separar,
 nos resultados, o dano causado pela poda daquilo que o retreinamento consegue recuperar.
-
-\section{Métricas de Avaliação}\label{sec:metricas}
-
-Toda configuração --- o modelo denso, as podadas pelos métodos da literatura e as podadas
-pela estratégia otimizada --- é avaliada pelo mesmo conjunto de métricas, cobrindo as três
-dimensões definidas na Seção~\ref{sec:metodologia_metricas}. A
-Tabela~\ref{tab:metricas} as resume.
-
-\begin{table}[htb]
-\centering
-\caption{Métricas de avaliação coletadas para cada configuração.}
-\label{tab:metricas}
-\small
-\begin{tabular}{p{3.2cm} p{6.1cm} p{1.7cm} p{2.2cm}}
-\hline
-\textbf{Métrica} & \textbf{O que mede} & \textbf{Unidade} & \textbf{Ferramenta} \\
-\hline
-Perplexity & Qualidade da modelagem da linguagem; quanto menor, melhor & --- & PyTorch \\
-Parâmetros totais & Parâmetros existentes na arquitetura & unidades & PyTorch \\
-Parâmetros não nulos & Parâmetros efetivamente diferentes de zero & unidades & PyTorch \\
-Esparsidade real & Fração de parâmetros podáveis eliminados & \% & PyTorch \\
-Tamanho do modelo & Memória ocupada pelos parâmetros & MB & PyTorch \\
-FLOPs & Operações de ponto flutuante por inferência & FLOPs & \texttt{thop} \\
-Tempo de inferência & Tempo médio de uma passagem direta & ms & \texttt{perf\_counter} \\
-Energia consumida & Energia gasta durante a avaliação & kWh & \texttt{CodeCarbon} \\
-Emissões de $CO_2$ & Emissões equivalentes ao consumo & kg & \texttt{CodeCarbon} \\
-\hline
-\end{tabular}\\
-\textit{Fonte: Elaboração própria.}
-\end{table}
-
-\subsection{Perplexity}\label{subsec:metrica_perplexity}
-
-A perplexity é a métrica de desempenho preditivo adotada. Ela é calculada pelo método da
-janela deslizante, padrão para modelos autorregressivos: o fluxo de \textit{tokens} do
-conjunto de teste é percorrido em janelas do tamanho máximo de contexto do modelo, com
-passo menor que a janela, de modo que cada \textit{token} seja previsto dispondo de
-contexto anterior substancial. Apenas os \textit{tokens} ainda não avaliados contribuem
-para a perda em cada janela; os demais entram como contexto.
-
-Emprega-se janela de 1.024 \textit{tokens} com passo de 512. Passos menores produzem
-estimativas mais precisas ao custo de mais computação; o valor adotado é o compromisso
-usual na literatura, e é mantido idêntico em todas as configurações avaliadas.
-
-\subsection{Custo Computacional}\label{subsec:metrica_custo}
-
-A contagem de \textbf{parâmetros} é reportada em duas formas complementares. O total
-reflete o que existe na arquitetura; a contagem de não nulos reflete o que sobrou depois da
-poda. Na poda não estruturada as duas divergem --- há zeros, mas a arquitetura é a mesma
----, enquanto na poda estruturada elas coincidem, pois o que foi removido deixou de
-existir. Essa divergência é, por si só, um resultado: ela evidencia a diferença entre
-compressão contábil e compressão física.
-
-A \textbf{esparsidade real} reportada nas tabelas é sempre calculada sobre o conjunto
-podável, mas a natureza do cálculo acompanha a estratégia: na poda por magnitude é a fração
-de pesos anulados nas 48 matrizes; na poda estruturada é a fração de parâmetros que
-deixaram de existir nas mesmas projeções, vieses incluídos, já que a remoção de uma
-estrutura elimina também o viés que lhe corresponde. As duas grandezas medem a mesma coisa
---- quanto do conjunto podável foi eliminado ---, mas não são idênticas em denominador, e
-diferenças na segunda casa decimal entre estratégias não devem ser interpretadas.
-
-Os \textbf{FLOPs} são contabilizados por análise do grafo computacional. Registre-se uma
-particularidade da implementação: as projeções internas do GPT-2 não são camadas lineares
-convencionais, e sim um tipo específico de camada que a ferramenta de contagem não
-reconhece por padrão. Sem tratamento, a contagem ignoraria justamente as matrizes que a
-poda modifica, e a métrica sairia constante. Foi necessário, portanto, registrar uma regra
-de contagem própria para esse tipo de camada. Reconhece-se uma limitação remanescente: as
-multiplicações de matriz internas ao mecanismo de atenção não são contabilizadas pela
-ferramenta em nenhuma configuração. Como a omissão é idêntica para todas as estratégias,
-as comparações permanecem válidas. A implementação prevê ainda um estimador analítico de
-reserva --- duas operações por parâmetro não pertencente aos \textit{embeddings}, por
-\textit{token} processado ---, acionado apenas se a contagem pelo grafo falhar. Todos os
-valores reportados no Capítulo~\ref{chap:resultados} provêm da contagem pelo grafo, o que
-se verifica pelo fato de os FLOPs variarem com a poda estruturada; o estimador de reserva
-produziria uma grandeza de natureza diferente e não deve ser misturado a eles.
-
-O \textbf{tempo de inferência} é medido sobre uma entrada representativa de 512
-\textit{tokens}, com execuções de aquecimento descartadas --- para mitigar efeitos de
-inicialização da GPU --- seguidas de execuções cronometradas, das quais se reporta média e
-desvio-padrão.
-
-\subsection{Impacto Ambiental}\label{subsec:metrica_energia}
-
-O consumo de \textbf{energia} é medido com o \texttt{CodeCarbon}, que monitora o
-\textit{hardware} durante a execução do bloco de avaliação e reporta a energia consumida em
-quilowatts-hora. As \textbf{emissões de $CO_2$} são estimadas a partir desse consumo e da
-intensidade de carbono da rede elétrica onde o código executa.
-
-Sobre esta última métrica cabe uma ressalva importante, identificada durante os
-experimentos: a intensidade de carbono utilizada varia conforme a sessão de execução. Em
-consequência, as emissões não são comparáveis entre execuções realizadas em sessões
-distintas, e a análise dos resultados apoia-se no consumo de energia, não nas emissões
-derivadas dele.
 
 \section{Ambiente de Execução e Reprodutibilidade}\label{sec:ambiente}
 
