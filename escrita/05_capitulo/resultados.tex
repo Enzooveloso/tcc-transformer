@@ -728,10 +728,14 @@ a investigar.
 
 \section{\textit{Fine-tuning} de Recuperação}\label{sec:res_finetune}
 
+% AJUSTE: 03/10 — "fecha a lacuna", expressão que o orientador marcou como confusa na
+% Metodologia, reescrita aqui do mesmo modo que nos capítulos 4 e 5.
 Todas as varreduras apresentadas até aqui operam em regime \textit{one-shot}.
-Esta seção fecha a lacuna descrita na Seção~\ref{sec:finetuning}, submetendo
-sete configurações representativas ao \textit{fine-tuning} de recuperação e
-medindo a perplexity antes e depois do retreinamento.
+Esta seção reporta a Etapa 4 (Seção~\ref{sec:finetuning}), que incorpora o
+retreinamento ao experimento para medir quanto da degradação causada pela poda
+pode ser recuperada: sete configurações representativas foram submetidas ao
+\textit{fine-tuning} de recuperação, com a perplexity medida antes e depois do
+retreinamento.
 % AJUSTE: 03/10 — "orçamento" fica reservado ao orçamento de poda (definido na
 % Metodologia); no sentido de treino, passa a "quantidade de retreinamento".
 A quantidade de retreinamento é
