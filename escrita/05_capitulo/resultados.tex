@@ -731,8 +731,11 @@ a investigar.
 Todas as varreduras apresentadas até aqui operam em regime \textit{one-shot}.
 Esta seção fecha a lacuna descrita na Seção~\ref{sec:finetuning}, submetendo
 sete configurações representativas ao \textit{fine-tuning} de recuperação e
-medindo a perplexity antes e depois do retreinamento. O orçamento de treino é
-idêntico para todas: uma época sobre o conjunto de treino do WikiText-2, 297
+medindo a perplexity antes e depois do retreinamento.
+% AJUSTE: 03/10 — "orçamento" fica reservado ao orçamento de poda (definido na
+% Metodologia); no sentido de treino, passa a "quantidade de retreinamento".
+A quantidade de retreinamento é
+idêntica para todas: uma época sobre o conjunto de treino do WikiText-2, 297
 passos do otimizador, taxa de aprendizado de $5 \times 10^{-5}$ e semente
 fixa. Diferentemente das demais, esta varredura foi executada integralmente
 em uma única sessão, de modo que suas medições de tempo e energia são
@@ -766,7 +769,7 @@ Sensibilidade 30\,\% ($\beta = 1$) & 29,01\,\% &  724,53 &  56,08 & 3,00 \\
 \subsection{O Controle Denso Reenquadra a Leitura}\label{subsec:controle_denso}
 
 O primeiro resultado da Tabela~\ref{tab:finetune} não envolve poda alguma: o
-modelo denso, submetido ao mesmo orçamento de treino, tem sua perplexity
+modelo denso, submetido à mesma quantidade de retreinamento, tem sua perplexity
 reduzida de 25,17 para \textbf{18,68}. São 26\,\% de ganho obtidos sem
 remover um único parâmetro, atribuíveis exclusivamente à adaptação de domínio
 --- o GPT-2 foi pré-treinado no WebText, não no WikiText-2, e o retreinamento
@@ -793,10 +796,10 @@ qualquer propósito prático ---, retorna a 104,78. A poda por magnitude a
 Esse comportamento qualifica de forma importante a leitura das seções
 anteriores. A perplexity \textit{one-shot} mede o dano imediato da poda, mas
 superestima o dano permanente: configurações que pareciam inutilizáveis são,
-após um orçamento modesto de retreinamento, recuperáveis a patamares
+após uma quantidade modesta de retreinamento, recuperáveis a patamares
 utilizáveis. A região praticável da poda, delimitada em 20\,\% de esparsidade
 na Seção~\ref{sec:res_magnitude}, estende-se consideravelmente quando o
-retreinamento entra no orçamento.
+retreinamento é incluído.
 
 Registre-se ainda que a hierarquia entre granularidades se mantém: a
 configuração de magnitude a 30\,\% atinge a menor perplexity pós-retreinamento
@@ -824,15 +827,15 @@ de 3,33 vezes do regime \textit{one-shot} (724,53 contra 2413,52) torna-se
 
 A interpretação é que a alocação por sensibilidade otimiza uma quantidade
 específica --- o dano imediato causado pela poda --- e o retreinamento repara
-justamente o tipo de dano que ela evita. Quanto maior o orçamento de
-recuperação, menor a importância de haver podado bem. Sob essa leitura, o
-perfil de sensibilidade é mais valioso quanto mais escasso for o orçamento de
+justamente o tipo de dano que ela evita. Quanto maior a quantidade de
+retreinamento, menor a importância de haver podado bem. Sob essa leitura, o
+perfil de sensibilidade é mais valioso quanto mais escassa for a quantidade de
 retreinamento disponível, e a vantagem tende a crescer com a severidade da
 poda, o que é consistente com sua persistência em 30\,\% e seu
 desaparecimento em 10\,\%.
 
 O achado não invalida a contribuição, mas delimita seu escopo com precisão: em
-orçamentos de compressão agressivos, a alocação guiada continua entregando
+orçamentos de poda agressivos, a alocação guiada continua entregando
 perplexity aproximadamente duas vezes menor ao mesmo custo computacional
 --- 40,28~ms e 1,307~mWh contra 40,82~ms e 1,285~mWh da alocação global em
 30\,\%, valores equivalentes dentro da variação de medição. Em orçamentos
@@ -866,7 +869,7 @@ individual. Converter a economia para base por janela exigiria registrar o
 número de janelas de cada avaliação, o que não foi feito; a amortização fica,
 portanto, expressa na unidade efetivamente medida.
 
-A limitação principal desta varredura é o orçamento de retreinamento: uma
+A limitação principal desta varredura é a quantidade de retreinamento: uma
 única época. Não é possível afirmar, a partir destes dados, se a erosão da
 vantagem da alocação guiada se estabiliza no patamar observado em 30\,\% ou se
 prossegue com mais épocas até desaparecer também nesse orçamento. Trata-se da
@@ -901,7 +904,7 @@ de 10\,\% a 50\,\% de estruturas removidas, sem custo adicional de tempo,
 energia ou memória. O escopo da conclusão é delimitado por três fronteiras: a
 saturação da alocação em orçamentos acima de 60\,\%; o fato de que o perfil
 de sensibilidade precisa ser levantado separadamente para cada estratégia de
-poda, por não ser transferível entre elas; e, sobretudo, o orçamento de
+poda, por não ser transferível entre elas; e, sobretudo, a quantidade de
 retreinamento disponível.
 
 Esta última fronteira merece registro explícito, por ser a que mais qualifica
@@ -911,7 +914,7 @@ alocação guiada evita, e por isso corrói sua vantagem: em 10\,\% de
 estruturas removidas a vantagem desaparece após uma época de retreinamento, e
 em 30\,\% ela se reduz de um fator de 3,33 para 1,87. A alocação por
 sensibilidade é, portanto, uma contribuição cujo valor cresce com a severidade
-da compressão e decresce com o orçamento de recuperação disponível --- útil
+da compressão e decresce com a quantidade de retreinamento disponível --- útil
 onde a poda é agressiva e o retreinamento, caro, e dispensável no regime
 oposto. Sobre a leitura de todos esses números pesa ainda o controle denso: o
 mero retreinamento do modelo sem poda reduz a perplexity de 25,17 para 18,68,

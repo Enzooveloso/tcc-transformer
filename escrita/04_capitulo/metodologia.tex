@@ -136,7 +136,7 @@ métricas registradas (Seção~\ref{sec:metricas}).
 O modelo de referência é o GPT-2 \textit{small}, proposto por \citeonline{Radford2019} e
 descrito na Seção~\ref{subsec:llm_gpt2}. Trata-se de um modelo autorregressivo composto
 exclusivamente pelo componente decodificador da arquitetura \textit{Transformer}. Os pesos
-pré-treinados são obtidos pela plataforma Hugging Face, que os disponibiliza publicamente,
+pré-treinados foram obtidos pela plataforma Hugging Face, que os disponibiliza publicamente,
 e carregados por meio da biblioteca PyTorch \cite{Paszke2019}.
 
 A Tabela~\ref{tab:gpt2_config} resume a configuração da variante utilizada.
@@ -262,7 +262,7 @@ fornecer parte do pré-treinamento do OPT.
 Restam três
 candidatos que atendem a todos os critérios: as variantes \textit{small},
 \textit{medium} e \textit{large} do GPT-2, esta última com margem estreita em C3 --- dos
-12,4 GB estimados, restam cerca de 3,6 GB para as ativações. Aplica-se, então, a regra de
+12,4 GB estimados, restam cerca de 3,6 GB para as ativações. Aplicou-se, então, a regra de
 desempate da Seção~\ref{subsec:metodologia_selecao_modelo}: entre os candidatos que atendem a todos os
 critérios, adota-se o de menor número de parâmetros. O GPT-2 \textit{medium} e o
 \textit{large} têm, respectivamente, cerca de 2,9 e 6,2 vezes mais parâmetros que o
@@ -281,7 +281,7 @@ a contagem de FLOPs da Tabela~\ref{tab:gpt2_config}, em que 126,6 GFLOPs por jan
 \textit{tokens} correspondem a cerca de 2 operações por parâmetro por \textit{token} ---, o
 mesmo conjunto de \textit{fine-tunings} levaria cerca de 1,5 hora com o \textit{medium} e
 3,2 horas com o \textit{large}; trata-se de estimativas, não de medições diretas. A escolha
-recai, portanto, sobre o GPT-2 \textit{small}.
+recaiu, portanto, sobre o GPT-2 \textit{small}.
 
 Cabe observar que, embora seja a menor variante da família GPT-2, o modelo é cerca de
 cinco vezes maior que a ResNet-50, arquitetura tradicionalmente usada em estudos de poda
@@ -302,7 +302,7 @@ original dos artigos --- parágrafos completos, pontuação e capitalização ma
 que o torna adequado para medir a capacidade de um modelo de acompanhar contexto ao longo
 de textos extensos.
 
-Emprega-se especificamente a variante \texttt{wikitext-2-raw-v1}, na qual o texto não
+Empregou-se especificamente a variante \texttt{wikitext-2-raw-v1}, na qual o texto não
 sofre substituição de palavras raras por um marcador genérico. Essa escolha é necessária
 porque o GPT-2 utiliza tokenização por \textit{subwords}, capaz de representar palavras
 fora do vocabulário decompondo-as em fragmentos; a variante processada anularia essa
@@ -374,8 +374,8 @@ Seção~\ref{subsec:justificativa_gpt2} --- uma época sobre o treino do WikiTex
 4,6 minutos ---, uma época sobre o WikiText-103 levaria cerca de 3,8 horas por
 \textit{fine-tuning}, e os sete \textit{fine-tunings} da campanha passariam de cerca de 31
 minutos para cerca de 25 horas (estimativa proporcional ao número de \textit{tokens} de
-treino). Aplica-se, então, a regra de desempate da Seção~\ref{subsec:metodologia_base}:
-adota-se o de menor conjunto de treino, o WikiText-2.
+treino). Aplicou-se, então, a regra de desempate da Seção~\ref{subsec:metodologia_base}:
+adotou-se o de menor conjunto de treino, o WikiText-2.
 
 Registre-se que a base de dados é parametrizável na implementação: a substituição pelo
 WikiText-103, de mesma natureza e cerca de cinquenta vezes maior, exige apenas a alteração
@@ -385,12 +385,12 @@ código.
 
 \subsubsection{Pré-processamento e Tokenização}\label{subsec:preprocessamento}
 
-O pré-processamento é intencionalmente mínimo, para que a perplexity medida reflita a
-base de dados e não decisões de limpeza. As linhas do conjunto são unidas por quebra dupla,
+O pré-processamento foi intencionalmente mínimo, para que a perplexity medida refletisse a
+base de dados e não decisões de limpeza. As linhas do conjunto foram unidas por quebra dupla,
 preservando a separação entre parágrafos tal como na base de dados original, e o texto resultante
-é tokenizado como um fluxo contínuo único.
+foi tokenizado como um fluxo contínuo único.
 
-A tokenização emprega o tokenizador original do GPT-2, baseado no algoritmo BPE
+A tokenização empregou o tokenizador original do GPT-2, baseado no algoritmo BPE
 (\textit{Byte Pair Encoding}), com vocabulário de 50.257 \textit{tokens}. Manter o
 tokenizador original é indispensável: os \textit{embeddings} do modelo foram aprendidos
 para esse vocabulário específico, e qualquer substituição invalidaria os pesos
@@ -398,21 +398,21 @@ pré-treinados.
 
 \subsubsection{Divisão dos Dados}\label{subsec:divisao_dados}
 
-Adota-se a divisão oficial da base de dados. O \textbf{conjunto de teste} é utilizado em todas as
+Adotou-se a divisão oficial da base de dados. O \textbf{conjunto de teste} foi utilizado em todas as
 medições de perplexity reportadas, tanto do modelo denso quanto de todas as configurações
-comprimidas. O \textbf{conjunto de treinamento} é utilizado exclusivamente na etapa de
+comprimidas. O \textbf{conjunto de treinamento} foi utilizado exclusivamente na etapa de
 \textit{fine-tuning} de recuperação (Seção~\ref{sec:finetuning}). O \textbf{conjunto de
-validação} é empregado apenas para acompanhar a evolução do treinamento ao longo dos
-passos, quando essa curva é solicitada, e nunca para selecionar resultados reportados.
+validação} foi empregado apenas para acompanhar a evolução do treinamento ao longo dos
+passos, quando essa curva foi solicitada, e nunca para selecionar resultados reportados.
 
-Essa separação estrita importa: como as varreduras \textit{one-shot} não realizam
-treinamento algum, elas não têm contato com o conjunto de treinamento, e a perplexity de
+Essa separação estrita importa: como as varreduras \textit{one-shot} não realizaram
+treinamento algum, elas não tiveram contato com o conjunto de treinamento, e a perplexity de
 teste é uma medida limpa do dano causado pela poda.
 
 \subsection{Métricas de Avaliação}\label{sec:metricas}
 
 Toda configuração --- o modelo denso, as podadas pelos métodos da literatura e as podadas
-pela estratégia otimizada --- é avaliada pelo mesmo conjunto de métricas, cobrindo as três
+pela estratégia otimizada --- foi avaliada pelo mesmo conjunto de métricas, cobrindo as três
 dimensões definidas na Seção~\ref{sec:metodologia_metricas}. A
 Tabela~\ref{tab:metricas} as resume.
 
@@ -441,16 +441,16 @@ Emissões de $CO_2$ & Emissões equivalentes ao consumo & kg & \texttt{CodeCarbo
 
 \subsubsection{Perplexity}\label{subsec:metrica_perplexity}
 
-A perplexity é a métrica de desempenho preditivo adotada. Ela é calculada pelo método da
+A perplexity é a métrica de desempenho preditivo adotada. Ela foi calculada pelo método da
 janela deslizante, padrão para modelos autorregressivos: o fluxo de \textit{tokens} do
-conjunto de teste é percorrido em janelas do tamanho máximo de contexto do modelo, com
-passo menor que a janela, de modo que cada \textit{token} seja previsto dispondo de
-contexto anterior substancial. Apenas os \textit{tokens} ainda não avaliados contribuem
-para a perda em cada janela; os demais entram como contexto.
+conjunto de teste foi percorrido em janelas do tamanho máximo de contexto do modelo, com
+passo menor que a janela, de modo que cada \textit{token} fosse previsto dispondo de
+contexto anterior substancial. Apenas os \textit{tokens} ainda não avaliados contribuíram
+para a perda em cada janela; os demais entraram como contexto.
 
-Emprega-se janela de 1.024 \textit{tokens} com passo de 512. Passos menores produzem
+Empregou-se janela de 1.024 \textit{tokens} com passo de 512. Passos menores produzem
 estimativas mais precisas ao custo de mais computação; o valor adotado é o compromisso
-usual na literatura, e é mantido idêntico em todas as configurações avaliadas.
+usual na literatura, e foi mantido idêntico em todas as configurações avaliadas.
 
 \subsubsection{Custo Computacional}\label{subsec:metrica_custo}
 
@@ -461,7 +461,7 @@ poda. Na poda não estruturada as duas divergem --- há zeros, mas a arquitetura
 existir. Essa divergência é, por si só, um resultado: ela evidencia a diferença entre
 compressão contábil e compressão física.
 
-A \textbf{esparsidade real} reportada nas tabelas é sempre calculada sobre o conjunto
+A \textbf{esparsidade real} reportada nas tabelas foi sempre calculada sobre o conjunto
 podável, mas a natureza do cálculo acompanha a estratégia: na poda por magnitude é a fração
 de pesos anulados nas 48 matrizes; na poda estruturada é a fração de parâmetros que
 deixaram de existir nas mesmas projeções, vieses incluídos, já que a remoção de uma
@@ -469,13 +469,13 @@ estrutura elimina também o viés que lhe corresponde. As duas grandezas medem a
 --- quanto do conjunto podável foi eliminado ---, mas não são idênticas em denominador, e
 diferenças na segunda casa decimal entre estratégias não devem ser interpretadas.
 
-Os \textbf{FLOPs} são contabilizados por análise do grafo computacional. Registre-se uma
+Os \textbf{FLOPs} foram contabilizados por análise do grafo computacional. Registre-se uma
 particularidade da implementação: as projeções internas do GPT-2 não são camadas lineares
 convencionais, e sim um tipo específico de camada que a ferramenta de contagem não
 reconhece por padrão. Sem tratamento, a contagem ignoraria justamente as matrizes que a
 poda modifica, e a métrica sairia constante. Foi necessário, portanto, registrar uma regra
 de contagem própria para esse tipo de camada. Reconhece-se uma limitação remanescente: as
-multiplicações de matriz internas ao mecanismo de atenção não são contabilizadas pela
+multiplicações de matriz internas ao mecanismo de atenção não foram contabilizadas pela
 ferramenta em nenhuma configuração. Como a omissão é idêntica para todas as estratégias,
 as comparações permanecem válidas. A implementação prevê ainda um estimador analítico de
 reserva --- duas operações por parâmetro não pertencente aos \textit{embeddings}, por
@@ -484,20 +484,20 @@ valores reportados no Capítulo~\ref{chap:resultados} provêm da contagem pelo g
 se verifica pelo fato de os FLOPs variarem com a poda estruturada; o estimador de reserva
 produziria uma grandeza de natureza diferente e não deve ser misturado a eles.
 
-O \textbf{tempo de inferência} é medido sobre uma entrada representativa de 512
+O \textbf{tempo de inferência} foi medido sobre uma entrada representativa de 512
 \textit{tokens}, com execuções de aquecimento descartadas --- para mitigar efeitos de
 inicialização da GPU --- seguidas de execuções cronometradas, das quais se reporta média e
 desvio-padrão.
 
 \subsubsection{Impacto Ambiental}\label{subsec:metrica_energia}
 
-O consumo de \textbf{energia} é medido com o \texttt{CodeCarbon}, que monitora o
+O consumo de \textbf{energia} foi medido com o \texttt{CodeCarbon}, que monitora o
 \textit{hardware} durante a execução do bloco de avaliação e reporta a energia consumida em
-quilowatts-hora. As \textbf{emissões de $CO_2$} são estimadas a partir desse consumo e da
+quilowatts-hora. As \textbf{emissões de $CO_2$} foram estimadas a partir desse consumo e da
 intensidade de carbono da rede elétrica onde o código executa.
 
 Sobre esta última métrica cabe uma ressalva importante, identificada durante os
-experimentos: a intensidade de carbono utilizada varia conforme a sessão de execução. Em
+experimentos: a intensidade de carbono utilizada variou conforme a sessão de execução. Em
 consequência, as emissões não são comparáveis entre execuções realizadas em sessões
 distintas, e a análise dos resultados apoia-se no consumo de energia, não nas emissões
 derivadas dele.
@@ -577,7 +577,7 @@ estratégias na literatura de poda, sem substituir os critérios de seleção.
 \subsection{Parâmetros Podáveis}\label{subsec:parametros_podaveis}
 
 Uma decisão de implementação que condiciona todos os resultados é a definição de quais
-parâmetros são elegíveis à poda. Adotam-se, por convenção consolidada na literatura,
+parâmetros são elegíveis à poda. Adotaram-se, por convenção consolidada na literatura,
 apenas as matrizes de peso das projeções lineares internas aos blocos
 \textit{Transformer}, a saber, quatro por bloco:
 
@@ -588,7 +588,7 @@ apenas as matrizes de peso das projeções lineares internas aos blocos
     \item \texttt{mlp.c\_proj} --- segunda transformação linear do MLP.
 \end{itemize}
 
-Com 12 blocos, são 48 matrizes podáveis. Ficam deliberadamente fora do escopo da poda:
+Com 12 blocos, são 48 matrizes podáveis. Ficaram deliberadamente fora do escopo da poda:
 
 \begin{itemize}
     \item as matrizes de \textit{embedding} de \textit{token} (\texttt{wte}) e de posição
@@ -610,8 +610,8 @@ podável, e as duas grandezas são reportadas separadamente.
 
 O primeiro método segue \citeonline{Han2015}. O critério de importância é o valor absoluto
 do peso: assume-se que pesos próximos de zero contribuem pouco para a saída e podem ser
-anulados. Dada uma taxa de esparsidade alvo, calcula-se o limiar correspondente ao
-quantil apropriado da distribuição de $|w|$ e zeram-se todos os pesos abaixo dele.
+anulados. Dada uma taxa de esparsidade alvo, calculou-se o limiar correspondente ao
+quantil apropriado da distribuição de $|w|$ e zeraram-se todos os pesos abaixo dele.
 
 A implementação preserva a característica essencial do método: os pesos são
 \textbf{zerados}, não removidos. As matrizes conservam suas dimensões originais e a
@@ -624,14 +624,14 @@ precisamente a razão pela qual esse método não reduz o custo de inferência e
 O segundo método adapta \citeonline{Li2017} ao \textit{Transformer}. O trabalho original
 poda filtros convolucionais ordenados por norma $L_1$; aqui, as unidades estruturais
 equivalentes são as \textbf{cabeças de atenção} e os \textbf{neurônios da camada
-intermediária do MLP}. Para cada uma dessas estruturas calcula-se a norma $L_1$ dos pesos
-que lhe correspondem, e removem-se as de menor norma.
+intermediária do MLP}. Para cada uma dessas estruturas calculou-se a norma $L_1$ dos pesos
+que lhe correspondem, e removeram-se as de menor norma.
 
 A diferença decisiva em relação ao método anterior é que a remoção é \textbf{física}. As
-matrizes são efetivamente reconstruídas com dimensões menores: as colunas de consulta,
-chave e valor associadas às cabeças removidas são eliminadas de \texttt{c\_attn}, as
-linhas correspondentes saem de \texttt{c\_proj}, e a contabilidade interna do módulo de
-atenção --- número de cabeças e dimensão de divisão --- é atualizada de acordo. O
+matrizes foram efetivamente reconstruídas com dimensões menores: as colunas de consulta,
+chave e valor associadas às cabeças removidas foram eliminadas de \texttt{c\_attn}, as
+linhas correspondentes saíram de \texttt{c\_proj}, e a contabilidade interna do módulo de
+atenção --- número de cabeças e dimensão de divisão --- foi atualizada de acordo. O
 resultado não é um modelo esparso, mas uma arquitetura menor e densa.
 
 A implementação admite três alvos: apenas cabeças, apenas neurônios MLP, ou ambos
@@ -650,7 +650,7 @@ de atenção, que são apenas 12 por bloco, produz arredondamentos visíveis. Um
 
 \subsection{Escopos de Alocação}\label{subsec:escopos}
 
-Ambos os métodos são avaliados sob dois escopos, que representam formas distintas de
+Ambos os métodos foram avaliados sob dois escopos, que representam formas distintas de
 distribuir o orçamento de poda entre as camadas:
 
 \begin{itemize}
@@ -674,13 +674,13 @@ de esparsidade, e é essa constatação que motiva a análise de sensibilidade.
 
 \subsection{Taxas de Poda Avaliadas}\label{subsec:taxas}
 
-Cada combinação de método e escopo é avaliada em dez níveis: 0\% (o modelo denso, incluído
+Cada combinação de método e escopo foi avaliada em dez níveis: 0\% (o modelo denso, incluído
 como controle interno de cada varredura) e de 10\% a 90\% em passos de 10 pontos
-percentuais. A varredura completa da faixa é uma escolha deliberada: como não se conhecia
+percentuais. A varredura completa da faixa foi uma escolha deliberada: como não se conhecia
 de antemão onde estaria o ponto de colapso de cada estratégia, restringir os níveis a uma
-faixa estreita poderia ocultar exatamente o comportamento que se deseja caracterizar.
+faixa estreita poderia ocultar exatamente o comportamento que se desejava caracterizar.
 
-Cada nível parte de um modelo recarregado do zero, e não do modelo podado no nível
+Cada nível partiu de um modelo recarregado do zero, e não do modelo podado no nível
 anterior. Sem esse cuidado, a poda seria cumulativa e os níveis deixariam de ser
 independentes entre si.
 
@@ -692,14 +692,14 @@ constitui a contribuição central do trabalho. Ela responde a uma limitação c
 métodos da Etapa 2: nenhum deles mede o quanto cada camada realmente importa. O escopo uniforme trata todas as camadas como intercambiáveis; o
 escopo global decide com base na magnitude dos pesos, que é um \textit{proxy} de
 importância, não uma medida dela. A estratégia proposta substitui esse \textit{proxy} por
-uma medição direta, em duas fases, e é avaliada nos mesmos orçamentos de poda das
+uma medição direta, em duas fases, e foi avaliada nos mesmos orçamentos de poda das
 varreduras da Etapa 2.
 
 \subsection{Fase 1 --- Perfil de Sensibilidade}\label{subsec:fase1}
 
-Para cada camada $\ell$ do modelo e para cada estratégia de poda, poda-se
+Para cada camada $\ell$ do modelo e para cada estratégia de poda, podou-se
 \textbf{exclusivamente} aquela camada a uma taxa-sonda fixa, mantendo todas as demais
-intactas, e mede-se a perplexity resultante. A degradação é registrada em escala
+intactas, e mediu-se a perplexity resultante. A degradação foi registrada em escala
 logarítmica:
 
 \begin{equation}\label{eq:delta_perfil}
@@ -711,22 +711,22 @@ podada. O logaritmo é necessário porque a perplexity de modelos podados sem re
 varia por ordens de grandeza; em escala linear, uma única camada catastrófica tornaria
 todas as demais indistinguíveis entre si.
 
-Adota-se taxa-sonda de 50\%. O procedimento não envolve treinamento e produz, ao final, um
+Adotou-se taxa-sonda de 50\%. O procedimento não envolveu treinamento e produziu, ao final, um
 perfil com uma medida de sensibilidade por camada, para cada estratégia. Como as duas
-estratégias removem coisas diferentes, os perfis são levantados separadamente e não são
+estratégias removem coisas diferentes, os perfis foram levantados separadamente e não são
 intercambiáveis --- ponto que a Seção~\ref{subsec:perfis_divergem} demonstra
 experimentalmente.
 
-Como a escolha da taxa-sonda é arbitrária, o perfilamento completo é replicado a uma
+Como a escolha da taxa-sonda é arbitrária, o perfilamento completo foi replicado a uma
 segunda taxa --- 30\% ---, nas duas estratégias, de modo a verificar se a ordenação de
 sensibilidade obtida é propriedade das camadas ou artefato do regime em que a sonda opera.
-A réplica cumpre função de verificação e não alimenta nenhuma alocação: todas as taxas por
+A réplica cumpriu função de verificação e não alimentou nenhuma alocação: todas as taxas por
 camada reportadas derivam do perfil de 50\%. O resultado da verificação é apresentado na
 Seção~\ref{subsec:robustez_sonda}.
 
 \subsection{Fase 2 --- Alocação Adaptativa de Taxas}\label{subsec:fase2}
 
-O perfil é então convertido em uma taxa de poda por camada. Atribui-se a cada camada uma
+O perfil foi então convertido em uma taxa de poda por camada. Atribuiu-se a cada camada uma
 taxa proporcional à sua robustez --- o inverso da degradação medida --- elevada a um
 expoente $\beta$ e escalada por um fator único $\alpha$, escolhido de modo que a média das
 taxas, ponderada pelo número de parâmetros podáveis de cada camada, iguale o orçamento
@@ -740,12 +740,12 @@ r_{\ell} = \min\!\left(\alpha \cdot \Delta_{\ell}^{-\beta},\ r_{\max}\right),
 
 \noindent em que $w_{\ell}$ é o número de parâmetros podáveis da camada $\ell$ e
 $r_{\max} = 0{,}95$ é um teto que impede que mesmo a camada mais robusta seja
-integralmente zerada. Como a fração podada é monótona em $\alpha$, o fator é obtido por
+integralmente zerada. Como a fração podada é monótona em $\alpha$, o fator foi obtido por
 bisseção.
 
 A ponderação por $w_{\ell}$ não produz efeito no modelo aqui empregado: os doze blocos do
 GPT-2 são idênticos em estrutura e, portanto, têm exatamente o mesmo número de parâmetros
-podáveis, de modo que a média ponderada se reduz à média simples das taxas. Ela é mantida
+podáveis, de modo que a média ponderada se reduz à média simples das taxas. Ela foi mantida
 na formulação por generalidade --- em arquiteturas de blocos heterogêneos, ignorá-la faria
 o orçamento global ser sistematicamente descumprido.
 
@@ -753,10 +753,10 @@ O expoente $\beta$ controla o quanto o perfil é levado a sério. Com $\beta = 1
 o inverso puro da degradação; valores intermediários amortecem a razão entre camadas. Esse
 amortecimento não é um detalhe: a razão de robustez entre duas camadas é ilimitada, e sem
 controle uma única camada muito robusta absorveria praticamente todo o orçamento. Os
-experimentos avaliam $\beta = 1{,}0$ e $\beta = 0{,}5$ sobre o mesmo perfil, o que fornece
+experimentos avaliaram $\beta = 1{,}0$ e $\beta = 0{,}5$ sobre o mesmo perfil, o que forneceu
 a ablação da função de alocação sem exigir a repetição da fase 1, que é a etapa cara.
 
-O valor $\beta = 0$ é avaliado também, mas com outra finalidade: como o fator
+O valor $\beta = 0$ foi avaliado também, mas com outra finalidade: como o fator
 $\Delta_{\ell}^{-\beta}$ vale 1 para toda camada, todas recebem a mesma taxa e a regra deve
 reproduzir a poda uniforme. Serve, portanto, de controle de corretude da alocação, e não de
 alocação candidata. O controle é exato na poda estruturada; na poda por magnitude ele não
@@ -768,17 +768,17 @@ verificação é reportada na Seção~\ref{subsec:controle_beta_zero}.
 Registre-se, por fim, uma salvaguarda da implementação não visível na
 Equação~\ref{eq:alocacao_dev}: como a degradação medida pela sonda pode ser nula ou
 negativa --- há casos em que remover cabeças de atenção \textit{melhora} a perplexity,
-fenômeno reportado por \citeonline{Michel2019} ---, a robustez $\Delta_{\ell}^{-1}$ é
+fenômeno reportado por \citeonline{Michel2019} ---, a robustez $\Delta_{\ell}^{-1}$ foi
 calculada sobre um piso positivo, de modo que tais camadas entrem na alocação como as mais
 robustas em vez de produzir divisão por zero. Nos perfis efetivamente levantados neste
-trabalho o piso não foi acionado: a menor degradação observada é de 0,0346, duas ordens de
+trabalho o piso não foi acionado: a menor degradação observada foi de 0,0346, duas ordens de
 grandeza acima dele.
 
 % AJUSTE: revisão 30/09 — "fecha essa lacuna", marcado pelo orientador na Metodologia,
 % aparecia também aqui; reescrito do mesmo modo.
 \section{Etapa 4 --- \textit{Fine-tuning} de Recuperação}\label{sec:finetuning}
 
-As Etapas 2 e 3 operam em regime \textit{one-shot}, isto é, podam e avaliam sem
+As Etapas 2 e 3 operaram em regime \textit{one-shot}, isto é, podaram e avaliaram sem
 retreinamento, de modo a isolar o dano causado pela poda. Esse regime, porém, não
 corresponde ao procedimento da literatura: tanto \citeonline{Han2015} quanto
 \citeonline{Li2017} retreinam o modelo após podá-lo. Na quarta etapa, esse retreinamento
@@ -791,31 +791,31 @@ A primeira é o \textbf{controle denso}. O GPT-2 não foi pré-treinado no WikiT
 modo que o simples \textit{fine-tuning} do modelo denso nessa base de dados já reduz a perplexity
 por adaptação de domínio, sem poda alguma envolvida. Sem essa linha de controle, seria
 impossível separar a recuperação do dano da poda da mera adaptação à base de dados. O modelo
-denso é, portanto, retreinado pelo mesmo número de passos e avaliado junto às demais
+denso foi, portanto, retreinado pelo mesmo número de passos e avaliado junto às demais
 configurações.
 
 A segunda é a \textbf{preservação da esparsidade}. Na poda não estruturada os pesos são
 apenas zerados, e o gradiente os restauraria já no primeiro passo do otimizador; ao final
-do treinamento, o modelo estaria novamente denso. Como em \citeonline{Han2015}, mantém-se
+do treinamento, o modelo estaria novamente denso. Como em \citeonline{Han2015}, manteve-se
 uma máscara binária fixa, capturada logo após a poda e reaplicada depois de cada passo do
 otimizador. Registre-se que zerar o gradiente não seria suficiente: o otimizador utilizado
 possui momento e regularização por decaimento de pesos, e ambos alteram um parâmetro mesmo
-quando seu gradiente é nulo. A esparsidade medida ao final do treinamento é registrada
-como verificação de integridade. Na poda estruturada não há máscara, pois as estruturas já
-foram fisicamente removidas.
+quando seu gradiente é nulo. A esparsidade medida ao final do treinamento foi registrada
+como verificação de integridade. Na poda estruturada não houve máscara, pois as estruturas já
+haviam sido fisicamente removidas.
 
-O treinamento emprega o otimizador AdamW, com aquecimento linear da taxa de aprendizado
+O treinamento empregou o otimizador AdamW, com aquecimento linear da taxa de aprendizado
 seguido de decaimento linear, recorte de norma do gradiente e acúmulo de gradiente para
 viabilizar lotes efetivos maiores do que a memória da GPU comportaria. O decaimento de
-pesos é aplicado apenas às matrizes de peso, deixando de fora vieses e parâmetros de
-normalização, conforme prática consolidada. A passagem direta e a retropropagação executam
+pesos foi aplicado apenas às matrizes de peso, deixando de fora vieses e parâmetros de
+normalização, conforme prática consolidada. A passagem direta e a retropropagação executaram
 em \textbf{precisão mista}, com escalonamento dinâmico da perda para evitar
-subtransbordamento dos gradientes em meia precisão; os pesos são mantidos em precisão
-simples. Essa escolha reduz aproximadamente à metade a memória de ativações e é o que
-viabiliza o orçamento de treino na GPU disponível, mas introduz uma fonte adicional de
+subtransbordamento dos gradientes em meia precisão; os pesos foram mantidos em precisão
+simples. Essa escolha reduziu aproximadamente à metade a memória de ativações e foi o que
+viabilizou o treinamento na GPU disponível, mas introduziu uma fonte adicional de
 variação numérica que não existe nas etapas \textit{one-shot}, todas executadas em
 precisão simples. O consumo de
-energia do treinamento é medido separadamente do consumo da inferência: trata-se de um
+energia do treinamento foi medido separadamente do consumo da inferência: trata-se de um
 custo pago uma única vez, que precisa ser amortizado contra a economia por inferência para
 que o balanço energético do trabalho feche corretamente.
 
@@ -825,13 +825,13 @@ aleatória efetivamente altera o resultado.
 
 \section{\textit{Framework} de Implementação}\label{sec:framework}
 
-A implementação é feita em Python, com o \textit{framework} PyTorch \cite{Paszke2019}
+A implementação foi feita em Python, com o \textit{framework} PyTorch \cite{Paszke2019}
 para construção, manipulação e treinamento dos modelos. O PyTorch foi escolhido por seu
 sistema de diferenciação automática, que constrói dinamicamente o grafo computacional e
 simplifica a implementação do \textit{backpropagation} durante o \textit{fine-tuning}, e
 por seu suporte nativo à aceleração em GPU.
 
-Os pesos pré-treinados são obtidos pela plataforma Hugging Face por meio da biblioteca
+Os pesos pré-treinados foram obtidos pela plataforma Hugging Face por meio da biblioteca
 \texttt{transformers}. Cabe a distinção, já feita no Capítulo~\ref{chap:metodologia}: a
 Hugging Face é a plataforma que hospeda e distribui os modelos, ao passo que PyTorch é a
 biblioteca que os executa.
@@ -852,9 +852,9 @@ Uma observação relevante sobre a implementação da poda: ambas as estratégia
 implementadas manualmente, sem recurso a bibliotecas dedicadas. No caso da poda
 estruturada, essa decisão foi imposta pelo ambiente --- as versões mais recentes da
 biblioteca \texttt{transformers} removeram a interface de poda de cabeças que existia em
-versões anteriores. A remoção física das estruturas é, portanto, realizada diretamente:
-as matrizes são reconstruídas com as dimensões reduzidas e a contabilidade interna do
-módulo de atenção é atualizada. A implementação da poda é coberta por uma
+versões anteriores. A remoção física das estruturas foi, portanto, realizada diretamente:
+as matrizes foram reconstruídas com as dimensões reduzidas e a contabilidade interna do
+módulo de atenção foi atualizada. A implementação da poda é coberta por uma
 suíte de testes automatizados (\texttt{test\_poda}), executada sobre um GPT-2 de dimensões
 reduzidas e pesos aleatórios --- o que está sob verificação é a mecânica da poda, não os
 pesos pré-treinados. O teste central é o de \textbf{equivalência numérica}: remover
@@ -959,7 +959,7 @@ nos resultados, o dano causado pela poda daquilo que o retreinamento consegue re
 
 \section{Ambiente de Execução e Reprodutibilidade}\label{sec:ambiente}
 
-Os experimentos são executados na plataforma Kaggle, em sessões com GPU NVIDIA Tesla T4. A
+Os experimentos foram executados na plataforma Kaggle, em sessões com GPU NVIDIA Tesla T4. A
 implementação detecta automaticamente o dispositivo disponível, o que permite executar
 localmente em CPU para testes rápidos sem alteração de código.
 
@@ -968,7 +968,7 @@ Quanto à reprodutibilidade, três aspectos merecem registro.
 O primeiro é que as varreduras \textit{one-shot} são \textbf{determinísticas}. Não há
 treinamento, o modelo opera em modo de avaliação, o conjunto de teste é fixo e os critérios
 de poda são ordenações determinísticas sobre pesos fixos. Verificou-se empiricamente que
-execuções independentes, em sessões distintas, reproduzem a perplexity até a última casa
+execuções independentes, em sessões distintas, reproduziram a perplexity até a última casa
 decimal. Repetições com sementes diferentes, nessas etapas, produziriam linhas idênticas e
 não acrescentariam informação. A semente passa a importar apenas no \textit{fine-tuning}.
 
@@ -976,10 +976,10 @@ O segundo é que as medições de \textbf{tempo e energia dependem da sessão}. 
 o mesmo modelo denso, sem qualquer poda, registrou tempos e consumos sensivelmente
 distintos em sessões diferentes da plataforma, o que se atribui à variação de
 \textit{hardware} físico e de carga concorrente. Por essa razão, comparações de custo entre
-varreduras executadas em sessões distintas são sempre feitas em termos relativos ao modelo
+varreduras executadas em sessões distintas foram sempre feitas em termos relativos ao modelo
 denso da própria sessão, nunca em valores absolutos.
 
-O terceiro é que cada configuração experimental grava uma linha em arquivo de resultados,
+O terceiro é que cada configuração experimental gravou uma linha em arquivo de resultados,
 contendo não apenas as métricas mas também os parâmetros que a geraram --- estratégia,
 escopo, taxa alvo, taxa efetiva e, no caso da estratégia otimizada, as taxas atribuídas a
 cada camada. Isso permite rastrear qualquer número apresentado no
@@ -991,7 +991,7 @@ Reconhecem-se, desde o desenho experimental, limitações que condicionam o esco
 resultados:
 
 \begin{itemize}
-    \item \textbf{Um único modelo e uma única base de dados.} Os experimentos empregam
+    \item \textbf{Um único modelo e uma única base de dados.} Os experimentos empregaram
           exclusivamente o GPT-2 \textit{small} sobre o WikiText-2. Os resultados podem
           não se transferir diretamente para modelos de escala substancialmente maior ou
           para bases de dados de natureza distinta. A implementação foi mantida parametrizável
@@ -1003,7 +1003,7 @@ resultados:
           escopo.
 
     \item \textbf{Faixa restrita de taxas-sonda no perfil de sensibilidade.} O perfil que
-          alimenta a alocação é levantado a uma única taxa, e sua estabilidade foi
+          alimenta a alocação foi levantado a uma única taxa, e sua estabilidade foi
           verificada por meio de uma réplica a uma segunda taxa
           (Seção~\ref{subsec:robustez_sonda}). Ambas pertencem, porém, ao mesmo regime
           intermediário de poda: nada garante que a ordenação de sensibilidade entre
