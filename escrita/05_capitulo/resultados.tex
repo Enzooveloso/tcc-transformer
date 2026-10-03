@@ -770,7 +770,7 @@ modelo denso, submetido ao mesmo orçamento de treino, tem sua perplexity
 reduzida de 25,17 para \textbf{18,68}. São 26\,\% de ganho obtidos sem
 remover um único parâmetro, atribuíveis exclusivamente à adaptação de domínio
 --- o GPT-2 foi pré-treinado no WebText, não no WikiText-2, e o retreinamento
-o aproxima da distribuição do corpus de avaliação.
+o aproxima da distribuição da base de dados de avaliação.
 
 A consequência metodológica é considerável e justifica retroativamente a
 decisão de incluir o controle. Sem ele, a configuração de magnitude a
@@ -779,7 +779,7 @@ uma leitura que sugeriria que a poda melhora o modelo. A comparação correta é
 contra 18,68, e diante desse valor a mesma configuração aparece pelo que de
 fato é --- 10\,\% pior que o denso equivalente. Toda a coluna de razão da
 Tabela~\ref{tab:finetune} adota essa referência, e é a única leitura que
-separa recuperação do dano da poda de mera adaptação ao corpus.
+separa recuperação do dano da poda de mera adaptação à base de dados.
 
 \subsection{A Recuperação é Substancial, mas Desigual}\label{subsec:recuperacao}
 

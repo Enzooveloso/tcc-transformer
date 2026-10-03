@@ -10,11 +10,11 @@ implementação das estratégias de poda sem otimização
 (Seção~\ref{sec:metodologia_poda_sem}); (iii) a implementação da estratégia de poda com
 otimização (Seção~\ref{sec:metodologia_poda_com}); (iv) o \textit{fine-tuning} de
 recuperação (Seção~\ref{sec:metodologia_finetuning}); e (v) a definição das métricas de
-avaliação, do modo como são obtidas para cada modelo avaliado e do corpus sobre o qual são
+avaliação, do modo como são obtidas para cada modelo avaliado e da base de dados sobre a qual são
 medidas (Seção~\ref{sec:metodologia_metricas}).
 % AJUSTE: revisão 24/09 — comentário "teve também o uso das métricas para avaliar o
 % modelo" atendido pelo item (v) acima; marcação removida em 03/10.
-O modelo selecionado, o \textit{dataset} empregado e as configurações de poda são descritos
+O modelo selecionado, a base de dados empregada e as configurações de poda são descritos
 no Capítulo~\ref{chap:desenvolvimento}.
 
 % -------------------------------------------------------
@@ -43,7 +43,7 @@ Para a seleção do modelo de referência, foram adotados os seguintes critério
     \item \textbf{C2 --- Pesos abertos:} dispor de pesos pré-treinados com \textit{download}
           direto na plataforma que os hospeda, sem exigência de aprovação prévia de acesso,
           sob licença que permita uso acadêmico. O pré-treinamento a partir do zero está
-          fora do alcance deste trabalho: exige corpora da ordem de dezenas de gigabytes de
+          fora do alcance deste trabalho: exige bases de dados da ordem de dezenas de gigabytes de
           texto --- o WebText, empregado no pré-treinamento da família GPT-2, reúne pouco
           mais de 8 milhões de documentos e 40 GB de texto \cite{Radford2019} --- e tem
           custo computacional e energético elevado \cite{Strubell2019}.
@@ -61,8 +61,8 @@ Para a seleção do modelo de referência, foram adotados os seguintes critério
           compressão --- destilação, poda ou quantização ---, de modo que a degradação
           medida ao longo deste trabalho seja atribuível exclusivamente à poda aqui
           aplicada.
-    \item \textbf{C5 --- Resultado de referência:} ter \textit{perplexity} no corpus de
-          avaliação adotado publicada em artigo científico --- pelos autores do modelo ou
+    \item \textbf{C5 --- Resultado de referência:} ter \textit{perplexity} na base de dados
+          de avaliação adotada publicada em artigo científico --- pelos autores do modelo ou
           em trabalho posterior ---, o que permite situar o modelo de referência
           reproduzido em relação à literatura.
     \item \textbf{C6 --- Implementação disponível:} possuir arquitetura implementada
@@ -75,10 +75,11 @@ Para a seleção do modelo de referência, foram adotados os seguintes critério
 % marcação removida em 03/10.
 
 Os critérios C1 a C4 e C6 dizem respeito apenas ao modelo. O critério C5, ao contrário,
-depende também do corpus de avaliação, cuja seleção segue critérios próprios
+depende também da base de dados de avaliação, cuja seleção segue critérios próprios
 (Seção~\ref{sec:metodologia_metricas}), dois dos quais --- D1 e D4 --- dependem, por sua
-vez, do modelo. Por essa razão, modelo e corpus são selecionados em conjunto: um par
-modelo--corpus é admissível quando o modelo atende a C1--C6 e o corpus atende a D1--D4
+vez, do modelo. Por essa razão, modelo e base de dados são selecionados em conjunto: um
+par formado por modelo e base de dados é admissível quando o modelo atende a C1--C6 e a
+base de dados atende a D1--D4
 em relação a esse modelo.
 
 Havendo mais de um candidato que atenda simultaneamente a todos os critérios, adota-se o
@@ -343,8 +344,8 @@ incorpora esse retreinamento ao experimento, com o objetivo de medir quanto da d
 causada pela poda pode ser recuperada.
 
 O \textit{fine-tuning} de recuperação consiste em continuar o treinamento do modelo já
-podado. Os parâmetros remanescentes são ajustados sobre a partição de treino do corpus de
-avaliação, com o mesmo objetivo do pré-treinamento --- a predição do próximo
+podado. Os parâmetros remanescentes são ajustados sobre a partição de treino da base de dados
+de avaliação, com o mesmo objetivo do pré-treinamento --- a predição do próximo
 \textit{token} ---, por um número fixo de passos de otimização, igual para todas as
 configurações retreinadas. Ao final, o modelo é avaliado novamente na partição de teste,
 pelas mesmas métricas da Seção~\ref{sec:metodologia_metricas}. A recuperação é medida pela
@@ -352,11 +353,14 @@ comparação entre a \textit{perplexity} do modelo podado antes e depois do retr
 
 Dois cuidados metodológicos condicionam a validade dessa comparação.
 
+% AJUSTE: revisão 30/09 — "corpus é a base de dados ou dataset? Unificar terminologia no
+% texto." Adotado "base de dados" em todo o texto (corpus, corpora, dataset e conjunto de
+% dados substituídos em 03/10).
 O primeiro é a necessidade de uma \textbf{linha de controle densa}. O modelo de referência
-não foi pré-treinado no corpus \comentariolinha{corpus é a "base de dados" ou "dataset"? Unificar terminologia no texto.} de avaliação, de modo que retreiná-lo nesse corpus já
-melhora o desempenho preditivo por simples adaptação de domínio, sem poda alguma
-envolvida. Sem essa linha de controle, seria impossível distinguir a recuperação do dano da
-poda da mera adaptação ao corpus. O modelo denso é, portanto, retreinado pelo mesmo número
+não foi pré-treinado na base de dados de avaliação, de modo que retreiná-lo nessa base de
+dados já melhora o desempenho preditivo por simples adaptação de domínio, sem poda
+alguma envolvida. Sem essa linha de controle, seria impossível distinguir a recuperação do dano da
+poda da mera adaptação à base de dados. O modelo denso é, portanto, retreinado pelo mesmo número
 de passos e avaliado junto às demais configurações.
 
 O segundo é a \textbf{preservação da esparsidade}. Na poda não estruturada os pesos são
@@ -395,35 +399,35 @@ capacidade preditiva.
 
 A adoção da \textit{perplexity}, em lugar de métricas de tarefas descendentes --- como a
 acurácia em uma tarefa de classificação ---, decorre de ela ser uma métrica intrínseca:
-pode ser medida diretamente sobre o corpus de avaliação, sem exigir o \textit{fine-tuning}
+pode ser medida diretamente sobre a base de dados de avaliação, sem exigir o \textit{fine-tuning}
 do modelo em uma tarefa específica, procedimento que tornaria a comparação entre
 configurações dependente de um segundo treinamento. O procedimento de cálculo adotado é
 descrito no Capítulo~\ref{chap:desenvolvimento}.}
 
-A \textit{perplexity} é medida sobre um corpus de avaliação, selecionado pelos seguintes
-critérios:
+A \textit{perplexity} é medida sobre uma base de dados de avaliação --- a coleção de textos
+sobre a qual o modelo é avaliado ---, selecionada pelos seguintes critérios:
 
 \begin{itemize}
     \item \textbf{D1 --- Resultado de referência:} \textit{perplexity} do modelo de
-          referência no corpus publicada em artigo científico; é a exigência do critério
-          C5 vista do lado do corpus.
-    \item \textbf{D2 --- Texto sem pré-processamento destrutivo:} o corpus preserva caixa,
+          referência na base de dados publicada em artigo científico; é a exigência do
+          critério C5 vista do lado da base de dados.
+    \item \textbf{D2 --- Texto sem pré-processamento destrutivo:} a base de dados preserva caixa,
           pontuação, números e palavras raras, e mantém a continuidade dos documentos;
           modelos com tokenização por subpalavras são pré-treinados sobre texto bruto e
           seriam avaliados fora de sua distribuição em texto normalizado.
     \item \textbf{D3 --- Divisão oficial:} partições oficiais de treino, validação e teste,
           de modo que o \textit{fine-tuning} use o treino e a avaliação use o teste, sem
           particionamento arbitrário.
-    \item \textbf{D4 --- Ausência de sobreposição com o pré-treinamento:} o corpus não
+    \item \textbf{D4 --- Ausência de sobreposição com o pré-treinamento:} a base de dados não
           integra nem reproduz os dados de pré-treinamento do modelo; do contrário, a
           \textit{perplexity} mediria em parte memorização.
 \end{itemize}
 
-Os critérios D2 e D3 dizem respeito apenas ao corpus; D1 e D4 dependem do modelo, e por
-isso modelo e corpus são selecionados em conjunto (Seção~\ref{sec:metodologia_modelo}).
-Havendo mais de um corpus que atenda a todos os critérios, adota-se o de menor conjunto de
+Os critérios D2 e D3 dizem respeito apenas à base de dados; D1 e D4 dependem do modelo, e
+por isso modelo e base de dados são selecionados em conjunto (Seção~\ref{sec:metodologia_modelo}).
+Havendo mais de uma base de dados que atenda a todos os critérios, adota-se a de menor conjunto de
 treino, pois é ele que determina o custo do \textit{fine-tuning}. A aplicação desses
-critérios a um conjunto de corpora candidatos é apresentada no
+critérios a um conjunto de bases de dados candidatas é apresentada no
 Capítulo~\ref{chap:desenvolvimento} (Tabela~\ref{tab:candidatos_dataset}).
 
 \adicionadomarcelo{\subsection*{Custo computacional}

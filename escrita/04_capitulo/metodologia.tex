@@ -12,7 +12,7 @@
 % AJUSTE: revisão 30/09 — sai a frase de abertura que retomava o capítulo anterior; a
 % referência aos critérios passa para a frase seguinte, que ficaria sem antecedente.
 Este capítulo descreve as decisões concretas que decorrem dos critérios estabelecidos no
-Capítulo~\ref{chap:metodologia} e o experimento tal como foi efetivamente implementado: o corpus e o
+Capítulo~\ref{chap:metodologia} e o experimento tal como foi efetivamente implementado: a base de dados e o
 modelo selecionados, quais parâmetros são considerados podáveis, como cada estratégia de
 poda foi implementada, como o perfil de sensibilidade é levantado e convertido em taxas
 por camada, o protocolo de \textit{fine-tuning} de recuperação, o \textit{framework} e as
@@ -36,7 +36,7 @@ sob condições controladas e reprodutíveis:
 \end{enumerate}
 
 Responder a essas duas perguntas exige que modelos comprimidos por estratégias distintas
-sejam avaliados exatamente pelo mesmo conjunto de métricas, no mesmo corpus e no mesmo
+sejam avaliados exatamente pelo mesmo conjunto de métricas, na mesma base de dados e no mesmo
 \textit{hardware}. Essa simetria de avaliação é condição necessária para que qualquer
 comparação seja interpretável, e é o princípio que organiza todo o desenvolvimento
 descrito adiante.
@@ -91,7 +91,7 @@ em maior profundidade as que são mais críticas para a interpretação dos resu
 \textbf{Decisão} & \textbf{Alternativas consideradas} & \textbf{Escolha} & \textbf{Justificativa} \\
 \hline
 
-\textit{Dataset}
+Base de dados
 & WikiText-103, Penn Treebank, OpenWebText, The Pile
 & \textbf{WikiText-2}
 & Atende aos quatro critérios da Seção~\ref{sec:metodologia_metricas}; entre os que
@@ -139,13 +139,13 @@ Ambiente
 \textit{Fonte: Elaboração própria.}
 \end{table}
 
-\section{\textit{Dataset}}\label{sec:dataset}
+\section{Base de Dados}\label{sec:dataset}
 
 \subsection{O WikiText-2}\label{subsec:wikitext2}
 
-O WikiText-2 é um corpus de língua inglesa extraído de artigos verificados da Wikipédia,
-proposto por \citeonline{Merity2017}, com \textit{perplexity} do GPT-2 nesse corpus
-reportada por \citeonline{Radford2019}. Diferentemente de corpora construídos a partir de
+O WikiText-2 é uma base de dados de língua inglesa extraída de artigos verificados da
+Wikipédia, proposta por \citeonline{Merity2017}, com \textit{perplexity} do GPT-2 nessa base
+de dados reportada por \citeonline{Radford2019}. Diferentemente de bases de dados construídas a partir de
 frases isoladas, o WikiText preserva a estrutura
 original dos artigos --- parágrafos completos, pontuação e capitalização mantidas ---, o
 que o torna adequado para medir a capacidade de um modelo de acompanhar contexto ao longo
@@ -160,7 +160,7 @@ capacidade e distorceria a perplexity medida.
 \subsection{Justificativa da Escolha}\label{subsec:dataset_justificativa}
 
 A Seção~\ref{sec:metodologia_metricas} estabeleceu quatro critérios objetivos (D1 a D4)
-para a seleção do corpus de avaliação. A Tabela~\ref{tab:candidatos_dataset} aplica esses
+para a seleção da base de dados de avaliação. A Tabela~\ref{tab:candidatos_dataset} aplica esses
 critérios a cinco candidatos: o WikiText-2 e o WikiText-103 \cite{Merity2017}, o Penn
 Treebank \cite{Merity2017}, o OpenWebText \cite{Gokaslan2019} e The Pile \cite{Gao2020}.
 Como D1 e D4 dependem do modelo, a tabela os verifica para a família GPT-2, adotada na
@@ -169,12 +169,12 @@ consta na Tabela~\ref{tab:candidatos_modelo}.
 
 \begin{table}[htb]
 \centering
-\caption{Candidatos a corpus de avaliação e verificação dos critérios de seleção.}
+\caption{Candidatas a base de dados de avaliação e verificação dos critérios de seleção.}
 \label{tab:candidatos_dataset}
 \footnotesize
 \begin{tabular}{l r c c c c}
 \hline
-\textbf{Corpus} & \textbf{Treino} & \textbf{D1} & \textbf{D2} & \textbf{D3} & \textbf{D4} \\
+\textbf{Base de dados} & \textbf{Treino} & \textbf{D1} & \textbf{D2} & \textbf{D3} & \textbf{D4} \\
 \hline
 WikiText-2    & 2,1 mi \textit{tokens}   & \checkmark & \checkmark & \checkmark & \checkmark \\
 WikiText-103  & 103,2 mi \textit{tokens} & \checkmark & \checkmark & \checkmark & \checkmark \\
@@ -201,7 +201,7 @@ caixa original e números \cite{Merity2017}, e a variante \textit{raw} adotada n
 trabalho não substitui palavras raras. O OpenWebText cai em D3, pois é distribuído com uma
 única partição, de treino, sem divisão oficial em validação e teste (8.013.769 documentos,
 39,8 GB, verificado na plataforma Hugging Face); e em D4, por ser uma reprodução aberta do
-WebText, o corpus de pré-treinamento do GPT-2 \cite{Gokaslan2019}. The Pile atende a D1 ---
+WebText, a base de dados de pré-treinamento do GPT-2 \cite{Gokaslan2019}. The Pile atende a D1 ---
 \citeonline{Gao2020} avaliam as quatro variantes do GPT-2 em seu conjunto de teste, com a
 \textit{perplexity} convertida em bits por \textit{byte} --- e a D3, por dispor de
 partições oficiais de treino, validação e teste --- validação e teste com cerca de 0,1\% dos
@@ -226,7 +226,7 @@ minutos para cerca de 25 horas (estimativa proporcional ao número de \textit{to
 treino). Aplica-se, então, a regra de desempate da Seção~\ref{sec:metodologia_metricas}:
 adota-se o de menor conjunto de treino, o WikiText-2.
 
-Registre-se que o corpus é parametrizável na implementação: a substituição pelo
+Registre-se que a base de dados é parametrizável na implementação: a substituição pelo
 WikiText-103, de mesma natureza e cerca de cinquenta vezes maior, exige apenas a alteração
 de um argumento de linha de comando. Essa flexibilidade foi mantida deliberadamente para
 que trabalhos futuros possam verificar a generalidade dos resultados sem reescrever o
@@ -234,9 +234,9 @@ código.
 
 \subsection{Pré-processamento e Tokenização}\label{subsec:preprocessamento}
 
-O pré-processamento é intencionalmente mínimo, para que a perplexity medida reflita o
-corpus e não decisões de limpeza. As linhas do conjunto são unidas por quebra dupla,
-preservando a separação entre parágrafos tal como no corpus original, e o texto resultante
+O pré-processamento é intencionalmente mínimo, para que a perplexity medida reflita a
+base de dados e não decisões de limpeza. As linhas do conjunto são unidas por quebra dupla,
+preservando a separação entre parágrafos tal como na base de dados original, e o texto resultante
 é tokenizado como um fluxo contínuo único.
 
 A tokenização emprega o tokenizador original do GPT-2, baseado no algoritmo BPE
@@ -247,7 +247,7 @@ pré-treinados.
 
 \subsection{Divisão dos Dados}\label{subsec:divisao_dados}
 
-Adota-se a divisão oficial do corpus. O \textbf{conjunto de teste} é utilizado em todas as
+Adota-se a divisão oficial da base de dados. O \textbf{conjunto de teste} é utilizado em todas as
 medições de perplexity reportadas, tanto do modelo denso quanto de todas as configurações
 comprimidas. O \textbf{conjunto de treinamento} é utilizado exclusivamente na etapa de
 \textit{fine-tuning} de recuperação (Seção~\ref{sec:finetuning}). O \textbf{conjunto de
@@ -378,14 +378,14 @@ O OPT-125M e o Pythia-160M exigem exame mais detido, pois atendem a C1--C4 e C6.
 OPT-125M atende também a C5: \citeonline{Frantar2023} reportam \textit{perplexity} de 27,66
 para o modelo denso no WikiText-2, em estudo de poda. Ambos, porém, caem em D4 em relação
 ao WikiText-2, pois incluem a Wikipédia no pré-treinamento: o OPT foi pré-treinado sobre
-um conjunto de subcorpora do The Pile que inclui a Wikipédia \cite{Zhang2022}, e o Pythia
+uma seleção de componentes do The Pile que inclui a Wikipédia \cite{Zhang2022}, e o Pythia
 sobre o The Pile completo \cite{Biderman2023}, cujo componente Wikipedia (en) soma 6,38
 GiB \cite{Gao2020}. O GPT-2, ao contrário, teve os documentos da Wikipédia removidos de
-seu corpus de pré-treinamento \cite{Radford2019} (Seção~\ref{subsec:dataset_justificativa}).
-Nenhum dos dois modelos forma par admissível com os demais corpora candidatos
+sua base de dados de pré-treinamento \cite{Radford2019} (Seção~\ref{subsec:dataset_justificativa}).
+Nenhum dos dois modelos forma par admissível com as demais bases de dados candidatas
 (Tabela~\ref{tab:candidatos_dataset}): o WikiText-103 cai em D4 pelo mesmo motivo; o Penn
 Treebank e o OpenWebText caem em critérios que independem do modelo (D2 e D3,
-respectivamente); e The Pile cai em D4, por ser o corpus de pré-treinamento do Pythia e
+respectivamente); e The Pile cai em D4, por ser a base de dados de pré-treinamento do Pythia e
 fornecer parte do pré-treinamento do OPT.
 
 Restam três
@@ -490,11 +490,11 @@ representatividade, que não integra os critérios.\end{minipage}\par\smallskip
 
 As quatro alternativas caem em P1, pois todas estimam a importância com base em dados. O
 SparseGPT e o Wanda, referências recentes da poda não estruturada de LLMs, utilizam 128
-sequências de calibração extraídas do corpus C4: o primeiro para reconstruir, com
+sequências de calibração extraídas da base de dados C4: o primeiro para reconstruir, com
 informação de segunda ordem, os pesos remanescentes de cada camada \cite{Frantar2023}; o
 segundo para ponderar a magnitude de cada peso pela norma da ativação de entrada
 correspondente \cite{Sun2024}. A importância das cabeças em \citeonline{Michel2019} é
-estimada pelo gradiente da perda sobre um conjunto de dados. A \textit{movement pruning}
+estimada pelo gradiente da perda sobre uma base de dados. A \textit{movement pruning}
 cai também em P2, pois a importância de cada peso é aprendida ao longo do
 \textit{fine-tuning} \cite{Sanh2020}. A exclusão dessas estratégias não decorre de
 desempenho inferior: elas já incorporam o tipo de informação que a análise de
@@ -688,9 +688,9 @@ retreinamento.
 Duas decisões de implementação merecem registro por afetarem a validade dos resultados.
 
 A primeira é o \textbf{controle denso}. O GPT-2 não foi pré-treinado no WikiText-2, de
-modo que o simples \textit{fine-tuning} do modelo denso nesse corpus já reduz a perplexity
+modo que o simples \textit{fine-tuning} do modelo denso nessa base de dados já reduz a perplexity
 por adaptação de domínio, sem poda alguma envolvida. Sem essa linha de controle, seria
-impossível separar a recuperação do dano da poda da mera adaptação ao corpus. O modelo
+impossível separar a recuperação do dano da poda da mera adaptação à base de dados. O modelo
 denso é, portanto, retreinado pelo mesmo número de passos e avaliado junto às demais
 configurações.
 
@@ -739,7 +739,7 @@ biblioteca que os executa.
 As demais bibliotecas empregadas são:
 
 \begin{itemize}
-    \item \texttt{datasets}: carregamento do corpus WikiText a partir da plataforma
+    \item \texttt{datasets}: carregamento da base de dados WikiText a partir da plataforma
           Hugging Face;
     \item \texttt{thop}: contagem de operações de ponto flutuante por análise do grafo
           computacional;
@@ -787,9 +787,9 @@ Figura~\ref{fig:pipeline_experimental} representa o fluxo experimental.
 \hline
 \textbf{Módulo} & \textbf{Responsabilidade} \\
 \hline
-\texttt{config} & Configuração central: modelo, corpus, parâmetros de avaliação, semente e ambiente. \\
+\texttt{config} & Configuração central: modelo, base de dados, parâmetros de avaliação, semente e ambiente. \\
 \texttt{utils} & Fixação das sementes e escrita incremental dos resultados em arquivo. \\
-\texttt{data} & Carregamento e tokenização do corpus. \\
+\texttt{data} & Carregamento e tokenização da base de dados. \\
 \texttt{model} & Carregamento do GPT-2 pré-treinado. \\
 \texttt{eval} & Perplexity por janela deslizante e métricas de custo computacional. \\
 \texttt{energy} & Medição de energia e emissões. \\
@@ -819,7 +819,7 @@ rotina de avaliação, o que garante a simetria necessária às comparações.}
 
   % --- entradas ---
   \node[fonte] (mod) at (-2.1,0) {GPT-2 \textit{small}\\ \scriptsize pré-treinado};
-  \node[fonte] (dat) at (2.1,0) {WikiText-2\\ \scriptsize corpus de avaliação};
+  \node[fonte] (dat) at (2.1,0) {WikiText-2\\ \scriptsize base de dados de avaliação};
 
   % --- baseline ---
   \node[etapa] (base) at (0,-1.35) {\textbf{Modelo de referência}\\ \scriptsize perplexity 25,17};
@@ -984,10 +984,10 @@ Reconhecem-se, desde o desenho experimental, limitações que condicionam o esco
 resultados:
 
 \begin{itemize}
-    \item \textbf{Um único modelo e um único corpus.} Os experimentos empregam
+    \item \textbf{Um único modelo e uma única base de dados.} Os experimentos empregam
           exclusivamente o GPT-2 \textit{small} sobre o WikiText-2. Os resultados podem
           não se transferir diretamente para modelos de escala substancialmente maior ou
-          para corpora de natureza distinta. A implementação foi mantida parametrizável
+          para bases de dados de natureza distinta. A implementação foi mantida parametrizável
           justamente para viabilizar essa verificação em trabalhos futuros.
 
     \item \textbf{Duas estratégias de poda, e não mais.} A restrição de tempo experimental
