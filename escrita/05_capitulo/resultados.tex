@@ -18,9 +18,17 @@ sintetiza os achados.
 Todos os experimentos partem do GPT-2 \textit{small} pré-treinado
 (124.439.808 parâmetros), avaliado no conjunto de teste do WikiText-2 por
 janela deslizante com \textit{stride} de 512 \textit{tokens}. A perplexity do
-modelo denso é de \textbf{25,17}, valor coerente com o reportado na
-literatura para essa configuração, o que valida a implementação do
-procedimento de avaliação. As medições de custo do modelo denso são: 474,70~MB
+modelo denso é de \textbf{25,17}. O valor é inferior aos 29,41 publicados por
+\citeonline{Radford2019}, e a diferença é compatível com a do protocolo de
+avaliação: com janelas deslizantes sobrepostas, cada \textit{token} é predito
+com pelo menos 512 \textit{tokens} de contexto, o que reduz a
+\textit{perplexity} em relação à avaliação em janelas disjuntas. A
+documentação da biblioteca \texttt{transformers} registra esse efeito no
+GPT-2 \textit{large}: 19,44 com janelas disjuntas de 1.024 \textit{tokens},
+valor próximo dos 19,93 publicados, e 16,44 com \textit{stride} de 512
+\cite{HuggingFacePerplexity}, redução de cerca de 15\%. Redução da mesma ordem,
+cerca de 14\%, separa os 29,41 publicados para o \textit{small} dos 25,17
+medidos aqui, com o mesmo protocolo daquela documentação. As medições de custo do modelo denso são: 474,70~MB
 de memória de parâmetros e 126,6~GFLOPs por janela de 512 \textit{tokens}.
 
 Duas ressalvas metodológicas condicionam a leitura das tabelas que se seguem.
