@@ -9,9 +9,10 @@
 
 \chapter{Desenvolvimento}\label{chap:desenvolvimento}
 
-\st{O Capítulo~ref\{chap:metodologia\} apresentou os critérios que orientam o percurso
-metodológico deste trabalho.} Este capítulo descreve as decisões concretas que decorrem
-desses critérios e o experimento tal como foi efetivamente implementado: o corpus e o
+% AJUSTE: revisão 30/09 — sai a frase de abertura que retomava o capítulo anterior; a
+% referência aos critérios passa para a frase seguinte, que ficaria sem antecedente.
+Este capítulo descreve as decisões concretas que decorrem dos critérios estabelecidos no
+Capítulo~\ref{chap:metodologia} e o experimento tal como foi efetivamente implementado: o corpus e o
 modelo selecionados, quais parâmetros são considerados podáveis, como cada estratégia de
 poda foi implementada, como o perfil de sensibilidade é levantado e convertido em taxas
 por camada, o protocolo de \textit{fine-tuning} de recuperação, o \textit{framework} e as
@@ -117,10 +118,10 @@ Regime de poda
   como etapa separada e mensurável. \\
 
 Estratégia otimizada
-& Destilação de conhecimento, quantização
+& Taxas dinâmicas, variação do momento da poda, destilação de conhecimento, quantização
 & \textbf{Sensibilidade por camada}
-& Ataca diretamente a hipótese do trabalho --- a de que as camadas não são igualmente
-  importantes --- sem alterar a natureza da poda. \\
+& Única que atende a O1--O3 (Seção~\ref{sec:metodologia_poda_com}): altera apenas a
+  distribuição do orçamento de poda entre as camadas, objeto da hipótese do trabalho. \\
 
 Métrica principal
 & \textit{Accuracy} em tarefas descendentes
@@ -678,7 +679,7 @@ A primeira é o \textbf{controle denso}. O GPT-2 não foi pré-treinado no WikiT
 modo que o simples \textit{fine-tuning} do modelo denso nesse corpus já reduz a perplexity
 por adaptação de domínio, sem poda alguma envolvida. Sem essa linha de controle, seria
 impossível separar a recuperação do dano da poda da mera adaptação ao corpus. O modelo
-denso é, portanto, retreinado com o mesmo orçamento de passos e avaliado junto às demais
+denso é, portanto, retreinado pelo mesmo número de passos e avaliado junto às demais
 configurações.
 
 A segunda é a \textbf{preservação da esparsidade}. Na poda não estruturada os pesos são

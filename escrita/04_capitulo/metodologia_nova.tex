@@ -124,14 +124,18 @@ representarem os dois extremos do espectro de granularidade da poda neural:
 \end{itemize}}
 
 % AJUSTE: reunião 13/05 — reforçar que estratégias são consolidadas na literatura
+% AJUSTE: revisão 30/09 — o orientador não entendeu a segunda metade do parágrafo
+% ("não constitui contribuição metodológica original; pelo contrário..."); reescrita
+% para dizer diretamente o papel das duas estratégias: linha de base, não contribuição.
 Ambas são estratégias de referência na literatura de compressão: a poda por magnitude foi
 proposta em 2015 \cite{Han2015} e a poda estruturada por norma $L_1$, em 2017
 \cite{Li2017}. Na meta-análise de \citeonline{Blalock2020}, que agregou resultados de 81
 trabalhos de poda, um dos resultados consistentes da área é que a poda de parâmetros pela
-magnitude comprime substancialmente as redes sem reduzir a acurácia. Sua inclusão neste
-trabalho não constitui contribuição metodológica original; pelo contrário, sua aplicação
-fornece uma base de comparação estabelecida, sobre a qual é avaliada a estratégia otimizada
-proposta na Seção~\ref{sec:metodologia_poda_com}. \comentariolinha{Não entendi muito bem esse parágrafo}
+magnitude comprime substancialmente as redes sem reduzir a acurácia. As duas estratégias
+não constituem, portanto, a contribuição deste trabalho: desempenham o papel de linha de
+base. São aplicadas com os critérios de importância propostos por seus autores, e os
+modelos que produzem servem de referência para avaliar a estratégia com otimização
+(Seção~\ref{sec:metodologia_poda_com}), que constitui a contribuição central do trabalho.
 
 % AJUSTE: revisão 24/09 — critérios vagos (representatividade, complementaridade,
 % viabilidade) substituídos por critérios verificáveis, aplicados às alternativas no Cap. 5
@@ -183,6 +187,12 @@ implementação, são apresentados no Capítulo~\ref{chap:desenvolvimento}.
 % AJUSTE: reescrita da Seção 4.3 — a estratégia otimizada passa a ser declarada
 % (sensibilidade por camada); taxas dinâmicas, momento de aplicação e Knowledge
 % Distillation descem para alternativas descartadas, como no Cap. 5.
+% AJUSTE: revisão 30/09 — (i) as alternativas passam a vir antes da técnica escolhida,
+% cada uma com o critério que não atende; (ii) os critérios de escolha viram O1--O3, e a
+% "única variável" (distribuição do orçamento entre camadas) e o "segundo modelo"
+% (Knowledge Distillation) são nomeados; (iii) "orçamento de poda" e "taxa-sonda" são
+% definidos na primeira ocorrência; (iv) a métrica do perfil (perplexity) é explicitada;
+% (v) "orienta" e "a hipótese que ela investiga" saem do texto.
 \section{Implementação da Estratégia de Poda com Otimização}\label{sec:metodologia_poda_com}
 % -------------------------------------------------------
 
@@ -190,71 +200,134 @@ Esta é a etapa central do trabalho. O objetivo é investigar se a combinação 
 estratégia clássica de poda com uma técnica de otimização resulta em modelos mais
 eficientes do que a poda aplicada de forma direta, sem qualquer refinamento adicional.
 
-A técnica de otimização adotada \textcolor{green}{neste trabalho} é a \textbf{análise de sensibilidade por camada}, que
-orienta \comentariolinha{como assim, "orienta"} uma alocação não uniforme do orçamento \comentariolinha{o que seria um "orçamento"} de poda entre as camadas do modelo. \st{A
-hipótese que ela investiga é a de que} as camadas não são igualmente importantes: se
-algumas toleram a remoção de parâmetros muito mais do que outras, distribuir o orçamento
-de poda em proporção a essa tolerância deve produzir, para um mesmo grau de compressão,
-perda menor de desempenho preditivo do que as alocações ingênuas adotadas pelas
-estratégias da Seção~\ref{sec:metodologia_poda_sem}.
+A hipótese central do trabalho é a de que as camadas do modelo não são igualmente
+importantes: se algumas toleram a remoção de parâmetros muito mais do que outras, podar
+mais as camadas tolerantes e menos as sensíveis deve produzir, para um mesmo grau de
+compressão, perda menor de desempenho preditivo do que as formas de distribuição adotadas
+pelas estratégias sem otimização (Seção~\ref{sec:metodologia_poda_sem}), que aplicam a
+mesma taxa a todas as camadas ou decidem a distribuição apenas pela magnitude dos pesos.
+Para testar essa hipótese, fixa-se o \textbf{orçamento de poda} --- a fração do total de
+parâmetros podáveis a ser removida do modelo, como 30\% ou 50\% --- e varia-se apenas o
+modo como essa fração é distribuída entre as camadas (Seção~\ref{subsec:sensibilidade}).
 
-\st{O procedimento organiza-se em duas fases. Na primeira, levanta-se um perfil de sensibilidade do modelo: poda-se uma camada de cada vez, a uma taxa fixa e mantendo todas as demais intactas, e registra-se a degradação resultante na métrica de desempenho preditivo. Na segunda, esse perfil é convertido em uma taxa de poda por camada, atribuída em proporção à robustez medida e escalada de modo que o orçamento global pretendido seja respeitado. Como cada estratégia de poda remove unidades de natureza distinta, o perfil é levantado separadamente para cada uma delas. A formulação da regra de alocação, a taxa-sonda empregada no perfilamento e os valores adotados para os demais parâmetros são apresentados no Capítulo}~\ref{chap:desenvolvimento}.
-
-\adicionarmarcelo{A estratégia de otimização adotada pode ser organizada em duas etapas. Na primeira etapa, é necessário obter o perfil de sensibilidade do modelo, para isso aplica-se a poda em uma camada de cada vez, a uma taxa fixa [de compressão, qual???] mantendo todas as demais camadas intactas, e registra-se a degradação [perda de acurácia??? Qual métrica???] resultante na métrica de desempenho preditivo. Na segunda, esse perfil é convertido em uma taxa de poda por camada, atribuída em proporção à robustez medida e escalada de modo que o orçamento [orçamento???] global pretendido seja respeitado. Como cada estratégia de poda remove unidades de natureza distinta, o perfil é levantado separadamente para cada uma das estratégias. A formulação da regra de alocação, a taxa-sonda [o que seria "taxa-sonda"] empregada no perfilamento e os valores adotados para os demais parâmetros são apresentados no Capítulo}~\ref{chap:desenvolvimento}.
-
-Os critérios que orientaram a escolha dessa técnica \adicionarmarcelo{de otimização} entre as alternativas cogitadas \comentariolinha{será se vale a penas falar das alternativas} foram sua aderência direta à hipótese do trabalho e o fato de não alterar a natureza da poda: ela redistribui o orçamento \comentariolinha{"orçamento"} entre as camadas sem modificar o critério de importância nem
-introduzir um segundo modelo no experimento \comentariolinha{em qual situação seria introduzido um "segundo modelo"}. Isso mantém a comparação com as estratégias sem otimização restrita a uma única variável \comentariolinha{Qual variável?}.
-
-\subsection*{Alternativas \comentariolinha{de estratégias de otimização} consideradas e descartadas}
-
-\comentline{Verificar a possibilidade de apresentar essa seção antes de falar da estratégia de otimização escolhida. Primeiro mostras as alternativas consideradas e em seguida aprofunda naquela que foi escolhida}
-
-Outras técnicas de otimização foram cogitadas e não integram o escopo experimental, por
-restrição de tempo. Registram-se a seguir, por delimitarem o alcance das conclusões e por
-constituírem desdobramentos naturais para trabalhos futuros:
+A técnica de otimização foi escolhida, entre as alternativas consideradas, segundo três
+critérios:
 
 \begin{itemize}
-    \item \textbf{comparação entre taxas de poda fixas e dinâmicas}, em que o orçamento de
-          poda varia ao longo do processo em vez de ser fixado de antemão;
-    \item \textbf{variação do momento de aplicação da poda} --- antes, durante ou após o
-          treinamento. Este trabalho aplica a poda sempre sobre o modelo pré-treinado,
-          reservando o retreinamento para a etapa de recuperação descrita na
-          Seção~\ref{sec:metodologia_finetuning};
-    \item \textbf{\textit{Knowledge Distillation}}, na qual um modelo menor
-          (\textit{student}) é treinado para reproduzir o comportamento de um modelo maior
-          (\textit{teacher}); trata-se de técnica de compressão de natureza distinta da
-          poda, cuja avaliação exigiria protocolo experimental próprio;
-    \item \textbf{quantização}, que reduz a precisão numérica da representação dos pesos
-          em vez de eliminá-los.
+    \item \textbf{O1 --- Aderência à hipótese:} a técnica determina \textit{quanto} podar
+          em cada camada, que é o objeto da hipótese, e preserva o critério de importância
+          da estratégia de poda --- a magnitude dos pesos ou a norma $L_1$ das estruturas
+          ---, que continua a decidir \textit{quais} parâmetros são removidos dentro de
+          cada camada.
+    \item \textbf{O2 --- Ausência de um segundo modelo:} o modelo avaliado é o próprio
+          modelo de referência após a poda, sem que outro modelo seja treinado para
+          substituí-lo, como ocorre na \textit{Knowledge Distillation}.
+    \item \textbf{O3 --- Compatibilidade com o regime \textit{one-shot}:} a técnica se
+          aplica ao modelo pré-treinado sem exigir treinamento durante a poda, como
+          estabelece o critério P2 (Seção~\ref{sec:metodologia_poda_sem}).
 \end{itemize}
 
-\comentline{A consideração das estratégia consideradas não deixou claro, o motivo exata pelo qual, cada uma foi descartada.}
+Os três critérios garantem que o modelo podado com otimização difira do modelo podado sem
+otimização em uma única variável: a distribuição do orçamento de poda entre as camadas.
+Mantidos o modelo, o critério de importância, o orçamento e a ausência de treinamento,
+qualquer diferença de desempenho entre os dois pode ser atribuída a essa distribuição.
 
-A comparação entre os modelos obtidos com e sem otimização visa identificar em que medida
-a alocação guiada por sensibilidade melhora o balanço entre desempenho preditivo e
-eficiência computacional em relação às alocações ingênuas.
+\subsection*{Alternativas de estratégias de otimização consideradas e descartadas}
+
+Quatro alternativas foram consideradas e descartadas, cada uma por deixar de atender a pelo
+menos um dos critérios. Elas não integram o escopo experimental, mas delimitam o alcance
+das conclusões e constituem desdobramentos para trabalhos futuros:
+
+\begin{itemize}
+    \item \textbf{Taxas de poda dinâmicas:} a taxa de poda cresce gradualmente ao longo do
+          treinamento, em vez de ser fixada de antemão, como na poda gradual de
+          \citeonline{Zhu2017}. A técnica pressupõe passos de treinamento intercalados à
+          poda, o que contraria O3; além disso, a variação ocorre ao longo do tempo, e não
+          entre as camadas, o que contraria O1.
+    \item \textbf{Variação do momento de aplicação da poda:} podar antes ou durante o
+          treinamento, e não depois dele (Seção~\ref{sec:pruning}). Ambas as variantes
+          exigem treinamento --- podar antes pressupõe treinar o modelo a partir do zero
+          \cite{Frankle2019}, e podar durante intercala passos de poda e de treino
+          \cite{Zhu2017} ---, o que contraria O3. O treinamento a partir do zero está,
+          além disso, fora do alcance deste trabalho pelo custo do pré-treinamento
+          (critério C2, Seção~\ref{sec:metodologia_modelo}). Por essa razão, a poda é
+          aplicada sempre sobre o modelo pré-treinado, e o retreinamento fica restrito à
+          etapa de recuperação (Seção~\ref{sec:metodologia_finetuning}).
+    \item \textbf{\textit{Knowledge Distillation}:} um modelo menor (aluno) é treinado
+          para reproduzir as saídas de um modelo maior (professor) \cite{Hinton2015}. O
+          modelo resultante é o aluno, e não o modelo de referência podado, o que contraria
+          O2; e sua obtenção exige treinamento, o que contraria O3.
+    \item \textbf{Quantização:} reduz o número de \textit{bits} usados para representar
+          cada peso, em vez de removê-lo \cite{Jacob2018}. A técnica não atua sobre a
+          distribuição da poda entre as camadas, o que contraria O1, e constitui uma
+          segunda forma de compressão, cujo efeito se somaria ao da poda sem poder ser
+          separado dele.
+\end{itemize}
+
+\subsection*{Técnica adotada: análise de sensibilidade por camada}
+
+A técnica de otimização adotada neste trabalho, única entre as consideradas que atende aos
+três critérios, é a \textbf{análise de sensibilidade por camada}. Em vez de aplicar a
+mesma taxa de poda a todas as camadas, ela mede a importância de cada camada e distribui o
+orçamento de poda de acordo com essa medida: camadas mais tolerantes à remoção recebem
+taxas maiores, e camadas mais sensíveis, taxas menores.
+
+A técnica é aplicada em duas fases. Na primeira, obtém-se o \textbf{perfil de
+sensibilidade} do modelo: poda-se uma camada de cada vez, mantendo todas as demais
+intactas, e mede-se o aumento da \textit{perplexity} (Seção~\ref{sec:metodologia_metricas})
+em relação ao modelo de referência. Todas as camadas são podadas à mesma taxa fixa,
+denominada \textbf{taxa-sonda} --- a fração da camada removida durante essa medição ---, de
+modo que as degradações obtidas sejam comparáveis entre si; o perfil é o conjunto dessas
+degradações, uma por camada. Na segunda fase, o perfil é convertido em uma taxa de poda por
+camada, tanto maior quanto menor a degradação que a camada provocou, e as taxas são
+ajustadas em conjunto de modo que a fração total removida seja igual ao orçamento de poda
+pretendido.
+
+Como cada estratégia de poda remove unidades de natureza distinta --- pesos individuais ou
+estruturas inteiras ---, o perfil é levantado separadamente para cada uma delas. A regra
+de alocação, o valor da taxa-sonda e os demais parâmetros adotados são apresentados no
+Capítulo~\ref{chap:desenvolvimento} (Seção~\ref{sec:estrategia_otimizada}).
+
+A comparação entre os modelos obtidos com e sem otimização, sob o mesmo orçamento de poda,
+visa identificar em que medida a alocação guiada por sensibilidade melhora o balanço entre
+desempenho preditivo e eficiência computacional em relação às formas de distribuição sem
+otimização.
 
 % -------------------------------------------------------
 % AJUSTE: seção nova — o fine-tuning de recuperação era, até aqui, apenas um
 % sub-item da lista de estratégias de otimização, embora seja uma etapa própria
 % no Cap. 5 e uma seção inteira do Cap. 6.
+% AJUSTE: revisão 30/09 — o orientador não entendeu como o fine-tuning é feito; o
+% procedimento passa a ser descrito, e "lacuna", "orçamento de retreinamento limitado"
+% e "dessa medição" são explicitados. Sai o "Registre-se".
 \section{\textit{Fine-tuning} de Recuperação}\label{sec:metodologia_finetuning}
 % -------------------------------------------------------
 
-As etapas anteriores operam em regime \textit{one-shot}: o modelo é podado e medido
-imediatamente, sem retreinamento. Esse regime é deliberado, pois isola o dano causado pela
-poda do efeito de qualquer recuperação posterior, mas não corresponde ao procedimento da
-literatura --- tanto \citeonline{Han2015} quanto \citeonline{Li2017} retreinam o modelo
-depois de podá-lo. Esta etapa fecha essa lacuna, medindo quanto da degradação é recuperável sob um orçamento de retreinamento limitado. \comentariolinha{Essa frase está confusa, qual é a "lacuna"? "orçamento de retreinamento limitado"???.}
+As etapas anteriores operam em regime \textit{one-shot}: o modelo é podado e avaliado
+imediatamente, sem nenhum treinamento após a poda. Esse regime é deliberado, pois mede o
+dano causado pela poda sem que nenhuma recuperação posterior o atenue. Ele difere, porém,
+do procedimento original das duas estratégias adotadas: tanto \citeonline{Han2015} quanto
+\citeonline{Li2017} retreinam o modelo depois de podá-lo, para que os parâmetros
+remanescentes compensem a ausência dos removidos (Seção~\ref{sec:pruning}). Esta etapa
+incorpora esse retreinamento ao experimento, com o objetivo de medir quanto da degradação
+causada pela poda pode ser recuperada.
 
-Dois cuidados metodológicos condicionam a validade dessa medição \comentariolinha{Qual medição?}.
+O \textit{fine-tuning} de recuperação consiste em continuar o treinamento do modelo já
+podado. Os parâmetros remanescentes são ajustados sobre a partição de treino do corpus de
+avaliação, com o mesmo objetivo do pré-treinamento --- a predição do próximo
+\textit{token} ---, por um número fixo de passos de otimização, igual para todas as
+configurações retreinadas. Ao final, o modelo é avaliado novamente na partição de teste,
+pelas mesmas métricas da Seção~\ref{sec:metodologia_metricas}. A recuperação é medida pela
+comparação entre a \textit{perplexity} do modelo podado antes e depois do retreinamento.
+
+Dois cuidados metodológicos condicionam a validade dessa comparação.
 
 O primeiro é a necessidade de uma \textbf{linha de controle densa}. O modelo de referência
 não foi pré-treinado no corpus \comentariolinha{corpus é a "base de dados" ou "dataset"? Unificar terminologia no texto.} de avaliação, de modo que retreiná-lo nesse corpus já
 melhora o desempenho preditivo por simples adaptação de domínio, sem poda alguma
 envolvida. Sem essa linha de controle, seria impossível distinguir a recuperação do dano da
-poda da mera adaptação ao corpus. O modelo denso é, portanto, submetido ao mesmo orçamento
-de retreinamento e avaliado junto às demais configurações.
+poda da mera adaptação ao corpus. O modelo denso é, portanto, retreinado pelo mesmo número
+de passos e avaliado junto às demais configurações.
 
 O segundo é a \textbf{preservação da esparsidade}. Na poda não estruturada os pesos são
 apenas anulados, e o otimizador os restauraria ao longo do treinamento, desfazendo a
@@ -263,16 +336,14 @@ por uma máscara binária fixa, capturada imediatamente após a poda e reaplicad
 do otimizador. Na poda estruturada esse cuidado é dispensável, pois as unidades removidas
 deixaram de existir.
 
-\st{Registre-se, }por fim, que esta é a única etapa estocástica do experimento: as varreduras
+Por fim, esta é a única etapa estocástica do experimento: as varreduras
 \textit{one-shot} são determinísticas, e a semente aleatória passa a afetar o resultado
 apenas aqui. O custo energético do retreinamento é medido separadamente do custo de
 inferência, por se tratar de custo pago uma única vez, que precisa ser amortizado contra a
 economia obtida a cada inferência.
 
-O protocolo concreto --- otimizador, orçamento de passos, hiperparâmetros e configurações
+O protocolo concreto --- otimizador, número de passos, hiperparâmetros e configurações
 submetidas ao retreinamento --- é apresentado no Capítulo~\ref{chap:desenvolvimento}.
-
-\comentline{Achei essa seção um pouco confusa, pois não consegui entender exatamente como é feito o fine-tunning de recuperação.}
 
 % -------------------------------------------------------
 % AJUSTE: reunião 13/05 — reescrita completa da Seção 3.4 (métricas explicadas em detalhe)
