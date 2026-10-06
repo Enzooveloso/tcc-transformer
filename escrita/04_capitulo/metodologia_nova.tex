@@ -27,8 +27,8 @@ sequenciais:
 \end{itemize}
 
 Cada etapa é descrita aqui de forma genérica: o que nela se faz e os critérios que orientam
-suas decisões. As decisões concretas --- o modelo e a base de dados selecionados, as
-configurações de poda e os parâmetros do retreinamento --- são apresentadas no
+suas decisões. As decisões concretas, o modelo e a base de dados selecionados, as
+configurações de poda e os parâmetros do retreinamento, são apresentadas no
 Capítulo~\ref{chap:desenvolvimento}, organizado nas mesmas quatro etapas, na mesma ordem.
 % AJUSTE: revisão 24/09 — comentário "teve também o uso das métricas para avaliar o
 % modelo" atendido; desde 03/10 as métricas integram a Etapa 1.
@@ -49,10 +49,8 @@ comparação de todo o trabalho: as métricas de cada modelo podado nas etapas s
 comparadas às desse modelo original, o que permite mensurar a perda de desempenho e o
 ganho de eficiência introduzidos pela compressão.
 
-A etapa depende, portanto, de três definições, apresentadas a seguir: o modelo
-(Seção~\ref{subsec:metodologia_selecao_modelo}), a base de dados sobre a qual ele é
-avaliado (Seção~\ref{subsec:metodologia_base}) e as métricas registradas
-(Seção~\ref{sec:metodologia_metricas}).
+A etapa depende, portanto, de três definições, apresentadas a seguir: o modelo, a base de dados sobre a qual ele é
+avaliado e as métricas registradas.
 
 \subsection{Seleção do Modelo}\label{subsec:metodologia_selecao_modelo}
 
@@ -86,12 +84,12 @@ Para a seleção do modelo de referência, foram adotados os seguintes critério
           modelos de até cerca de 1 bilhão de parâmetros (16 GB $\div$ 16 bytes por parâmetro);
           como a estimativa não inclui as ativações, o limite prático é inferior.
     \item \textbf{C4 --- Modelo original:} não ser derivado de um processo prévio de
-          compressão --- destilação, poda ou quantização ---, de modo que a degradação
+          compressão (destilação, poda ou quantização), de modo que a degradação
           medida ao longo deste trabalho seja atribuível exclusivamente à poda aqui
           aplicada.
     \item \textbf{C5 --- Resultado de referência:} ter \textit{perplexity} na base de dados
           de avaliação adotada publicada em artigo científico --- pelos autores do modelo ou
-          em trabalho posterior ---, o que permite situar o modelo de referência
+          em trabalho posterior, o que permite situar o modelo de referência
           reproduzido em relação à literatura.
     \item \textbf{C6 --- Implementação disponível:} possuir arquitetura implementada
           nativamente na biblioteca \texttt{transformers} \cite{Wolf2020}, que opera sobre
@@ -276,11 +274,11 @@ representarem os dois extremos do espectro de granularidade da poda neural:
 % Tabela~tab:candidatos_poda (Desenvolvimento); marcação removida em 03/10.
 
 \begin{itemize}
-    \item \textbf{Poda não estruturada --- poda por magnitude:} remove parâmetros
+    \item \textbf{Poda por magnitude:} remove parâmetros
           individuais cujos valores absolutos são inferiores a um limiar \cite{Han2015};
           representa a granularidade mais fina possível e gera modelos esparsos sem
           alteração da estrutura física do modelo;
-    \item \textbf{Poda estruturada --- poda de cabeças de atenção e de neurônios do MLP:}
+    \item \textbf{Poda de cabeças de atenção e de neurônios do MLP:}
           elimina unidades arquiteturais inteiras \cite{Li2017} --- filtros convolucionais,
           no trabalho original; em uma arquitetura \textit{Transformer}, cabeças de atenção
           e neurônios da camada intermediária do MLP, isoladamente ou em conjunto ---,
@@ -394,7 +392,7 @@ compressão, perda menor de desempenho preditivo do que as formas de distribuiç
 pelas estratégias sem otimização (Seção~\ref{sec:metodologia_poda_sem}), que aplicam a
 mesma taxa a todas as camadas ou decidem a distribuição apenas pela magnitude dos pesos.
 Para testar essa hipótese, fixa-se o \textbf{orçamento de poda} --- a fração do total de
-parâmetros podáveis a ser removida do modelo, como 30\% ou 50\% --- e varia-se apenas o
+parâmetros podáveis a ser removida do modelo, como 30\% ou 50\%,e varia-se apenas o
 modo como essa fração é distribuída entre as camadas (Seção~\ref{subsec:sensibilidade}).
 
 A técnica de otimização foi escolhida, entre as alternativas consideradas, segundo três
@@ -403,8 +401,8 @@ critérios:
 \begin{itemize}
     \item \textbf{O1 --- Aderência à hipótese:} a técnica determina \textit{quanto} podar
           em cada camada, que é o objeto da hipótese, e preserva o critério de importância
-          da estratégia de poda --- a magnitude dos pesos ou a norma $L_1$ das estruturas
-          ---, que continua a decidir \textit{quais} parâmetros são removidos dentro de
+          da estratégia de poda, a magnitude dos pesos ou a norma $L_1$ das estruturas
+          , que continua a decidir \textit{quais} parâmetros são removidos dentro de
           cada camada.
     \item \textbf{O2 --- Ausência de um segundo modelo:} o modelo avaliado é o próprio
           modelo de referência após a poda, sem que outro modelo seja treinado para
@@ -533,7 +531,8 @@ inferência, por se tratar de custo pago uma única vez, que precisa ser amortiz
 economia obtida a cada inferência.
 
 O protocolo concreto --- otimizador, número de passos, hiperparâmetros e configurações
-submetidas ao retreinamento --- é apresentado no Capítulo~\ref{chap:desenvolvimento}.
+submetidas ao retreinamento --- é apresentado no Capítulo~\ref{chap:desenvolvimento}
+(Seção~\ref{sec:finetuning}).
 
 % -------------------------------------------------------
 % AJUSTE: reunião 13/05 — reescrita completa da Seção 3.5 (como medir e analisar energia)

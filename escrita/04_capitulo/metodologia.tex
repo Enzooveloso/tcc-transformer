@@ -776,14 +776,88 @@ grandeza acima dele.
 
 % AJUSTE: revisão 30/09 — "fecha essa lacuna", marcado pelo orientador na Metodologia,
 % aparecia também aqui; reescrito do mesmo modo.
+% AJUSTE: 05/10 — revisão 30/09, "não consegui entender exatamente como é feito o
+% fine-tuning de recuperação". A Metodologia remete a esta seção o protocolo concreto
+% (configurações, número de passos, hiperparâmetros), que não estava aqui: os valores
+% constavam só dos Resultados, e o texto dizia "para cada configuração", embora apenas
+% sete tenham sido retreinadas. A seção passa a descrever o que codigo/finetune.py faz e
+% o que codigo/resultados/finetune.csv registra. Saem duas afirmações que o código não
+% sustenta: que o acúmulo de gradiente e a precisão mista foram necessários para caber
+% na memória da GPU.
 \section{Etapa 4 --- \textit{Fine-tuning} de Recuperação}\label{sec:finetuning}
 
 As Etapas 2 e 3 operaram em regime \textit{one-shot}, isto é, podaram e avaliaram sem
 retreinamento, de modo a isolar o dano causado pela poda. Esse regime, porém, não
 corresponde ao procedimento da literatura: tanto \citeonline{Han2015} quanto
 \citeonline{Li2017} retreinam o modelo após podá-lo. Na quarta etapa, esse retreinamento
-foi incorporado ao experimento: para cada configuração, mediu-se a perplexity antes e
-depois do \textit{fine-tuning}, o que indica quanto da degradação é recuperável.
+foi incorporado ao experimento: sete configurações foram submetidas ao \textit{fine-tuning}
+de recuperação, e a \textit{perplexity} de cada uma foi medida antes e depois do
+retreinamento, o que indica quanto da degradação é recuperável. As subseções a seguir
+apresentam as configurações retreinadas, o procedimento aplicado a cada uma, os cuidados
+que condicionam a validade da medição e os parâmetros do treinamento.
+
+\subsection{Configurações Retreinadas}\label{subsec:ft_configuracoes}
+
+O retreinamento foi aplicado às seguintes configurações das Etapas 2 e 3:
+
+\begin{itemize}
+    \item \textbf{Controle denso:} o modelo de referência, sem poda, cuja função é
+          descrita na Seção~\ref{subsec:ft_validade};
+    \item \textbf{Poda não estruturada --- poda por magnitude}, com escopo uniforme, a
+          30\% e a 50\% de esparsidade;
+    \item \textbf{Poda estruturada --- poda de cabeças de atenção e de neurônios do MLP},
+          com os dois alvos simultâneos e escopo global, a 10\% e a 30\% de estruturas
+          removidas;
+    \item \textbf{Poda estruturada com alocação por sensibilidade}, guiada pelo perfil da
+          própria poda estruturada, com $\beta = 1$, nas mesmas duas taxas.
+\end{itemize}
+
+Em cada estratégia, retreinou-se o escopo de alocação ingênuo de menor
+\textit{perplexity} na faixa em que a escolha de escopo tem consequência prática: o
+uniforme na poda por magnitude, que supera o global entre 30\% e 70\%
+(Seção~\ref{sec:res_magnitude}), e o global na poda estruturada
+(Seção~\ref{sec:res_estruturada}). A alocação por sensibilidade foi retreinada apenas na
+poda estruturada, a única estratégia que converteu a compressão em redução de tempo de
+inferência e de energia (Seção~\ref{sec:res_estruturada}), com o expoente de melhor
+desempenho nessa estratégia (Seção~\ref{subsec:ablacao_beta}). As duas taxas, 10\% e
+30\%, são comuns à alocação global e à guiada, o que permite comparar as duas formas de
+distribuição também depois do retreinamento, e pertencem à faixa de 10\% a 50\% em que a
+alocação guiada superou a global em regime \textit{one-shot}
+(Seção~\ref{subsec:aloc_estruturada}). Na poda por magnitude, 30\% é o primeiro nível
+acima da região utilizável em regime \textit{one-shot}, limitada a 20\%
+(Seção~\ref{sec:res_magnitude}), e 50\% é um nível de degradação severa, com
+\textit{perplexity} \textit{one-shot} de 473,28.
+
+\subsection{Procedimento}\label{subsec:ft_procedimento}
+
+Cada configuração passou pelo mesmo procedimento, implementado no módulo
+\texttt{finetune} (Tabela~\ref{tab:modulos}):
+
+\begin{enumerate}
+    \item o modelo de referência foi recarregado a partir dos pesos pré-treinados e podado
+          pelas mesmas funções das Etapas 2 e 3, de modo que o modelo retreinado fosse
+          idêntico ao avaliado em regime \textit{one-shot};
+    \item mediu-se a \textit{perplexity} do modelo podado, ponto de partida da
+          recuperação; nas sete configurações, o valor obtido reproduziu, em todos os
+          dígitos registrados, o das varreduras \textit{one-shot};
+    \item na poda não estruturada, capturou-se a máscara binária dos pesos
+          remanescentes (Seção~\ref{subsec:ft_validade});
+    \item o modelo foi retreinado sobre a partição de treino do WikiText-2, com os
+          parâmetros da Tabela~\ref{tab:finetune_protocolo};
+    \item o modelo retreinado foi avaliado na partição de teste por todas as métricas da
+          Etapa 1 (Tabela~\ref{tab:metricas}), pelo mesmo procedimento aplicado aos
+          modelos não retreinados.
+\end{enumerate}
+
+O retreinamento atualizou todos os parâmetros do modelo podado --- inclusive
+\textit{embeddings}, vieses e parâmetros de normalização ---, e não apenas as matrizes
+podáveis (Seção~\ref{subsec:parametros_podaveis}). O modelo avaliado é o obtido ao final
+do último passo do otimizador: a partição de validação não foi utilizada, e não houve
+parada antecipada nem seleção do melhor ponto do treinamento. Com isso, a quantidade de
+retreinamento é idêntica em todas as configurações, condição para que suas
+\textit{perplexities} pós-retreinamento sejam comparáveis entre si.
+
+\subsection{Controle Denso e Preservação da Esparsidade}\label{subsec:ft_validade}
 
 Duas decisões de implementação merecem registro por afetarem a validade dos resultados.
 
@@ -801,27 +875,94 @@ uma máscara binária fixa, capturada logo após a poda e reaplicada depois de c
 otimizador. Registre-se que zerar o gradiente não seria suficiente: o otimizador utilizado
 possui momento e regularização por decaimento de pesos, e ambos alteram um parâmetro mesmo
 quando seu gradiente é nulo. A esparsidade medida ao final do treinamento foi registrada
-como verificação de integridade. Na poda estruturada não houve máscara, pois as estruturas já
-haviam sido fisicamente removidas.
+como verificação de integridade e coincidiu, nas duas configurações de magnitude, com a
+medida logo após a poda (Seção~\ref{subsec:ft_verificacoes}). Na poda estruturada não
+houve máscara, pois as estruturas já haviam sido fisicamente removidas.
 
-O treinamento empregou o otimizador AdamW, com aquecimento linear da taxa de aprendizado
-seguido de decaimento linear, recorte de norma do gradiente e acúmulo de gradiente para
-viabilizar lotes efetivos maiores do que a memória da GPU comportaria. O decaimento de
-pesos foi aplicado apenas às matrizes de peso, deixando de fora vieses e parâmetros de
-normalização, conforme prática consolidada. A passagem direta e a retropropagação executaram
-em \textbf{precisão mista}, com escalonamento dinâmico da perda para evitar
-subtransbordamento dos gradientes em meia precisão; os pesos foram mantidos em precisão
-simples. Essa escolha reduziu aproximadamente à metade a memória de ativações e foi o que
-viabilizou o treinamento na GPU disponível, mas introduziu uma fonte adicional de
-variação numérica que não existe nas etapas \textit{one-shot}, todas executadas em
-precisão simples. O consumo de
-energia do treinamento foi medido separadamente do consumo da inferência: trata-se de um
-custo pago uma única vez, que precisa ser amortizado contra a economia por inferência para
-que o balanço energético do trabalho feche corretamente.
+\subsection{Parâmetros do Treinamento}\label{subsec:ft_protocolo}
+
+Para o treinamento, as linhas da partição de treino do WikiText-2 foram concatenadas em
+um único texto, tokenizado e dividido em blocos contíguos e disjuntos de 512
+\textit{tokens}; o resto final, menor que um bloco, foi descartado. Resultaram 4.743
+blocos, ou 2.428.416 \textit{tokens}. A divisão difere da adotada na avaliação, que
+percorre o texto por janelas deslizantes sobrepostas (Seção~\ref{sec:metricas}): na
+avaliação, a sobreposição garante contexto anterior a cada \textit{token} avaliado; no
+treinamento, blocos disjuntos fazem de cada bloco uma amostra independente. A
+Tabela~\ref{tab:finetune_protocolo} reúne os parâmetros adotados, idênticos nas sete
+configurações.
+
+\begin{table}[htb]
+\centering
+\caption{Parâmetros do \textit{fine-tuning} de recuperação.}
+\label{tab:finetune_protocolo}
+\small
+\begin{tabular}{p{7.5cm} r}
+\hline
+\textbf{Parâmetro} & \textbf{Valor} \\
+\hline
+Blocos de treino (512 \textit{tokens} cada) & 4.743 \\
+Blocos por lote & 4 \\
+Lotes acumulados por passo do otimizador & 4 \\
+Lote efetivo por passo & 16 blocos (8.192 \textit{tokens}) \\
+Passos do otimizador & 297 (uma época) \\
+Otimizador & AdamW \\
+Taxa de aprendizado máxima & $5 \times 10^{-5}$ \\
+Aquecimento linear da taxa de aprendizado & 17 passos (6\% do total, truncado) \\
+Decaimento da taxa de aprendizado & linear, até zero no passo 297 \\
+Decaimento de pesos & 0,01 \\
+Limite da norma do gradiente & 1,0 \\
+Precisão numérica & mista (FP16 e FP32) \\
+Semente aleatória & 42 \\
+\hline
+\end{tabular}\\
+\textit{Fonte: Elaboração própria, com valores de \texttt{codigo/finetune.py} e de
+\texttt{codigo/resultados/finetune.csv}.}
+\end{table}
+
+Os gradientes de quatro lotes consecutivos, de quatro blocos cada, foram acumulados antes
+de cada passo do otimizador, o que equivale a um lote efetivo de 16 blocos; a perda de
+cada lote foi dividida por quatro, de modo que o gradiente acumulado correspondesse à
+média dos lotes, e não à soma. O número de passos foi calculado para corresponder a uma
+época, isto é, a uma passagem pelo conjunto de treino: os 4.743 blocos, divididos em lotes efetivos de 16,
+resultam em 297 passos, com arredondamento para cima.
+
+O otimizador AdamW \cite{Loshchilov2019} aplica o decaimento de pesos separadamente da
+atualização pelo gradiente. O decaimento foi aplicado apenas às matrizes de peso,
+deixando de fora vieses e parâmetros de normalização, conforme prática consolidada. A
+taxa de aprendizado cresceu linearmente durante os 17 primeiros passos e decresceu
+linearmente até zero no último, e a norma do gradiente foi limitada a 1,0 antes de cada
+passo. A taxa de aprendizado e o lote efetivo estão entre os valores recomendados por
+\citeonline{Devlin2019} para o \textit{fine-tuning} de \textit{Transformers}
+pré-treinados --- taxa de $2 \times 10^{-5}$ a $5 \times 10^{-5}$ e lotes de 16 ou 32
+exemplos ---; o decaimento de pesos de 0,01 e o aquecimento seguido de decaimento linear
+são os adotados por esses autores no pré-treinamento do BERT. Nenhum desses valores foi
+ajustado para este experimento (Seção~\ref{sec:limitacoes}). A quantidade de
+retreinamento, uma época, fica abaixo das duas a quatro épocas recomendadas pelos mesmos
+autores; o que essa limitação impede de concluir é discutido na
+Seção~\ref{subsec:ft_verificacoes}.
+
+A passagem direta e a retropropagação executaram em \textbf{precisão mista}
+\cite{Micikevicius2018}: as operações foram realizadas em meia precisão (FP16), com os
+pesos mantidos em precisão simples (FP32) e escalonamento dinâmico da perda, que evita o
+subtransbordamento dos gradientes em meia precisão. A escolha aproveita as unidades de
+cálculo especializadas da GPU Tesla T4, que alcança 65 TFLOPS em precisão mista contra
+8,1 TFLOPS em precisão simples \cite{NVIDIA2019T4}, e corresponde à configuração
+pressuposta na estimativa de memória do critério C3
+(Seção~\ref{subsec:metodologia_selecao_modelo}). Ela introduz, porém, uma fonte adicional
+de variação numérica que não existe nas etapas \textit{one-shot}, todas executadas em
+precisão simples. O consumo de energia do treinamento foi medido pela biblioteca
+CodeCarbon separadamente do consumo da avaliação: trata-se de um custo pago uma única vez,
+que precisa ser amortizado contra a economia por inferência para que o balanço energético
+do trabalho feche corretamente.
 
 Diferentemente de todas as etapas anteriores, esta é estocástica --- a ordem dos lotes e o
 \textit{dropout} introduzem variabilidade --- e, portanto, é a única em que a semente
-aleatória efetivamente altera o resultado.
+aleatória efetivamente altera o resultado. Cada configuração foi retreinada uma única vez,
+com a semente 42, reiniciada antes de cada configuração. A ordem dos lotes, sorteada por um
+gerador próprio iniciado com essa semente, foi a mesma nas sete configurações, de modo que
+as diferenças entre elas não decorrem da ordem em que os dados foram apresentados. A
+ausência de repetições com sementes distintas é discutida entre as limitações
+(Seção~\ref{sec:limitacoes}).
 
 \section{\textit{Framework} de Implementação}\label{sec:framework}
 
@@ -1020,9 +1161,13 @@ resultados:
           ambientes distintos; a análise apoia-se em comparações relativas dentro de um
           mesmo ambiente.
 
-    \item \textbf{Hiperparâmetros não otimizados exaustivamente.} Os hiperparâmetros do
-          \textit{fine-tuning} foram definidos a partir da literatura e de experimentos
-          preliminares, sem busca sistemática. Valores melhores podem existir.
+    % AJUSTE: 05/10 — "e de experimentos preliminares" sai: o código e o histórico não
+    % registram nenhum; os valores padrão de finetune.py nunca mudaram desde o commit
+    % f95cf76, e a única execução anterior foi o teste de fumaça (2 passos, descartado).
+    \item \textbf{Hiperparâmetros não otimizados.} Os hiperparâmetros do
+          \textit{fine-tuning} foram tomados de valores recomendados na literatura
+          (Seção~\ref{subsec:ft_protocolo}), sem busca sistemática. Valores melhores
+          podem existir.
 
     \item \textbf{Semente única no \textit{fine-tuning}.} Esta é a única etapa estocástica
           do experimento, e todas as configurações foram executadas com uma única semente.
