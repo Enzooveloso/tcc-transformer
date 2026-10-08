@@ -573,6 +573,11 @@ terceiro (Semantic Scholar, acesso em 3 out. 2026). Como as citações se acumul
 tempo, a diferença reflete em parte a antiguidade dos trabalhos --- as quatro alternativas
 foram publicadas entre 2019 e 2024. O dado reforça a condição de referência das duas
 estratégias na literatura de poda, sem substituir os critérios de seleção.
+% AJUSTE: 05/10 — frase trazida da Metodologia (Etapa 2), que deixou de nomear as
+% estratégias escolhidas.
+A mesma condição é corroborada pela meta-análise de \citeonline{Blalock2020}, que reuniu os
+resultados de 81 trabalhos de poda e aponta como um dos resultados consistentes da área que
+a poda pela magnitude dos pesos comprime substancialmente as redes sem reduzir a acurácia.
 
 \subsection{Parâmetros Podáveis}\label{subsec:parametros_podaveis}
 
@@ -972,10 +977,14 @@ sistema de diferenciação automática, que constrói dinamicamente o grafo comp
 simplifica a implementação do \textit{backpropagation} durante o \textit{fine-tuning}, e
 por seu suporte nativo à aceleração em GPU.
 
-Os pesos pré-treinados foram obtidos pela plataforma Hugging Face por meio da biblioteca
-\texttt{transformers}. Cabe a distinção, já feita no Capítulo~\ref{chap:metodologia}: a
-Hugging Face é a plataforma que hospeda e distribui os modelos, ao passo que PyTorch é a
-biblioteca que os executa.
+% AJUSTE: 05/10 — parágrafo trazido da Metodologia (Etapa 1), segundo o esboço do
+% orientador: as ferramentas usadas pertencem ao Desenvolvimento.
+Os pesos pré-treinados foram obtidos na plataforma Hugging Face por meio da biblioteca
+\texttt{transformers} \cite{Wolf2020}, que implementa sobre o PyTorch as arquiteturas dos
+modelos candidatos. A Hugging Face não é uma biblioteca, mas um ambiente colaborativo de
+hospedagem e distribuição de modelos, que hospedava mais de 3,1 milhões de modelos em 28
+set. 2026, entre eles diversas famílias de modelos de linguagem, como GPT-2, OPT, Pythia,
+Llama e BERT; a biblioteca que executa os modelos é o PyTorch.
 
 As demais bibliotecas empregadas são:
 

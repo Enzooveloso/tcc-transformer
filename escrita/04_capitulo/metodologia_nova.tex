@@ -40,12 +40,12 @@ Capítulo~\ref{chap:desenvolvimento}, organizado nas mesmas quatro etapas, na me
 \section{Etapa 1 --- Modelo de Referência}\label{sec:metodologia_modelo}
 % -------------------------------------------------------
 
-Na primeira etapa, seleciona-se o modelo de referência (\textit{baseline}): a versão
+Na primeira etapa, seleciona-se o modelo de referência (\textit{baseline}), a versão
 original de um modelo de linguagem de grande escala (\textit{Large Language Model} ---
 LLM), antes de qualquer processo de poda. O modelo é executado sem nenhuma modificação e
 avaliado sobre uma base de dados, registrando-se métricas de desempenho preditivo, de custo
 computacional e de consumo de energia. Os valores obtidos constituem o referencial de
-comparação de todo o trabalho: as métricas de cada modelo podado nas etapas seguintes são
+comparação de todo o trabalho, as métricas de cada modelo podado nas etapas seguintes são
 comparadas às desse modelo original, o que permite mensurar a perda de desempenho e o
 ganho de eficiência introduzidos pela compressão.
 
@@ -102,9 +102,9 @@ Para a seleção do modelo de referência, foram adotados os seguintes critério
 
 Os critérios C1 a C4 e C6 dizem respeito apenas ao modelo. O critério C5, ao contrário,
 depende também da base de dados de avaliação, cuja seleção segue critérios próprios
-(Seção~\ref{subsec:metodologia_base}), dois dos quais --- D1 e D4 --- dependem, por sua
+(Seção~\ref{subsec:metodologia_base}), dois dos quais, D1 e D4, dependem, por sua
 vez, do modelo. Por essa razão, modelo e base de dados são selecionados em conjunto: um
-par formado por modelo e base de dados é admissível quando o modelo atende a C1--C6 e a
+par formado por modelo e base de dados é admissível quando o modelo atende a C1--C6 e a 
 base de dados atende a D1--D4 em relação a esse modelo.
 
 Havendo mais de um candidato que atenda simultaneamente a todos os critérios, adota-se o
@@ -114,16 +114,9 @@ com o tamanho do modelo. A aplicação desses critérios a um conjunto de modelo
 apresentada no Capítulo~\ref{chap:desenvolvimento} (Tabela~\ref{tab:candidatos_modelo}).
 
 % AJUSTE: reunião 13/05 — Hugging Face como plataforma, não biblioteca
-A implementação do modelo de referência utiliza a biblioteca PyTorch \cite{Paszke2019}:
-biblioteca de código aberto para aprendizado profundo, com diferenciação automática e
-execução em GPU, recursos exigidos pelo \textit{fine-tuning}. Sobre ela opera a biblioteca
-\texttt{transformers} \cite{Wolf2020}, que implementa as arquiteturas dos modelos
-candidatos. Os pesos pré-treinados são obtidos na plataforma Hugging Face --- não uma
-biblioteca, mas um ambiente colaborativo de hospedagem e distribuição de modelos, que
-hospedava mais de 3,1 milhões de modelos em 28 set. 2026 ---, entre eles diversas famílias
-de modelos de linguagem, como GPT-2, OPT, Pythia, Llama e BERT. O modelo selecionado a partir dos critérios
-estabelecidos, e a versão específica obtida na plataforma, são apresentados no
-Capítulo~\ref{chap:desenvolvimento}.
+% AJUSTE: 05/10 — segundo o esboço do orientador (revisão 30/09), as ferramentas usadas
+% pertencem ao Desenvolvimento: o parágrafo sobre PyTorch, transformers e Hugging Face
+% passou para a Seção sec:framework, mantida a distinção entre plataforma e biblioteca.
 
 % AJUSTE: revisão 24/09 — comentário "listar outros candidatos, com tabela de
 % requisitos" atendido pela Tabela~tab:candidatos_modelo (Desenvolvimento);
@@ -197,9 +190,8 @@ O custo computacional é avaliado por meio de quatro indicadores complementares:
 
     \item \textbf{Operações de ponto flutuante (FLOPs):} contagem das operações matemáticas
           necessárias para uma inferência completa, obtida por análise estática do grafo
-          computacional do modelo. Bibliotecas específicas --- como \texttt{thop}, em
-          ambiente PyTorch --- percorrem cada camada do modelo e acumulam as operações
-          correspondentes. A automação, porém, é parcial: a contagem cobre apenas os tipos
+          computacional do modelo: ferramentas de contagem percorrem cada camada do modelo
+          e acumulam as operações correspondentes. A automação, porém, é parcial: a contagem cobre apenas os tipos
           de camada previstos no catálogo da ferramenta, de modo que camadas fora dele
           exigem o registro de regras de contagem próprias, sob pena de serem silenciosamente
           ignoradas. O tratamento efetivamente necessário no modelo adotado, bem como as
@@ -210,26 +202,32 @@ O custo computacional é avaliado por meio de quatro indicadores complementares:
           \textit{hardware}. Múltiplas medições são agregadas por meio de média e
           desvio-padrão para mitigar a variância natural de execução;
 
-    \item \textbf{Tamanho do modelo:} avaliado em duas dimensões --- espaço ocupado em disco
-          após serialização do estado do modelo e consumo de memória durante a inferência,
-          este último registrado por ferramentas de \textit{profiling} do PyTorch.
+    \item \textbf{Tamanho do modelo:} memória ocupada pelos parâmetros, calculada como o
+          produto entre o número de parâmetros e o número de \textit{bytes} usado para
+          representar cada um.
 \end{itemize}
+% AJUSTE: 05/10 — o tamanho do modelo era descrito em duas dimensões (disco e memória
+% durante a inferência, por profiling), que o experimento não mediu: codigo/eval.py
+% (model_size_mb) soma os bytes dos parâmetros, como na Tabela~tab:metricas.
 
 \subsubsection*{Impacto ambiental}
 
 O impacto ambiental é mensurado por meio de dois indicadores:
 
 \begin{itemize}
+% AJUSTE: 05/10 — os nomes das ferramentas (thop, profiling do PyTorch, CodeCarbon)
+% saem da Metodologia, segundo o esboço do orientador; constam da Tabela~tab:metricas e
+% da Seção sec:framework (Desenvolvimento).
     \item \textbf{Consumo energético:} estimado por meio de ferramentas de monitoramento do
-          uso de \textit{hardware} (CPU e GPU) durante a execução dos experimentos. A
-          biblioteca CodeCarbon \cite{CodeCarbon2023} integra leituras periódicas de consumo
-          elétrico dos componentes, registrando a energia total consumida (em kWh) durante
+          uso de \textit{hardware} (CPU e GPU), que integram leituras periódicas do consumo
+          elétrico dos componentes e registram a energia total consumida (em kWh) durante
           o intervalo de inferência;
 
     \item \textbf{Emissões equivalentes de CO\textsubscript{2}:} calculadas a partir do
           consumo energético registrado, multiplicado por um fator de intensidade carbônica
-          da matriz energética da região onde os experimentos são executados. A biblioteca
-          CodeCarbon mantém base desses fatores e realiza essa conversão automaticamente.
+          da matriz energética da região onde os experimentos são executados. As mesmas
+          ferramentas de monitoramento mantêm bases desses fatores e realizam essa
+          conversão automaticamente.
           Cabe uma ressalva sobre o alcance desse indicador: como o fator de intensidade
           carbônica depende da localidade em que o código executa, ele não é controlado pelo
           experimento e pode variar entre execuções. As emissões devem, por isso, ser lidas
@@ -264,45 +262,37 @@ Os modelos podados são avaliados pelas mesmas métricas e sobre a mesma base de
 Etapa 1 (Seção~\ref{sec:metodologia_modelo}).
 
 % AJUSTE: reunião 13/05 — duas estratégias (magnitude + estruturada), "avaliadas" em vez de "consideradas"
+% AJUSTE: 05/10 — segundo o esboço do orientador (revisão 30/09), a Metodologia não
+% antecipa as estratégias escolhidas: a lista das duas estratégias e suas funções de
+% importância passaram para o Desenvolvimento (Seções subsec:metodo_magnitude e
+% subsec:metodo_estruturado, que já as descreviam); o critério de importância é
+% definido aqui de forma genérica.
 \adicionadomarcelo{As estratégias de poda sem otimização têm por objetivo reduzir o número de parâmetros de um
 modelo pré-treinado, eliminando pesos ou estruturas avaliadas como menos relevantes para o
-desempenho preditivo. Serão avaliadas duas estratégias de poda clássicas, escolhidas por
-representarem os dois extremos do espectro de granularidade da poda neural:
+desempenho preditivo.} A relevância é estimada por um critério de importância, que atribui
+uma pontuação a cada parâmetro ou a cada unidade arquitetural removível; os elementos de
+menor pontuação são removidos até que se atinja a taxa de poda pretendida.
 
 % AJUSTE: revisão 24/09 — comentário "por que essas estratégias, considerando que
 % existem outras opções?" atendido pelos critérios P1--P3 e pela
 % Tabela~tab:candidatos_poda (Desenvolvimento); marcação removida em 03/10.
 
-\begin{itemize}
-    \item \textbf{Poda por magnitude:} remove parâmetros
-          individuais cujos valores absolutos são inferiores a um limiar \cite{Han2015};
-          representa a granularidade mais fina possível e gera modelos esparsos sem
-          alteração da estrutura física do modelo;
-    \item \textbf{Poda de cabeças de atenção e de neurônios do MLP:}
-          elimina unidades arquiteturais inteiras \cite{Li2017} --- filtros convolucionais,
-          no trabalho original; em uma arquitetura \textit{Transformer}, cabeças de atenção
-          e neurônios da camada intermediária do MLP, isoladamente ou em conjunto ---,
-          reduzindo fisicamente as dimensões dos tensores e gerando modelos de menor custo
-          computacional.
-\end{itemize}}
-
 % AJUSTE: reunião 13/05 — reforçar que estratégias são consolidadas na literatura
 % AJUSTE: revisão 30/09 — o orientador não entendeu a segunda metade do parágrafo
 % ("não constitui contribuição metodológica original; pelo contrário..."); reescrita
 % para dizer diretamente o papel das duas estratégias: linha de base, não contribuição.
-Ambas são estratégias de referência na literatura de compressão: a poda por magnitude foi
-proposta em 2015 \cite{Han2015} e a poda estruturada por norma $L_1$, em 2017
-\cite{Li2017}. Na meta-análise de \citeonline{Blalock2020}, que agregou resultados de 81
-trabalhos de poda, um dos resultados consistentes da área é que a poda de parâmetros pela
-magnitude comprime substancialmente as redes sem reduzir a acurácia. As duas estratégias
-não constituem, portanto, a contribuição deste trabalho: desempenham o papel de linha de
-base. São aplicadas com os critérios de importância propostos por seus autores, e os
-modelos que produzem servem de referência para avaliar a estratégia com otimização
-(Seção~\ref{sec:metodologia_poda_com}), que constitui a contribuição central do trabalho.
+% AJUSTE: 05/10 — as frases sobre a consolidação das duas estratégias na literatura
+% (Han, Li, Blalock) passaram para a Seção subsec:selecao_estrategias (Desenvolvimento);
+% aqui fica só o papel das estratégias desta etapa.
+As estratégias desta etapa não constituem a contribuição deste trabalho: desempenham o
+papel de linha de base. São aplicadas com os critérios de importância propostos por seus
+autores, e os modelos que produzem servem de referência para avaliar a estratégia com
+otimização (Seção~\ref{sec:metodologia_poda_com}), que constitui a contribuição central do
+trabalho.
 
 % AJUSTE: revisão 24/09 — critérios vagos (representatividade, complementaridade,
 % viabilidade) substituídos por critérios verificáveis, aplicados às alternativas no Cap. 5
-A escolha das duas estratégias, entre as alternativas disponíveis na literatura, seguiu
+A escolha das estratégias, entre as alternativas disponíveis na literatura, seguiu
 três critérios:
 
 \begin{itemize}
@@ -345,28 +335,18 @@ mesmas condições permite medir esse compromisso, que nenhuma das duas revelari
 isoladamente e que constitui uma das perguntas do trabalho
 (Seção~\ref{sec:visao_geral}).
 
-Como indicador complementar de representatividade, registra-se para cada estratégia
-candidata o número de citações do artigo que a propôs, na base Semantic Scholar. O
-indicador não integra os critérios de seleção: como as citações se acumulam ao longo do
-tempo, ele favorece trabalhos mais antigos e não distingue a relevância de propostas
-recentes.
+% Como indicador complementar de representatividade, registra-se para cada estratégia
+% candidata o número de citações do artigo que a propôs, na base Semantic Scholar. O
+% indicador não integra os critérios de seleção: como as citações se acumulam ao longo do
+% tempo, ele favorece trabalhos mais antigos e não distingue a relevância de propostas
+% recentes.
 
-A aplicação desses critérios a alternativas recentes da literatura --- entre elas o
-SparseGPT \cite{Frantar2023}, o Wanda \cite{Sun2024}, a \textit{movement pruning}
-\cite{Sanh2020} e a poda de cabeças de atenção por importância estimada com gradientes
-\cite{Michel2019} --- é apresentada no Capítulo~\ref{chap:desenvolvimento}
-(Tabela~\ref{tab:candidatos_poda}).
-
-
-Em ambas as estratégias, são aplicadas funções de avaliação de importância de parâmetros,
-que orientam o processo de remoção: a poda por magnitude utiliza como critério o valor
-absoluto de cada peso individual, enquanto a poda estruturada utiliza a norma $L_1$ do
-conjunto de pesos associado a cada unidade arquitetural removível.
-
-
-
-As estratégias selecionadas com base nesses critérios, bem como os detalhes de sua
-implementação, são apresentados no Capítulo~\ref{chap:desenvolvimento}.
+% AJUSTE: 05/10 — a frase que nomeava as alternativas e o parágrafo sobre as funções de
+% importância das duas estratégias escolhidas foram unidos ao encaminhamento final, como
+% na Etapa 1: os candidatos e a escolha aparecem só no Desenvolvimento.
+A aplicação desses critérios a um conjunto de estratégias candidatas, as estratégias
+selecionadas e os detalhes de sua implementação são apresentados no
+Capítulo~\ref{chap:desenvolvimento} (Tabela~\ref{tab:candidatos_poda}).
 
 % -------------------------------------------------------
 % AJUSTE: reescrita da Seção 4.3 — a estratégia otimizada passa a ser declarada
@@ -391,8 +371,8 @@ mais as camadas tolerantes e menos as sensíveis deve produzir, para um mesmo gr
 compressão, perda menor de desempenho preditivo do que as formas de distribuição adotadas
 pelas estratégias sem otimização (Seção~\ref{sec:metodologia_poda_sem}), que aplicam a
 mesma taxa a todas as camadas ou decidem a distribuição apenas pela magnitude dos pesos.
-Para testar essa hipótese, fixa-se o \textbf{orçamento de poda} --- a fração do total de
-parâmetros podáveis a ser removida do modelo, como 30\% ou 50\%,e varia-se apenas o
+Para testar essa hipótese, fixa-se o \textbf{orçamento de poda} (a fração do total de
+parâmetros podáveis a ser removida do modelo, como 30\% ou 50\%) e varia-se apenas o
 modo como essa fração é distribuída entre as camadas (Seção~\ref{subsec:sensibilidade}).
 
 A técnica de otimização foi escolhida, entre as alternativas consideradas, segundo três
@@ -401,9 +381,8 @@ critérios:
 \begin{itemize}
     \item \textbf{O1 --- Aderência à hipótese:} a técnica determina \textit{quanto} podar
           em cada camada, que é o objeto da hipótese, e preserva o critério de importância
-          da estratégia de poda, a magnitude dos pesos ou a norma $L_1$ das estruturas
-          , que continua a decidir \textit{quais} parâmetros são removidos dentro de
-          cada camada.
+          da estratégia de poda, que continua a decidir \textit{quais} parâmetros são
+          removidos dentro de cada camada.
     \item \textbf{O2 --- Ausência de um segundo modelo:} o modelo avaliado é o próprio
           modelo de referência após a poda, sem que outro modelo seja treinado para
           substituí-lo, como ocorre na \textit{Knowledge Distillation}.
@@ -417,37 +396,37 @@ otimização em uma única variável: a distribuição do orçamento de poda ent
 Mantidos o modelo, o critério de importância, o orçamento e a ausência de treinamento,
 qualquer diferença de desempenho entre os dois pode ser atribuída a essa distribuição.
 
-\subsection{Alternativas de Estratégias de Otimização Consideradas e Descartadas}
+% \subsection{Alternativas de Estratégias de Otimização Consideradas e Descartadas}
 
-Quatro alternativas foram consideradas e descartadas, cada uma por deixar de atender a pelo
-menos um dos critérios. Elas não integram o escopo experimental, mas delimitam o alcance
-das conclusões e constituem desdobramentos para trabalhos futuros:
+% Quatro alternativas foram consideradas e descartadas, cada uma por deixar de atender a pelo
+% menos um dos critérios. Elas não integram o escopo experimental, mas delimitam o alcance
+% das conclusões e constituem desdobramentos para trabalhos futuros:
 
-\begin{itemize}
-    \item \textbf{Taxas de poda dinâmicas:} a taxa de poda cresce gradualmente ao longo do
-          treinamento, em vez de ser fixada de antemão, como na poda gradual de
-          \citeonline{Zhu2017}. A técnica pressupõe passos de treinamento intercalados à
-          poda, o que contraria O3; além disso, a variação ocorre ao longo do tempo, e não
-          entre as camadas, o que contraria O1.
-    \item \textbf{Variação do momento de aplicação da poda:} podar antes ou durante o
-          treinamento, e não depois dele (Seção~\ref{sec:pruning}). Ambas as variantes
-          exigem treinamento --- podar antes pressupõe treinar o modelo a partir do zero
-          \cite{Frankle2019}, e podar durante intercala passos de poda e de treino
-          \cite{Zhu2017} ---, o que contraria O3. O treinamento a partir do zero está,
-          além disso, fora do alcance deste trabalho pelo custo do pré-treinamento
-          (critério C2, Seção~\ref{sec:metodologia_modelo}). Por essa razão, a poda é
-          aplicada sempre sobre o modelo pré-treinado, e o retreinamento fica restrito à
-          etapa de recuperação (Seção~\ref{sec:metodologia_finetuning}).
-    \item \textbf{\textit{Knowledge Distillation}:} um modelo menor (aluno) é treinado
-          para reproduzir as saídas de um modelo maior (professor) \cite{Hinton2015}. O
-          modelo resultante é o aluno, e não o modelo de referência podado, o que contraria
-          O2; e sua obtenção exige treinamento, o que contraria O3.
-    \item \textbf{Quantização:} reduz o número de \textit{bits} usados para representar
-          cada peso, em vez de removê-lo \cite{Jacob2018}. A técnica não atua sobre a
-          distribuição da poda entre as camadas, o que contraria O1, e constitui uma
-          segunda forma de compressão, cujo efeito se somaria ao da poda sem poder ser
-          separado dele.
-\end{itemize}
+% \begin{itemize}
+%     \item \textbf{Taxas de poda dinâmicas:} a taxa de poda cresce gradualmente ao longo do
+%           treinamento, em vez de ser fixada de antemão, como na poda gradual de
+%           \citeonline{Zhu2017}. A técnica pressupõe passos de treinamento intercalados à
+%           poda, o que contraria O3; além disso, a variação ocorre ao longo do tempo, e não
+%           entre as camadas, o que contraria O1.
+%     \item \textbf{Variação do momento de aplicação da poda:} podar antes ou durante o
+%           treinamento, e não depois dele (Seção~\ref{sec:pruning}). Ambas as variantes
+%           exigem treinamento --- podar antes pressupõe treinar o modelo a partir do zero
+%           \cite{Frankle2019}, e podar durante intercala passos de poda e de treino
+%           \cite{Zhu2017} ---, o que contraria O3. O treinamento a partir do zero está,
+%           além disso, fora do alcance deste trabalho pelo custo do pré-treinamento
+%           (critério C2, Seção~\ref{sec:metodologia_modelo}). Por essa razão, a poda é
+%           aplicada sempre sobre o modelo pré-treinado, e o retreinamento fica restrito à
+%           etapa de recuperação (Seção~\ref{sec:metodologia_finetuning}).
+%     \item \textbf{\textit{Knowledge Distillation}:} um modelo menor (aluno) é treinado
+%           para reproduzir as saídas de um modelo maior (professor) \cite{Hinton2015}. O
+%           modelo resultante é o aluno, e não o modelo de referência podado, o que contraria
+%           O2; e sua obtenção exige treinamento, o que contraria O3.
+%     \item \textbf{Quantização:} reduz o número de \textit{bits} usados para representar
+%           cada peso, em vez de removê-lo \cite{Jacob2018}. A técnica não atua sobre a
+%           distribuição da poda entre as camadas, o que contraria O1, e constitui uma
+%           segunda forma de compressão, cujo efeito se somaria ao da poda sem poder ser
+%           separado dele.
+% \end{itemize}
 
 \subsection{Técnica Adotada: Análise de Sensibilidade por Camada}
 
@@ -491,9 +470,9 @@ otimização.
 As Etapas 2 e 3 operam em regime \textit{one-shot}: o modelo é podado e avaliado
 imediatamente, sem nenhum treinamento após a poda. Esse regime é deliberado, pois mede o
 dano causado pela poda sem que nenhuma recuperação posterior o atenue. Ele difere, porém,
-do procedimento original das duas estratégias adotadas: tanto \citeonline{Han2015} quanto
-\citeonline{Li2017} retreinam o modelo depois de podá-lo, para que os parâmetros
-remanescentes compensem a ausência dos removidos (Seção~\ref{sec:pruning}). Esta etapa
+do procedimento original das estratégias clássicas de poda, que retreinam o modelo depois
+de podá-lo, para que os parâmetros remanescentes compensem a ausência dos removidos
+\cite{Han2015,Li2017} (Seção~\ref{sec:pruning}). Esta etapa
 incorpora esse retreinamento ao experimento, com o objetivo de medir quanto da degradação
 causada pela poda pode ser recuperada.
 
@@ -505,34 +484,34 @@ configurações retreinadas. Ao final, o modelo é avaliado novamente na partiç
 pelas mesmas métricas da Seção~\ref{sec:metodologia_metricas}. A recuperação é medida pela
 comparação entre a \textit{perplexity} do modelo podado antes e depois do retreinamento.
 
-Dois cuidados metodológicos condicionam a validade dessa comparação.
+% Dois cuidados metodológicos condicionam a validade dessa comparação.
 
-% AJUSTE: revisão 30/09 — "corpus é a base de dados ou dataset? Unificar terminologia no
-% texto." Adotado "base de dados" em todo o texto (corpus, corpora, dataset e conjunto de
-% dados substituídos em 03/10).
-O primeiro é a necessidade de uma \textbf{linha de controle densa}. O modelo de referência
-não foi pré-treinado na base de dados de avaliação, de modo que retreiná-lo nessa base de
-dados já melhora o desempenho preditivo por simples adaptação de domínio, sem poda
-alguma envolvida. Sem essa linha de controle, seria impossível distinguir a recuperação do dano da
-poda da mera adaptação à base de dados. O modelo denso é, portanto, retreinado pelo mesmo número
-de passos e avaliado junto às demais configurações.
+% % AJUSTE: revisão 30/09 — "corpus é a base de dados ou dataset? Unificar terminologia no
+% % texto." Adotado "base de dados" em todo o texto (corpus, corpora, dataset e conjunto de
+% % dados substituídos em 03/10).
+% O primeiro é a necessidade de uma \textbf{linha de controle densa}. O modelo de referência
+% não foi pré-treinado na base de dados de avaliação, de modo que retreiná-lo nessa base de
+% dados já melhora o desempenho preditivo por simples adaptação de domínio, sem poda
+% alguma envolvida. Sem essa linha de controle, seria impossível distinguir a recuperação do dano da
+% poda da mera adaptação à base de dados. O modelo denso é, portanto, retreinado pelo mesmo número
+% de passos e avaliado junto às demais configurações.
 
-O segundo é a \textbf{preservação da esparsidade}. Na poda não estruturada os pesos são
-apenas anulados, e o otimizador os restauraria ao longo do treinamento, desfazendo a
-compressão que se pretende avaliar. Como em \citeonline{Han2015}, a esparsidade é mantida
-por uma máscara binária fixa, capturada imediatamente após a poda e reaplicada a cada passo
-do otimizador. Na poda estruturada esse cuidado é dispensável, pois as unidades removidas
-deixaram de existir.
+% O segundo é a \textbf{preservação da esparsidade}. Na poda não estruturada os pesos são
+% apenas anulados, e o otimizador os restauraria ao longo do treinamento, desfazendo a
+% compressão que se pretende avaliar. Como em \citeonline{Han2015}, a esparsidade é mantida
+% por uma máscara binária fixa, capturada imediatamente após a poda e reaplicada a cada passo
+% do otimizador. Na poda estruturada esse cuidado é dispensável, pois as unidades removidas
+% deixaram de existir.
 
-Por fim, esta é a única etapa estocástica do experimento: as varreduras
-\textit{one-shot} são determinísticas, e a semente aleatória passa a afetar o resultado
-apenas aqui. O custo energético do retreinamento é medido separadamente do custo de
-inferência, por se tratar de custo pago uma única vez, que precisa ser amortizado contra a
-economia obtida a cada inferência.
+% Por fim, esta é a única etapa estocástica do experimento: as varreduras
+% \textit{one-shot} são determinísticas, e a semente aleatória passa a afetar o resultado
+% apenas aqui. O custo energético do retreinamento é medido separadamente do custo de
+% inferência, por se tratar de custo pago uma única vez, que precisa ser amortizado contra a
+% economia obtida a cada inferência.
 
-O protocolo concreto --- otimizador, número de passos, hiperparâmetros e configurações
-submetidas ao retreinamento --- é apresentado no Capítulo~\ref{chap:desenvolvimento}
-(Seção~\ref{sec:finetuning}).
+% O protocolo concreto --- otimizador, número de passos, hiperparâmetros e configurações
+% submetidas ao retreinamento --- é apresentado no Capítulo~\ref{chap:desenvolvimento}
+% (Seção~\ref{sec:finetuning}).
 
 % -------------------------------------------------------
 % AJUSTE: reunião 13/05 — reescrita completa da Seção 3.5 (como medir e analisar energia)
