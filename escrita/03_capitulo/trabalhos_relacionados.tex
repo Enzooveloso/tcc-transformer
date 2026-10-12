@@ -6,6 +6,90 @@
 
 \adicionadomarcelo{Este capítulo apresenta trabalhos da literatura diretamente relacionados ao tema desta pesquisa, com foco em estratégias de poda neural e, em especial, naquelas que visam a redução do consumo energético de modelos de \textit{Deep Learning}. Para cada trabalho, são descritos os objetivos principais, a metodologia adotada e os principais resultados obtidos.}
 
+% AJUSTE: 12/10 — resenhas de Han (2015) e Li (2017), pedidas no \todo do orientador.
+% Ordem cronológica (Han → Li → Yang), que é também a da narrativa: poda por magnitude,
+% poda estruturada como resposta a ela, poda orientada por energia. Números conferidos
+% nos artigos originais (arXiv 1506.02626 e 1608.08710).
+\section{Learning both Weights and Connections for Efficient Neural Networks}\label{sec:han2015}
+
+\citeonline{Han2015} propõem reduzir o número de parâmetros de redes neurais profundas sem
+perda de acurácia, a fim de diminuir a memória e a energia exigidas na inferência. A
+motivação é energética: segundo os dados apresentados pelos autores, ler um peso de 32 bits
+da memória externa (DRAM) custa 640~pJ, cerca de três ordens de grandeza a mais do que uma
+operação aritmética simples, e uma rede que não cabe na memória interna do processador paga
+esse custo a cada inferência.
+
+O método tem três passos. Primeiro, a rede é treinada normalmente, não para obter os pesos
+finais, mas para identificar quais conexões são importantes. Em seguida, removem-se as
+conexões cujos pesos têm valor absoluto abaixo de um limiar, proporcional ao desvio-padrão
+dos pesos de cada camada, o que torna a rede esparsa. Por fim, a rede é retreinada para que
+as conexões remanescentes compensem as removidas; poda e retreinamento podem ser repetidos
+iterativamente. O retreinamento mostrou-se decisivo: sem ele, a acurácia começa a cair
+quando resta cerca de um terço das conexões; com ele, apenas quando resta um décimo. Os
+autores medem ainda a sensibilidade de cada camada, podando uma de cada vez e observando a
+queda de acurácia. As camadas convolucionais revelaram-se mais sensíveis que as totalmente
+conectadas, e a primeira camada convolucional, que recebe a imagem diretamente, a mais
+sensível de todas. Esse resultado orientou a escolha do limiar de cada camada: na AlexNet,
+a primeira camada convolucional reteve 84\% dos pesos, e as duas primeiras totalmente
+conectadas, 9\%.
+
+Na base ImageNet, o método reduziu os parâmetros da AlexNet em 9$\times$, de 61 milhões para
+6,7 milhões, e os da VGG-16 em 13$\times$, de 138 milhões para 10,3 milhões, sem perda de
+acurácia. O consumo de energia, embora motive o trabalho, não é medido: os resultados são
+expressos em parâmetros e operações, e os autores direcionam o método a \textit{hardware}
+especializado em redes esparsas, dada a limitação do \textit{hardware} de propósito geral
+na computação esparsa.
+
+Este trabalho adota o critério de \citeonline{Han2015} como primeira estratégia de poda
+(Seção~\ref{subsec:metodo_magnitude}), com três diferenças. A poda é aplicada a um
+\textit{Transformer}, e não a redes convolucionais. A energia é medida, o que permitiu
+verificar que, em \textit{hardware} de propósito geral, a poda por magnitude não reduz o
+consumo de forma detectável (Seção~\ref{sec:res_custo}), como antecipavam os próprios
+autores. E a análise de sensibilidade por camada, que em \citeonline{Han2015} orienta os
+limiares sem que uma regra seja descrita, torna-se aqui uma regra explícita de definição
+das taxas por camada, comparada às alocações sem análise de sensibilidade sob a mesma taxa
+de poda (Seção~\ref{sec:metodologia_poda_com}). Também no GPT-2 a camada mais sensível é a
+primeira (Seção~\ref{subsec:camada_zero}).
+
+\section{Pruning Filters for Efficient ConvNets}\label{sec:li2017}
+
+\citeonline{Li2017} partem de uma limitação da poda por magnitude: ela remove sobretudo
+parâmetros das camadas totalmente conectadas, que concentram os parâmetros, mas pouco do
+custo computacional --- na VGG-16, essas camadas reúnem 90\% dos parâmetros e menos de 1\%
+das operações de ponto flutuante (FLOPs) ---, e a esparsidade irregular que produz nas
+camadas convolucionais só reduz o tempo de inferência com bibliotecas de convolução
+esparsa. O objetivo dos autores é reduzir o custo de inferência de redes convolucionais com
+uma poda que dispense essas bibliotecas.
+
+O método é uma poda estruturada: em vez de pesos isolados, remove filtros convolucionais
+inteiros, junto com os mapas de características que eles produzem e com os núcleos
+correspondentes da camada seguinte. A importância de cada filtro é a norma $L_1$ dos seus
+pesos, e removem-se os de menor norma --- critério que, nos experimentos dos autores,
+preservou mais acurácia do que remover filtros aleatórios na maior parte das camadas. Como
+a rede resultante permanece densa, apenas menor, ela é executada pelas bibliotecas usuais
+de multiplicação de matrizes densas. A sensibilidade de cada camada é medida podando-a
+isoladamente e avaliando a acurácia no conjunto de validação; nas camadas sensíveis,
+poda-se uma fração menor de filtros, ou nenhum. Para evitar um hiperparâmetro por camada,
+as camadas de um mesmo estágio da rede recebem a mesma taxa, e todas são podadas de uma só
+vez, seguidas de um único retreinamento.
+
+Na base CIFAR-10, o método reduziu os FLOPs da VGG-16 em 34,2\% e seus parâmetros em 64\%,
+e os FLOPs da ResNet-110 em 38,6\%, com erro de teste próximo ao da rede original após o
+retreinamento: 6,60\% contra 6,75\% na VGG-16 e 6,70\% contra 6,47\% na ResNet-110. A
+redução de FLOPs converteu-se em redução semelhante do tempo de inferência, de 40,7\% na
+VGG-16. Os experimentos mostraram ainda que camadas sensíveis são difíceis de recuperar pelo
+retreinamento e que excluí-las da poda melhora o resultado. O consumo de energia não é
+medido.
+
+Este trabalho adapta o método de \citeonline{Li2017} ao \textit{Transformer} como segunda
+estratégia de poda: as unidades estruturais passam a ser as cabeças de atenção e os
+neurônios do MLP, ordenados pela norma $L_1$ (Seção~\ref{subsec:metodo_estruturado}). Como
+em \citeonline{Li2017}, a sensibilidade de cada camada é medida podando-a isoladamente; o
+perfil obtido, porém, define as taxas por camada por meio de uma regra explícita, que
+preserva a taxa de poda do modelo e substitui a escolha empírica por estágio. Além disso, o
+custo é medido também em energia, e a poda é avaliada tanto sem retreinamento quanto após
+o \textit{fine-tuning} de recuperação.
+
 \section{Designing Energy-Efficient Convolutional Neural Networks using Energy-Aware Pruning}\label{sec:yang2017}
 
 \modificado{\citeonline{Yang2017} propõem um algoritmo de poda para redes neurais convolucionais (CNNs) cujo foco é minimizar o consumo real de energia, e não apenas o número de parâmetros ou de operações, preservando a acurácia. Os autores consideram especialmente o custo computacional associado a operações de multiplicação e acumulação (MAC) e o custo de acesso à memória em dispositivos periféricos, como \textit{smartphones}.}
@@ -14,4 +98,4 @@
 
 \modificado{Os autores reportam redução de 3,7$\times$ no consumo de energia da AlexNet e 1,6$\times$ no da GoogLeNet, com perda de acurácia inferior a 1\%. O trabalho também demonstra empiricamente que as camadas convolucionais são as que mais consomem energia, principalmente devido ao volume de acessos à memória, e que a simples redução do número de classes tem impacto limitado na redução do consumo energético, uma vez que as camadas convolucionais não são significativamente afetadas.}
 
-\adicionadomarcelo{\todo[inline]{\textbf{A fazer:} adicionar resenhas de outros trabalhos fundamentais para esta pesquisa. Sugestões: \citeonline{Han2015} (poda por magnitude não estruturada -- seminal); \citeonline{Li2017} (poda estruturada L1 em filtros -- seminal); \citeonline{Frankle2019} (Lottery Ticket Hypothesis); \citeonline{Blalock2020} (revisão crítica de métodos de poda); \citeonline{Liu2019} (\textit{Rethinking the Value of Network Pruning}). Para cada um, seguir o mesmo padrão de resenha: objetivo, método, resultados principais.}}
+\adicionadomarcelo{\todo[inline]{\textbf{A fazer:} adicionar resenhas de outros trabalhos fundamentais para esta pesquisa. Sugestões: \citeonline{Frankle2019} (Lottery Ticket Hypothesis); \citeonline{Blalock2020} (revisão crítica de métodos de poda); \citeonline{Liu2019} (\textit{Rethinking the Value of Network Pruning}). Para cada um, seguir o mesmo padrão de resenha: objetivo, método, resultados principais.}}
