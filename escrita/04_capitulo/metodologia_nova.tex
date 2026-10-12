@@ -247,6 +247,67 @@ O impacto ambiental é mensurado por meio de dois indicadores:
 % proporcionais à compressão introduzida, conforme detalhado a seguir.
 }
 
+% AJUSTE: 12/10 — pedido do orientador: a comparação entre configurações passa a ser
+% definida aqui, e só aqui, com três indicadores adaptados do artigo de Veloso e Rego
+% (redução relativa de energia, acurácia por joule e ponto ótimo de eficiência). Como a
+% métrica do trabalho é a perplexity (menor é melhor), a razão de qualidade é invertida.
+\subsubsection*{Comparação entre configurações}
+
+As configurações são comparadas taxa a taxa: em cada taxa de poda, a \textit{perplexity} e
+a energia de cada alocação são confrontadas com as do modelo de referência e com as das
+demais alocações. Três indicadores sintetizam essa comparação; os dois últimos adaptam a
+acurácia por joule e o ponto ótimo de eficiência propostos por Veloso e Rego.
+
+\todo[inline]{Citar o artigo de Veloso e Rego (JBCS, 2026) quando houver referência
+bibliográfica.}
+
+\textbf{Redução relativa de energia ($\Delta E$):} fração da energia do modelo de
+referência economizada pelo modelo podado,
+\begin{equation}\label{eq:delta_e}
+\Delta E = \frac{E_0 - E}{E_0} \times 100\ [\%],
+\end{equation}
+em que $E$ é a energia consumida pelo modelo podado e $E_0$, a do modelo de referência
+medida na mesma sessão de execução. A referência na mesma sessão é necessária porque a
+energia medida de um mesmo modelo varia entre sessões do ambiente de execução; por isso,
+a energia é sempre comparada em termos relativos, e nunca em valores absolutos.
+
+\textbf{Eficiência relativa ($\eta$):} relaciona o desempenho preditivo à energia
+consumida. Como valores menores de \textit{perplexity} indicam melhor desempenho, a
+razão de qualidade é tomada em relação ao modelo de referência, de modo invertido:
+\begin{equation}\label{eq:eta}
+\eta = \frac{\text{PPL}_0}{\text{PPL}} \times \frac{E_0}{E},
+\end{equation}
+em que $\text{PPL}$ e $\text{PPL}_0$ são as \textit{perplexities} do modelo podado e do
+modelo de referência. O modelo de referência tem $\eta = 1$; valores acima de 1 indicam
+mais desempenho preditivo por unidade de energia do que ele. Como usa apenas razões, o
+indicador respeita a restrição de comparar a energia em termos relativos. Quando a
+diferença de energia está abaixo do ruído de medição, porém, $\eta$ passa a refletir só a
+\textit{perplexity} e esse ruído.
+
+\textbf{Ponto de eficiência ($S^*_E$):} maior taxa de poda cuja \textit{perplexity} não
+excede em mais de 5\% a do modelo de referência:
+\begin{equation}\label{eq:ponto_eficiencia}
+S^*_E = \max \left\{ s \;\middle|\; \text{PPL}(s) \leq 1{,}05 \cdot \text{PPL}_0 \right\},
+\end{equation}
+em que $s$ é a taxa de poda. A referência é o modelo de referência no mesmo regime: sem
+retreinamento, o modelo pré-treinado; após o \textit{fine-tuning}, o modelo de referência
+submetido ao mesmo retreinamento. O limite de 5\% foi fixado antes da análise dos
+resultados, e não ajustado a eles.
+
+\textbf{Resumo por configuração:} para comparar estratégias e alocações por um único
+valor, adota-se a média sobre as taxas de poda consideradas. Para a
+\textit{perplexity}, a média é geométrica: como a \textit{perplexity} de modelos podados
+sem retreinamento varia por ordens de grandeza entre taxas, a média aritmética seria
+determinada quase só pela pior taxa; a média geométrica equivale à média da degradação
+logarítmica, a mesma escala da análise de sensibilidade. Para $\Delta E$, a média é
+aritmética, e $\eta$ é calculado a partir das duas médias. Entram na média as taxas até a
+maior em que nenhuma camada atinge o teto da alocação com análise de sensibilidade
+(Seção~\ref{sec:metodologia_poda_com}): acima dela, a alocação deixa de diferenciar as
+camadas, e a comparação entre alocações perde o objeto. As taxas acima desse corte são
+reportadas, mas não entram nas médias. O resumo aplica-se às varreduras sem
+retreinamento, que cobrem todas as taxas; as configurações submetidas ao
+\textit{fine-tuning}, avaliadas em poucas taxas, são comparadas taxa a taxa.
+
 % -------------------------------------------------------
 \section{Etapa 2 --- Poda sem Otimização}\label{sec:metodologia_poda_sem}
 % -------------------------------------------------------
@@ -413,11 +474,10 @@ ilustra a diferença entre a alocação uniforme e uma alocação que segue a se
 
 A hipótese é a de que podar mais as camadas robustas e menos as sensíveis produz, na mesma
 taxa de poda, menor perda de desempenho preditivo do que as alocações uniforme e global.
-Para testá-la, fixa-se a taxa de poda e varia-se apenas a alocação. O que se compara é a
-\textit{perplexity} dos modelos obtidos na mesma taxa de poda. O custo computacional também
-é medido (Seção~\ref{sec:metodologia_metricas}), para verificar que ele permanece
-equivalente: como a taxa de poda é a mesma, a técnica não busca reduzir o custo, e sim a
-perda de desempenho preditivo que acompanha essa redução.
+Para testá-la, fixa-se a taxa de poda e varia-se apenas a alocação, e os modelos obtidos
+são comparados segundo as métricas e o critério da Seção~\ref{sec:metodologia_metricas}.
+Como a taxa de poda é a mesma, a técnica não busca reduzir o custo, e sim a perda de
+desempenho preditivo que acompanha essa redução.
 
 A técnica de otimização foi escolhida, entre as alternativas consideradas, segundo três
 critérios:
@@ -541,8 +601,8 @@ O procedimento, para uma estratégia de poda e uma taxa de poda dadas, tem cinco
           seu valor.
     \item \textbf{Escalar à taxa de poda.} Todas as robustezes são multiplicadas por um
           mesmo fator, escolhido para que a média das taxas resultantes seja a taxa de poda
-          pretendida. As taxas resultantes formam a \textbf{alocação guiada por
-          sensibilidade}. Um teto impede que uma camada seja removida por inteiro: quando
+          pretendida. As taxas resultantes formam a \textbf{alocação com análise
+          de sensibilidade}. Um teto impede que uma camada seja removida por inteiro: quando
           uma camada o atinge, o excedente passa às demais. A regra admite ainda um
           parâmetro que controla a intensidade com que as diferenças do perfil são seguidas.
     \item \textbf{Podar.} Em cada camada, o critério de importância da estratégia remove os
@@ -565,10 +625,12 @@ quatro camadas de mesmo tamanho, podado à taxa de poda de 30\%.
 \centering
 \caption{Exemplo dos passos 1 a 3 da análise de sensibilidade em um modelo hipotético de
 quatro camadas de mesmo tamanho, à taxa de poda de 30\%. Valores ilustrativos, não
-medidos; a robustez é o inverso da degradação, e a medida de degradação adotada é definida
+medidos; a robustez é o inverso da degradação, e cada taxa da alocação com análise de
+sensibilidade é a robustez multiplicada por 0,10. A medida de degradação adotada é definida
 na Seção~\ref{subsec:fase1}.}
 \label{tab:exemplo_alocacao}
 \small
+\setlength{\tabcolsep}{5pt}
 \begin{tabular}{l ccccc}
 \hline
  & \textbf{Camada 1} & \textbf{Camada 2} & \textbf{Camada 3} & \textbf{Camada 4} & \textbf{Média} \\
@@ -578,7 +640,7 @@ Robustez (passo 2) & 1 & 2 & 4 & 5 & 3 \\
 \hline
 \multicolumn{6}{l}{\textit{Taxa de poda por camada, por alocação (passo 3)}} \\
 Uniforme & 30\% & 30\% & 30\% & 30\% & 30\% \\
-Guiada (robustez $\times$ 0,10) & 10\% & 20\% & 40\% & 50\% & 30\% \\
+Com análise de sensibilidade & 10\% & 20\% & 40\% & 50\% & 30\% \\
 \hline
 \end{tabular}
 \end{table}

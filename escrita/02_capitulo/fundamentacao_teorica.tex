@@ -484,7 +484,7 @@ comportamento do modelo, cara de obter, porém direta.
 \centering
 \caption{Duas formas de atingir a mesma taxa de poda, de 30\,\%, nas camadas de uma rede. À
 esquerda, a alocação uniforme, que ignora qualquer medida de importância; à direita, a
-alocação guiada por sensibilidade, que poupa as camadas mais sensíveis e compensa nas mais
+alocação com análise de sensibilidade, que poupa as camadas mais sensíveis e compensa nas mais
 robustas. Ambas removem a mesma fração total de parâmetros: a linha tracejada indica a taxa
 de poda do modelo, que é a média das taxas por camada nos dois casos. Figura esquemática.}
 \label{fig:alocacao_sensibilidade}
@@ -517,7 +517,7 @@ de poda do modelo, que é a média das taxas por camada nos dois casos. Figura e
          node[right,font=\tiny,black] {30\,\%};
     \draw[-{Stealth},thick] (0.17,{0.05*\h+0.15}) ++(0,0.45) -- ++(0,-0.4);
     \node[above,font=\tiny,align=center] at (0.17,{0.05*\h+0.62}) {camada\\sensível\\poupada};
-    \node[below,align=center] at (1.5,-0.35) {\textbf{alocação guiada}\\ taxa proporcional à robustez};
+    \node[below,align=center] at (1.5,-0.35) {\textbf{com análise de sensibilidade}\\ taxa proporcional à robustez};
   \end{scope}
 \end{tikzpicture}
 % \fonte{Elaborada pelo autor.}

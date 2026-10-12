@@ -37,9 +37,9 @@ sob condições controladas e reprodutíveis:
     \item[(A)] Em que medida a redução \textit{teórica} de parâmetros se converte em
           redução \textit{real} de tempo de inferência e de consumo de energia, e como
           essa conversão depende da granularidade da poda?
-    \item[(B)] Uma alocação não uniforme da poda entre as camadas, guiada por uma análise de
-          sensibilidade por camada, melhora o compromisso entre compressão e qualidade em
-          relação às alocações ingênuas?
+    \item[(B)] Uma alocação não uniforme da poda entre as camadas, definida por uma análise
+          de sensibilidade por camada, melhora o compromisso entre compressão e qualidade em
+          relação às alocações sem análise de sensibilidade?
 \end{enumerate}
 
 Responder a essas duas perguntas exige que modelos comprimidos por estratégias distintas
@@ -670,7 +670,7 @@ distribuir a poda entre as camadas:
           agregam números distintos de pesos, e ordená-las em conjunto faria a escolha
           depender do tamanho da estrutura em vez de sua importância relativa.
     \item \textbf{Uniforme:} cada camada recebe exatamente a mesma fração de poda,
-          decidida isoladamente dentro dela. É a alocação ingênua por excelência, pois
+          decidida isoladamente dentro dela. É a alocação mais simples possível, pois
           ignora qualquer diferença de importância entre camadas.
 \end{itemize}
 
@@ -858,21 +858,21 @@ O retreinamento foi aplicado às seguintes configurações das Etapas 2 e 3:
     \item \textbf{Poda estruturada --- poda de cabeças de atenção e de neurônios do MLP},
           com os dois alvos simultâneos e escopo global, a 10\% e a 30\% de estruturas
           removidas;
-    \item \textbf{Poda estruturada com alocação por sensibilidade}, guiada pelo perfil da
-          própria poda estruturada, com $\beta = 1$, nas mesmas duas taxas.
+    \item \textbf{Poda estruturada com análise de sensibilidade}, com a alocação definida
+          pelo perfil da própria poda estruturada, com $\beta = 1$, nas mesmas duas taxas.
 \end{itemize}
 
-Em cada estratégia, retreinou-se o escopo de alocação ingênuo de menor
+Em cada estratégia, retreinou-se o escopo sem análise de sensibilidade de menor
 \textit{perplexity} na faixa em que a escolha de escopo tem consequência prática: o
 uniforme na poda por magnitude, que supera o global entre 30\% e 70\%
 (Seção~\ref{sec:res_magnitude}), e o global na poda estruturada
 (Seção~\ref{sec:res_estruturada}). A alocação por sensibilidade foi retreinada apenas na
 poda estruturada, a única estratégia que converteu a compressão em redução de tempo de
-inferência e de energia (Seção~\ref{sec:res_estruturada}), com o expoente de melhor
+inferência e de energia (Seção~\ref{sec:res_custo}), com o expoente de melhor
 desempenho nessa estratégia (Seção~\ref{subsec:ablacao_beta}). As duas taxas, 10\% e
-30\%, são comuns à alocação global e à guiada, o que permite comparar as duas formas de
+30\%, são comuns à alocação global e à alocação com análise de sensibilidade, o que permite comparar as duas formas de
 distribuição também depois do retreinamento, e pertencem à faixa de 10\% a 50\% em que a
-alocação guiada superou a global em regime \textit{one-shot}
+alocação com análise de sensibilidade superou a global em regime \textit{one-shot}
 (Seção~\ref{subsec:aloc_estruturada}). Na poda por magnitude, 30\% é o primeiro nível
 acima da região utilizável em regime \textit{one-shot}, limitada a 20\%
 (Seção~\ref{sec:res_magnitude}), e 50\% é um nível de degradação severa, com
@@ -1228,8 +1228,8 @@ resultados:
           As perplexities pós-retreinamento não vêm, portanto, acompanhadas de estimativa
           de variância, e diferenças pequenas entre configurações retreinadas devem ser
           lidas com a cautela correspondente. A comparação principal da etapa --- alocação
-          guiada contra alocação global --- é afetada por essa limitação justamente no
-          taxa de poda em que as duas praticamente empatam.
+          com análise de sensibilidade contra alocação global --- é afetada por essa
+          limitação justamente na taxa de poda em que as duas praticamente empatam.
 
     \item \textbf{Estimativa de emissões.} A conversão de energia em emissões depende de
           tabelas regionais de intensidade de carbono, que carregam incerteza e variaram
