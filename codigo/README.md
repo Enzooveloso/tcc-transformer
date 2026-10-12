@@ -28,6 +28,7 @@ Ver o relatório de tese no capítulo de Metodologia.
 | `prune_structured.py` | Poda estruturada de cabeças/MLP (Li, 2017) | ✅ |
 | `sensitivity.py` | Análise de sensibilidade por camada | ✅ |
 | `finetune.py` | Fine-tuning de recuperação pós-poda | ✅ |
+| `test_poda.py` | Testes de corretude da poda (15; GPT-2 minúsculo, CPU, sem download) — 15/15 no Kaggle em 12/10/2026, saída em `resultados/testes_poda.txt` | ✅ |
 | `gerar_tabelas.py` | Gera as tabelas do capítulo de Resultados a partir de `resultados/` (só biblioteca padrão) | ✅ |
 
 ## Como rodar (Estágio 0 — baseline)

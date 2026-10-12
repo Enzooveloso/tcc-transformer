@@ -1,0 +1,26 @@
+# Saída de `python test_poda.py`, executado em 12/10/2026 num notebook Kaggle
+# (CPU, sem acelerador), sobre o commit da branch main clonado do GitHub.
+# Os avisos do transformers vêm da configuração minúscula do teste (vocabulário
+# de 64 tokens, contra os ids 50256 de bos/eos herdados do GPT-2) e não afetam
+# os testes, que não usam esses tokens.
+
+[transformers] Model config: bos_token_id must be `None` or an integer within the vocabulary (between 0 and 63), got 50256. This may result in unexpected behavior.
+[transformers] Model config: eos_token_id must be `None` or an integer within the vocabulary (between 0 and 63), got 50256. This may result in unexpected behavior.
+[transformers] `loss_type=None` was set in the config but it is unrecognized. Using the default loss: `ForCausalLMLoss`.
+  ok      test_alocacao_poda_menos_a_camada_mais_sensivel
+  ok      test_alocacao_respeita_o_orcamento
+  ok      test_beta_zero_degenera_na_poda_uniforme_estruturada
+  ok      test_beta_zero_difere_na_magnitude
+  ok      test_contabilidade_da_atencao_fica_consistente
+  ok      test_estruturas_removidas_sao_as_de_menor_norma
+  ok      test_guarda_preserva_uma_estrutura_por_camada
+  ok      test_magnitude_atinge_a_esparsidade_alvo
+  ok      test_magnitude_preserva_as_dimensoes
+  ok      test_magnitude_zera_os_pesos_de_menor_modulo
+  ok      test_mascara_sobrevive_a_um_passo_do_otimizador
+  ok      test_poda_nula_nao_altera_o_modelo
+  ok      test_remover_ambos_equivale_a_anular
+  ok      test_remover_cabecas_equivale_a_anular
+  ok      test_remover_neuronios_equivale_a_anular
+
+15/15 testes passaram

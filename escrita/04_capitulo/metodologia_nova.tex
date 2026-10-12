@@ -251,15 +251,18 @@ O impacto ambiental é mensurado por meio de dois indicadores:
 % definida aqui, e só aqui, com três indicadores adaptados do artigo de Veloso e Rego
 % (redução relativa de energia, acurácia por joule e ponto ótimo de eficiência). Como a
 % métrica do trabalho é a perplexity (menor é melhor), a razão de qualidade é invertida.
+% O artigo não foi publicado e não pode ser citado; no lugar dele entram as referências
+% que o próprio artigo usa para fundamentar suas métricas (Schwartz, Henderson, Blalock).
 \subsubsection*{Comparação entre configurações}
 
 As configurações são comparadas taxa a taxa: em cada taxa de poda, a \textit{perplexity} e
 a energia de cada alocação são confrontadas com as do modelo de referência e com as das
-demais alocações. Três indicadores sintetizam essa comparação; os dois últimos adaptam a
-acurácia por joule e o ponto ótimo de eficiência propostos por Veloso e Rego.
-
-\todo[inline]{Citar o artigo de Veloso e Rego (JBCS, 2026) quando houver referência
-bibliográfica.}
+demais alocações. Três indicadores sintetizam essa comparação, em linha com a recomendação
+de tratar a eficiência como critério de avaliação ao lado do desempenho preditivo
+\cite{Schwartz2020} e de relatar sistematicamente a energia consumida
+\cite{Henderson2020}. Definir o critério de forma explícita responde, ainda, à falta de
+padronização das métricas, que dificulta a comparação entre métodos de poda
+\cite{Blalock2020}.
 
 \textbf{Redução relativa de energia ($\Delta E$):} fração da energia do modelo de
 referência economizada pelo modelo podado,
