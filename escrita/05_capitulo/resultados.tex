@@ -134,7 +134,7 @@ prática --- e o global só apresenta valores menores em 80\,\% e 90\,\%, regiã
 em que ambos os modelos já estão destruídos (perplexity acima de 4600) e a
 comparação perde sentido. Na faixa que importa, portanto, a alocação uniforme
 é preferível à global. Esse é um resultado contraintuitivo: o escopo global é
-o que aloca o orçamento com base em uma medida de importância --- a magnitude
+o que distribui a poda com base em uma medida de importância --- a magnitude
 do peso --- e ainda assim perde para a alocação que ignora qualquer medida de
 importância. Trata-se do primeiro indício de que a magnitude do peso é um
 \textit{proxy} pobre para a importância de um parâmetro.
@@ -212,8 +212,8 @@ alcance limitado como estratégia de compressão.
 
 \section{Perfil de Sensibilidade por Camada}\label{sec:perfil_sensibilidade}
 
-As duas seções anteriores mostraram que nenhuma alocação ingênua do orçamento
-de poda domina o espectro de esparsidade: na poda por magnitude o escopo
+As duas seções anteriores mostraram que nenhuma alocação ingênua da poda
+domina o espectro de esparsidade: na poda por magnitude o escopo
 uniforme prevaleceu na faixa útil (Seção~\ref{sec:res_magnitude}), enquanto na
 poda estruturada foi o escopo global que obteve as melhores perplexidades
 (Seção~\ref{sec:res_estruturada}) --- e ambas as alocações colapsam em algum
@@ -221,7 +221,7 @@ regime. A hipótese central deste trabalho é que a
 causa é comum aos dois casos: as camadas do \textit{Transformer} não são
 igualmente importantes, de modo que tanto tratá-las de forma idêntica
 (alocação uniforme) quanto confiar exclusivamente na magnitude dos pesos como
-proxy de importância (alocação global) distribuem mal o orçamento disponível.
+proxy de importância (alocação global) distribuem mal a poda entre as camadas.
 
 Esta seção reporta o experimento que testa diretamente essa hipótese. Para
 cada uma das 12 camadas do GPT-2 \textit{small} e para cada uma das duas
@@ -380,8 +380,8 @@ quarta mais sensível sob poda estruturada.
 A implicação prática é que não existe um perfil de sensibilidade único do
 GPT-2. Sensibilidade é uma propriedade do par (camada, estratégia de poda),
 não da camada isoladamente, e o perfil precisa ser levantado separadamente
-para cada estratégia --- como foi feito aqui --- sob pena de se alocar o
-orçamento com um mapa que pertence a outro método. Esse achado também oferece
+para cada estratégia --- como foi feito aqui --- sob pena de se distribuir a
+poda com um mapa que pertence a outro método. Esse achado também oferece
 uma explicação para a inversão observada nas varreduras ingênuas: como
 magnitude de peso e norma de estrutura respondem a aspectos diferentes da
 importância de uma camada, é esperado que o escopo global (que decide com base
@@ -393,12 +393,12 @@ O perfil é um diagnóstico; para virar estratégia, precisa ser convertido em
 uma taxa de poda por camada. Essa conversão é a Equação~\ref{eq:alocacao_dev},
 apresentada na Seção~\ref{subsec:fase2}: a taxa de cada camada é proporcional
 à sua robustez --- o inverso da degradação medida --- elevada ao expoente
-$\beta$, escalada por um fator único obtido por bisseção de modo que o
-orçamento global seja respeitado, e limitada pelo teto $r_{\max} = 0{,}95$.
+$\beta$, escalada por um fator único obtido por bisseção de modo que a
+taxa de poda pretendida seja respeitada, e limitada pelo teto $r_{\max} = 0{,}95$.
 Interessa aqui apenas o que ela produz na prática.
 
 A Tabela~\ref{tab:alocacao_50} mostra as taxas que a
-Equação~\ref{eq:alocacao_dev} produziu para um orçamento global de 50\,\% com
+Equação~\ref{eq:alocacao_dev} produziu para uma taxa de poda de 50\,\% com
 $\beta = 1$. O contraste com a alocação uniforme é acentuado: sob poda
 estruturada, a camada 0 recebe 2\,\% de poda e a camada 1 recebe 84\,\%,
 enquanto a alocação uniforme aplicaria 50\,\% a ambas.
@@ -406,7 +406,7 @@ enquanto a alocação uniforme aplicaria 50\,\% a ambas.
 \begin{table}[htb]
 \centering
 \caption{Taxas de poda por camada efetivamente aplicadas pela
-Equação~\ref{eq:alocacao_dev} para orçamento global de 50\,\% e $\beta = 1$
+Equação~\ref{eq:alocacao_dev} para taxa de poda de 50\,\% e $\beta = 1$
 (coluna \texttt{taxas\_por\_camada} dos registros experimentais). A alocação
 uniforme corresponderia a 50\,\% em todas as camadas.}
 \label{tab:alocacao_50}
@@ -532,7 +532,7 @@ Esta seção reporta a fase que responde à pergunta central do trabalho: a
 alocação derivada do perfil de sensibilidade melhora, de fato, o compromisso
 entre compressão e qualidade em relação às alocações ingênuas? As taxas por
 camada produzidas pela Equação~\ref{eq:alocacao_dev} foram aplicadas nos mesmos
-dez níveis de orçamento das varreduras anteriores, para as duas estratégias, e
+dez taxas de poda das varreduras anteriores, para as duas estratégias, e
 avaliadas com o mesmo vetor de métricas. O experimento foi replicado com três
 valores do expoente $\beta$ --- 1,0, 0,5 e 0,0 ---, o que fornece a ablação da
 função de alocação sobre um mesmo perfil. O caso $\beta = 0$ não é uma
@@ -573,7 +573,7 @@ A alocação guiada vence em oito dos nove níveis, e as margens são
 substanciais na faixa de interesse. Em 30\,\% de esparsidade, a perplexity cai
 de 36,42 (melhor alocação ingênua) para 31,20 --- uma redução de 14\,\%. Em
 40\,\%, o ganho é de 104,82 para 57,30, ou seja, a degradação é praticamente
-\textbf{reduzida à metade} usando exatamente o mesmo orçamento de poda. Em
+\textbf{reduzida à metade} usando exatamente a mesma taxa de poda. Em
 50\,\% a vantagem persiste, ainda que modesta (447,57 contra 473,28). Nos
 níveis altos, de 60\,\% a 80\,\%, a configuração com $\beta = 1$ produz
 perplexities entre 2,5 e 4 vezes menores que a melhor alocação ingênua ---
@@ -621,7 +621,7 @@ para 124,29 --- uma redução de 65\,\%. Em 20\,\%, de 1484,89 para 371,07, um
 fator de \textbf{quatro}. Em 30\,\%, de 2413,52 para 724,53, um fator de
 \textbf{3,3}. Considerando que a Seção~\ref{sec:res_estruturada} concluiu que
 não existe região gratuita para a poda estruturada \textit{one-shot}, reduzir a
-perplexity a um quarto no mesmo orçamento é o resultado mais expressivo deste
+perplexity a um quarto na mesma taxa de poda é o resultado mais expressivo deste
 capítulo.
 
 Uma ressalva quantitativa é necessária. Como a remoção de estruturas é
@@ -636,13 +636,13 @@ não se sustenta como causa principal --- mas o efeito existe e deve ser
 declarado.
 
 A partir de 60\,\%, a ordenação se inverte e o escopo global volta a vencer. A
-causa é identificável nas taxas alocadas: a partir desse orçamento, um número
+causa é identificável nas taxas alocadas: a partir dessa taxa, um número
 crescente de camadas satura no teto $r_{\max} = 0{,}95$ --- duas camadas em
 60\,\%, quatro em 70\,\%, oito em 80\,\% e onze em 90\,\%. Saturadas as
 camadas, a alocação deixa de discriminar entre elas e degenera em algo próximo
 da poda uniforme sobre o subconjunto saturado, ao mesmo tempo em que concentra
 uma pressão crescente sobre as poucas camadas ainda livres. A estratégia
-guiada, portanto, \textbf{só é informativa enquanto o orçamento couber dentro
+guiada, portanto, \textbf{só é informativa enquanto a taxa de poda couber dentro
 do teto por camada}; acima disso, ela perde sua vantagem estrutural. Esse é um
 limite intrínseco de qualquer alocação proporcional com teto, e não um defeito
 de implementação.
@@ -656,8 +656,8 @@ a mesma taxa e a alocação deve coincidir com a varredura uniforme
 correspondente. É um teste de sanidade barato, pois reaproveita o perfil já
 levantado.
 
-Na poda estruturada a coincidência é \textbf{exata}: nos dez níveis de
-orçamento, a alocação com $\beta = 0$ reproduz a perplexity da varredura
+Na poda estruturada a coincidência é \textbf{exata}: nas dez taxas de
+poda, a alocação com $\beta = 0$ reproduz a perplexity da varredura
 uniforme até a última casa decimal registrada --- 5467,5635 em 30\,\%,
 4573,0020 em 50\,\% e 827.316,1875 em 90\,\%, para citar três níveis. A
 identidade confirma que a conversão de perfil em taxas, a bisseção do fator de
@@ -695,7 +695,7 @@ partir de 60\,\% o expoente pleno passa à frente.
 A explicação mais plausível liga-se à dispersão dos perfis. O perfil
 estruturado tem razão máximo/mínimo de 42,9$\times$ e é dominado pela camada 0,
 cuja fragilidade é tão extrema (Seção~\ref{subsec:camada_zero}) que qualquer
-amortecimento da alocação lhe devolve orçamento de poda com consequências
+amortecimento da alocação lhe atribui uma taxa de poda maior, com consequências
 catastróficas: em 70\,\%, $\beta = 0{,}5$ atribui 14,6\,\% de poda à camada 0,
 contra 3,0\,\% de $\beta = 1$. Quando o perfil contém um sinal dessa
 intensidade, convém segui-lo integralmente. Já o perfil de magnitude tem
@@ -709,7 +709,7 @@ nítido o sinal, maior o $\beta$ que compensa adotar.
 
 Do ponto de vista da eficiência, a alocação guiada preserva integralmente o
 comportamento da estratégia de base, o que era esperado, uma vez que ela
-altera a distribuição do orçamento, não sua natureza. Na poda por magnitude,
+altera a distribuição da poda, não sua natureza. Na poda por magnitude,
 tamanho, FLOPs e tempo permanecem constantes, pelo mesmo motivo discutido na
 Seção~\ref{sec:res_magnitude}. Na poda estruturada, o custo cai
 proporcionalmente: normalizando pelo \textit{baseline} da própria sessão, a
@@ -820,7 +820,7 @@ Guiada}\label{subsec:ft_corroi}
 O achado mais desconfortável desta varredura diz respeito diretamente à
 contribuição central do trabalho. As duas últimas linhas de cada bloco da
 Tabela~\ref{tab:finetune} confrontam a alocação guiada por sensibilidade com a
-alocação global, nos mesmos dois orçamentos, antes e depois do retreinamento.
+alocação global, nas mesmas duas taxas de poda, antes e depois do retreinamento.
 
 Em 10\,\% de estruturas removidas, a vantagem \textbf{desaparece}. Em regime
 \textit{one-shot}, a alocação guiada registrava perplexity 124,29 contra
@@ -840,11 +840,11 @@ poda, o que é consistente com sua persistência em 30\,\% e seu
 desaparecimento em 10\,\%.
 
 O achado não invalida a contribuição, mas delimita seu escopo com precisão: em
-orçamentos de poda agressivos, a alocação guiada continua entregando
+taxas de poda elevadas, a alocação guiada continua entregando
 perplexity aproximadamente duas vezes menor ao mesmo custo computacional
 --- 40,28~ms e 1,307~mWh contra 40,82~ms e 1,285~mWh da alocação global em
-30\,\%, valores equivalentes dentro da variação de medição. Em orçamentos
-leves, seguidos de retreinamento, a alocação ingênua é suficiente.
+30\,\%, valores equivalentes dentro da variação de medição. Em taxas de poda
+baixas, seguidas de retreinamento, a alocação ingênua é suficiente.
 
 \subsection{Verificações de Integridade e Custo}\label{subsec:ft_verificacoes}
 
@@ -877,7 +877,7 @@ portanto, expressa na unidade efetivamente medida.
 A limitação principal desta varredura é a quantidade de retreinamento: uma
 única época. Não é possível afirmar, a partir destes dados, se a erosão da
 vantagem da alocação guiada se estabiliza no patamar observado em 30\,\% ou se
-prossegue com mais épocas até desaparecer também nesse orçamento. Trata-se da
+prossegue com mais épocas até desaparecer também nessa taxa. Trata-se da
 verificação mais imediata que este trabalho deixa em aberto.
 
 \section{Síntese dos Resultados}\label{sec:res_sintese}
@@ -902,12 +902,12 @@ qualidade --- a resposta é afirmativa, com escopo delimitado. As camadas do
 GPT-2 diferem entre si por mais de uma ordem de grandeza no custo de serem
 podadas, com a camada 0 respondendo isoladamente por cerca de três quartos da
 degradação da poda uniforme; essa informação, que nenhuma alocação ingênua
-utiliza, converte-se em ganho mensurável quando incorporada à distribuição do
-orçamento. Na poda estruturada --- a estratégia que efetivamente reduz consumo
+utiliza, converte-se em ganho mensurável quando incorporada à distribuição da
+poda entre as camadas. Na poda estruturada --- a estratégia que efetivamente reduz consumo
 --- a alocação guiada reduz a perplexity por fatores de três a quatro na faixa
 de 10\,\% a 50\,\% de estruturas removidas, sem custo adicional de tempo,
 energia ou memória. O escopo da conclusão é delimitado por três fronteiras: a
-saturação da alocação em orçamentos acima de 60\,\%; o fato de que o perfil
+saturação da alocação em taxas de poda acima de 60\,\%; o fato de que o perfil
 de sensibilidade precisa ser levantado separadamente para cada estratégia de
 poda, por não ser transferível entre elas; e, sobretudo, a quantidade de
 retreinamento disponível.

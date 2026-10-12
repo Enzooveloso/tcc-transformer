@@ -37,7 +37,7 @@ sob condições controladas e reprodutíveis:
     \item[(A)] Em que medida a redução \textit{teórica} de parâmetros se converte em
           redução \textit{real} de tempo de inferência e de consumo de energia, e como
           essa conversão depende da granularidade da poda?
-    \item[(B)] Uma alocação não uniforme do orçamento de poda, guiada por uma análise de
+    \item[(B)] Uma alocação não uniforme da poda entre as camadas, guiada por uma análise de
           sensibilidade por camada, melhora o compromisso entre compressão e qualidade em
           relação às alocações ingênuas?
 \end{enumerate}
@@ -95,7 +95,7 @@ Estratégia otimizada
 & Taxas dinâmicas, variação do momento da poda, destilação de conhecimento, quantização
 & \textbf{Sensibilidade por camada}
 & Única que atende a O1--O3 (Seção~\ref{sec:metodologia_poda_com}): altera apenas a
-  distribuição do orçamento de poda entre as camadas, objeto da hipótese do trabalho. \\
+  distribuição da poda entre as camadas, objeto da hipótese do trabalho. \\
 
 Métrica principal
 & \textit{Accuracy} em tarefas descendentes
@@ -655,8 +655,9 @@ de atenção, que são apenas 12 por bloco, produz arredondamentos visíveis. Um
 
 \subsection{Escopos de Alocação}\label{subsec:escopos}
 
-Ambos os métodos foram avaliados sob dois escopos, que representam formas distintas de
-distribuir o orçamento de poda entre as camadas:
+Ambos os métodos foram avaliados sob dois escopos, que correspondem às alocações global e
+uniforme definidas na Seção~\ref{sec:metodologia_poda_sem} e representam formas distintas de
+distribuir a poda entre as camadas:
 
 \begin{itemize}
     \item \textbf{Global:} o critério de importância é aplicado ao modelo inteiro de uma
@@ -689,23 +690,25 @@ Cada nível partiu de um modelo recarregado do zero, e não do modelo podado no 
 anterior. Sem esse cuidado, a poda seria cumulativa e os níveis deixariam de ser
 independentes entre si.
 
+% AJUSTE: 12/10 — reunião com o orientador: a motivação da técnica (nenhum método da
+% Etapa 2 mede a sensibilidade das camadas) e a descrição do procedimento passaram para a
+% Metodologia (Seção sec:metodologia_poda_com, Figura fig:fluxo_sensibilidade). Aqui ficam
+% a aplicação ao GPT-2: valores, forma exata da medida e regra de alocação.
 \section{Etapa 3 --- Poda com Otimização}\label{sec:estrategia_otimizada}
 
-Na terceira etapa, aplicou-se a técnica de otimização selecionada na
-Seção~\ref{sec:metodologia_poda_com} --- a análise de sensibilidade por camada ---, que
-constitui a contribuição central do trabalho. Ela responde a uma limitação comum aos
-métodos da Etapa 2: nenhum deles mede o quanto cada camada realmente importa. O escopo uniforme trata todas as camadas como intercambiáveis; o
-escopo global decide com base na magnitude dos pesos, que é um \textit{proxy} de
-importância, não uma medida dela. A estratégia proposta substitui esse \textit{proxy} por
-uma medição direta, em duas fases, e foi avaliada nos mesmos orçamentos de poda das
-varreduras da Etapa 2.
+Na terceira etapa, aplicou-se a técnica descrita na Seção~\ref{sec:metodologia_poda_com}
+--- a análise de sensibilidade por camada, cujo procedimento está na
+Figura~\ref{fig:fluxo_sensibilidade} --- às duas estratégias de poda, nas mesmas taxas de
+poda da Etapa 2 (Seção~\ref{subsec:taxas}). As subseções trazem os valores adotados: a
+medida da degradação e a taxa-sonda da fase 1, e a regra de alocação da fase 2, com o teto
+e o parâmetro de intensidade.
 
 \subsection{Fase 1 --- Perfil de Sensibilidade}\label{subsec:fase1}
 
-Para cada camada $\ell$ do modelo e para cada estratégia de poda, podou-se
-\textbf{exclusivamente} aquela camada a uma taxa-sonda fixa, mantendo todas as demais
-intactas, e mediu-se a perplexity resultante. A degradação foi registrada em escala
-logarítmica:
+O perfil foi levantado conforme o passo 1 do procedimento da
+Seção~\ref{sec:metodologia_poda_com}: cada camada $\ell$ foi podada isoladamente, a uma
+taxa-sonda fixa, e a \textit{perplexity} resultante foi medida. A degradação foi registrada
+em escala logarítmica:
 
 \begin{equation}\label{eq:delta_perfil}
 \Delta_{\ell} = \ln\!\left(\frac{\text{PPL}_{\ell}}{\text{PPL}_{\text{base}}}\right),
@@ -731,11 +734,16 @@ Seção~\ref{subsec:robustez_sonda}.
 
 \subsection{Fase 2 --- Alocação Adaptativa de Taxas}\label{subsec:fase2}
 
-O perfil foi então convertido em uma taxa de poda por camada. Atribuiu-se a cada camada uma
-taxa proporcional à sua robustez --- o inverso da degradação medida --- elevada a um
-expoente $\beta$ e escalada por um fator único $\alpha$, escolhido de modo que a média das
-taxas, ponderada pelo número de parâmetros podáveis de cada camada, iguale o orçamento
-global $s$ pretendido:
+% AJUSTE: 12/10 — reunião com o orientador: o fator α e o "orçamento global" não ficaram
+% claros. "Orçamento" passa a "taxa de poda", e a regra é apresentada como generalização
+% do exemplo da Metodologia (Tabela tab:exemplo_alocacao): o papel de α, do teto e de β
+% é ilustrado com os mesmos números (Tabela tab:exemplo_beta).
+A conversão do perfil em taxas por camada (passos 2 e 3 da
+Seção~\ref{sec:metodologia_poda_com}, exemplificados na Tabela~\ref{tab:exemplo_alocacao})
+foi formalizada pela Equação~\ref{eq:alocacao_dev}. A taxa de cada camada é proporcional à
+sua robustez elevada a um expoente $\beta$ e multiplicada pelo fator $\alpha$, comum a
+todas as camadas e escolhido de modo que a média das taxas por camada, ponderada pelo
+número de parâmetros podáveis de cada camada, seja igual à taxa de poda $s$ pretendida:
 
 \begin{equation}\label{eq:alocacao_dev}
 r_{\ell} = \min\!\left(\alpha \cdot \Delta_{\ell}^{-\beta},\ r_{\max}\right),
@@ -743,27 +751,64 @@ r_{\ell} = \min\!\left(\alpha \cdot \Delta_{\ell}^{-\beta},\ r_{\max}\right),
 \frac{\sum_{\ell} w_{\ell}\, r_{\ell}}{\sum_{\ell} w_{\ell}} = s,
 \end{equation}
 
-\noindent em que $w_{\ell}$ é o número de parâmetros podáveis da camada $\ell$ e
-$r_{\max} = 0{,}95$ é um teto que impede que mesmo a camada mais robusta seja
-integralmente zerada. Como a fração podada é monótona em $\alpha$, o fator foi obtido por
-bisseção.
+\noindent em que $r_{\ell}$ é a taxa de poda da camada $\ell$, $w_{\ell}$ é o seu número
+de parâmetros podáveis e $r_{\max} = 0{,}95$ é um teto que impede que mesmo a camada mais
+robusta seja integralmente zerada.
+
+O termo $\Delta_{\ell}^{-\beta}$ fixa a proporção entre as taxas das camadas, e $\alpha$
+fixa a escala, isto é, quanto se remove no total. No exemplo da
+Tabela~\ref{tab:exemplo_alocacao}, que corresponde a
+$\beta = 1$, a taxa de poda de 30\% exige $\alpha = 0{,}10$, e a de 15\%, $\alpha = 0{,}05$.
+Enquanto nenhuma camada atinge o teto, $\alpha$ tem expressão direta: é a taxa de poda
+dividida pela média ponderada das robustezes. O teto rompe essa proporcionalidade. No mesmo
+exemplo, a taxa de poda de 60\% exigiria $\alpha = 0{,}20$ e levaria a camada 4 a 100\%;
+limitada a 95\%, essa camada deixa de acompanhar $\alpha$, e os cinco pontos percentuais
+que excederiam o teto precisam ser absorvidos pelas outras três, o que eleva o fator a
+aproximadamente 0,207 e as taxas dessas camadas a 20,7\%, 41,4\% e 82,9\%. Como a média das
+taxas cresce monotonamente com $\alpha$, com ou sem camadas no teto, o fator foi obtido
+numericamente, por bisseção, procedimento que atende aos dois casos.
 
 A ponderação por $w_{\ell}$ não produz efeito no modelo aqui empregado: os doze blocos do
 GPT-2 são idênticos em estrutura e, portanto, têm exatamente o mesmo número de parâmetros
 podáveis, de modo que a média ponderada se reduz à média simples das taxas. Ela foi mantida
 na formulação por generalidade --- em arquiteturas de blocos heterogêneos, ignorá-la faria
-o orçamento global ser sistematicamente descumprido.
+a taxa de poda do modelo ser sistematicamente descumprida.
 
-O expoente $\beta$ controla o quanto o perfil é levado a sério. Com $\beta = 1$ emprega-se
-o inverso puro da degradação; valores intermediários amortecem a razão entre camadas. Esse
-amortecimento não é um detalhe: a razão de robustez entre duas camadas é ilimitada, e sem
-controle uma única camada muito robusta absorveria praticamente todo o orçamento. Os
-experimentos avaliaram $\beta = 1{,}0$ e $\beta = 0{,}5$ sobre o mesmo perfil, o que forneceu
-a ablação da função de alocação sem exigir a repetição da fase 1, que é a etapa cara.
+O expoente $\beta$ é o parâmetro de intensidade do passo 3 da
+Seção~\ref{sec:metodologia_poda_com}: controla o quanto o perfil é levado a sério. Com $\beta = 1$ emprega-se
+o inverso puro da degradação, como na Tabela~\ref{tab:exemplo_alocacao}; valores
+intermediários amortecem a razão entre camadas. A Tabela~\ref{tab:exemplo_beta} aplica a
+regra ao mesmo exemplo: com $\beta = 0{,}5$, as robustezes 1, 2, 4 e 5 são substituídas por
+suas raízes quadradas, e a camada 4 deixa de perder cinco vezes mais elementos que a
+camada 1 para perder 2,24 vezes mais. Esse amortecimento não é um detalhe: a razão de
+robustez entre duas camadas é ilimitada, e sem controle uma única camada muito robusta
+concentraria praticamente toda a poda. Os experimentos avaliaram $\beta = 1{,}0$ e
+$\beta = 0{,}5$ sobre o mesmo perfil, o que forneceu a ablação da função de alocação sem
+exigir a repetição da fase 1, que é a etapa cara.
+
+\begin{table}[htb]
+\centering
+\caption{Taxas de poda por camada produzidas pela Equação~\ref{eq:alocacao_dev} para o
+modelo hipotético da Tabela~\ref{tab:exemplo_alocacao}, à taxa de poda de 30\%, com três
+valores do expoente $\beta$. Nenhuma camada atinge o teto $r_{\max}$.}
+\label{tab:exemplo_beta}
+\small
+\begin{tabular}{cc ccccc}
+\hline
+$\boldsymbol{\beta}$ & $\boldsymbol{\alpha}$ & \textbf{Camada 1} & \textbf{Camada 2} &
+\textbf{Camada 3} & \textbf{Camada 4} & \textbf{Média} \\
+\hline
+1,0 & 0,100 & 10,0\% & 20,0\% & 40,0\% & 50,0\% & 30\% \\
+0,5 & 0,180 & 18,0\% & 25,5\% & 36,1\% & 40,3\% & 30\% \\
+0   & 0,300 & 30,0\% & 30,0\% & 30,0\% & 30,0\% & 30\% \\
+\hline
+\end{tabular}
+\end{table}
 
 O valor $\beta = 0$ foi avaliado também, mas com outra finalidade: como o fator
-$\Delta_{\ell}^{-\beta}$ vale 1 para toda camada, todas recebem a mesma taxa e a regra deve
-reproduzir a poda uniforme. Serve, portanto, de controle de corretude da alocação, e não de
+$\Delta_{\ell}^{-\beta}$ vale 1 para toda camada, todas recebem a mesma taxa --- última
+linha da Tabela~\ref{tab:exemplo_beta} --- e a regra deve reproduzir a poda uniforme.
+Serve, portanto, de controle de corretude da alocação, e não de
 alocação candidata. O controle é exato na poda estruturada; na poda por magnitude ele não
 se aplica, porque a poda por camada adota um limiar único por bloco --- compartilhado pelas
 quatro projeções --- enquanto a varredura uniforme decide um limiar por matriz. As duas
@@ -1018,7 +1063,7 @@ quebraria. Os demais testes verificam que a contabilidade interna do módulo de 
 permanece coerente com as formas dos tensores, que a salvaguarda preserva ao menos uma
 estrutura por bloco mesmo sob taxa integral, que as estruturas removidas são efetivamente
 as de menor norma $L_1$, que a poda por magnitude atinge a esparsidade solicitada
-preservando as dimensões, que a regra de alocação respeita o orçamento e poda menos a
+preservando as dimensões, que a regra de alocação respeita a taxa de poda e poda menos a
 camada mais sensível, e que a máscara de esparsidade sobrevive a um passo do otimizador.
 
 \section{\textit{Pipeline} Experimental}\label{sec:pipeline}
@@ -1184,7 +1229,7 @@ resultados:
           de variância, e diferenças pequenas entre configurações retreinadas devem ser
           lidas com a cautela correspondente. A comparação principal da etapa --- alocação
           guiada contra alocação global --- é afetada por essa limitação justamente no
-          orçamento em que as duas praticamente empatam.
+          taxa de poda em que as duas praticamente empatam.
 
     \item \textbf{Estimativa de emissões.} A conversão de energia em emissões depende de
           tabelas regionais de intensidade de carbono, que carregam incerteza e variaram

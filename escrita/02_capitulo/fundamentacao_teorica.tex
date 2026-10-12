@@ -454,12 +454,12 @@ experimentalmente.
 \end{figure}
 
 
-\subsection{Sensibilidade e a Alocação do Orçamento de Poda}\label{subsec:sensibilidade}
+\subsection{Sensibilidade e a Distribuição da Poda entre Camadas}\label{subsec:sensibilidade}
 
 A poda por magnitude responde a uma pergunta: \textit{quais} pesos remover. Ela deixa
 intocada uma segunda pergunta, logicamente anterior e menos discutida: \textit{quanto}
-remover de cada parte da rede. Um modelo com doze camadas e um orçamento de poda de
-30\,\% admite infinitas distribuições desse orçamento --- 30\,\% em cada camada, 60\,\% na
+remover de cada parte da rede. Um modelo com doze camadas podado a uma taxa de
+30\,\% admite infinitas distribuições dessa poda --- 30\,\% em cada camada, 60\,\% na
 metade delas e nada na outra metade, ou qualquer combinação intermediária. Todas removem a
 mesma quantidade de parâmetros e produzem modelos de custo praticamente idêntico, mas não
 produzem modelos de qualidade idêntica.
@@ -468,7 +468,7 @@ A analogia é a de uma empresa que precisa cortar 30\,\% das despesas. O corte l
 30\,\% em todos os setores --- é o mais simples de justificar e o que exige menos
 informação, mas trata a contabilidade e a produção como igualmente dispensáveis. Um corte
 melhor exige saber de antemão qual setor a empresa suporta perder e qual a paralisa. Essa
-informação não está no orçamento de cada setor: um setor caro pode ser supérfluo, e um
+informação não está na despesa de cada setor: um setor caro pode ser supérfluo, e um
 setor barato pode ser crítico. Ela só aparece quando se pergunta o que acontece com a
 empresa na ausência de cada setor.
 
@@ -482,10 +482,11 @@ comportamento do modelo, cara de obter, porém direta.
 
 \begin{figure}[htb]
 \centering
-\caption{Duas distribuições do mesmo orçamento de poda entre as camadas de uma rede. À
+\caption{Duas formas de atingir a mesma taxa de poda, de 30\,\%, nas camadas de uma rede. À
 esquerda, a alocação uniforme, que ignora qualquer medida de importância; à direita, a
 alocação guiada por sensibilidade, que poupa as camadas mais sensíveis e compensa nas mais
-robustas. Ambas removem a mesma fração total de parâmetros. Figura esquemática.}
+robustas. Ambas removem a mesma fração total de parâmetros: a linha tracejada indica a taxa
+de poda do modelo, que é a média das taxas por camada nos dois casos. Figura esquemática.}
 \label{fig:alocacao_sensibilidade}
 \begin{tikzpicture}[font=\scriptsize]
   \def\bw{0.34}   % largura da barra
@@ -498,7 +499,7 @@ robustas. Ambas removem a mesma fração total de parâmetros. Figura esquemáti
       \draw[fill=gray!35,draw=gray!70] (\i*\sx,0) rectangle ++(\bw,{0.30*\h});
     }
     \draw[-{Stealth}] (-0.25,0) -- (3.3,0) node[right,font=\tiny] {camadas};
-    \draw[-{Stealth}] (-0.25,0) -- (-0.25,{1.05*\h}) node[above,font=\tiny,align=center] {taxa\\de poda};
+    \draw[-{Stealth}] (-0.25,0) -- (-0.25,{1.05*\h}) node[above,font=\tiny,align=center] {taxa por\\camada};
     \draw[dashed,gray] (-0.25,{0.30*\h}) -- (3.15,{0.30*\h})
          node[right,font=\tiny,black] {30\,\%};
     \node[below,align=center] at (1.5,-0.35) {\textbf{alocação uniforme}\\ mesma taxa em toda camada};
@@ -511,7 +512,7 @@ robustas. Ambas removem a mesma fração total de parâmetros. Figura esquemáti
       \draw[fill=gray!35,draw=gray!70] (\i*\sx,0) rectangle ++(\bw,{\r*\h});
     }
     \draw[-{Stealth}] (-0.25,0) -- (3.3,0) node[right,font=\tiny] {camadas};
-    \draw[-{Stealth}] (-0.25,0) -- (-0.25,{1.05*\h}) node[above,font=\tiny,align=center] {taxa\\de poda};
+    \draw[-{Stealth}] (-0.25,0) -- (-0.25,{1.05*\h}) node[above,font=\tiny,align=center] {taxa por\\camada};
     \draw[dashed,gray] (-0.25,{0.30*\h}) -- (3.15,{0.30*\h})
          node[right,font=\tiny,black] {30\,\%};
     \draw[-{Stealth},thick] (0.17,{0.05*\h+0.15}) ++(0,0.45) -- ++(0,-0.4);
@@ -539,7 +540,7 @@ forma desigual. Em \textit{Transformers} especificamente, \citeonline{Michel2019
 verificam que a maioria das cabeças de atenção pode ser removida após o treinamento com
 perda pequena de desempenho, enquanto algumas poucas são indispensáveis --- e que quais
 delas são indispensáveis não é previsível a partir de propriedades dos pesos. Se a
-importância fosse aproximadamente uniforme, a alocação do orçamento seria irrelevante e a
+importância fosse aproximadamente uniforme, a distribuição da poda entre as camadas seria irrelevante e a
 poda uniforme seria ótima por construção; é precisamente porque não é uniforme que existe
 espaço para alocar melhor.
 
