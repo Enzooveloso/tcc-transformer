@@ -1,6 +1,6 @@
 """Gera as tabelas do capítulo de Resultados a partir dos CSVs de ``resultados/``.
 
-Cada tabela é escrita em ``escrita/05_capitulo/tabelas/<nome>.tex`` contendo
+Cada tabela é escrita em ``escrita/06_capitulo/tabelas/<nome>.tex`` contendo
 apenas o ambiente ``tabular``; legenda, rótulo e posição ficam no
 ``resultados.tex``, que inclui cada arquivo com ``\\input``. Assim nenhum número
 das tabelas é digitado à mão, e rodar o script de novo reproduz todas elas.
@@ -26,7 +26,7 @@ from statistics import mean
 
 RAIZ = Path(__file__).resolve().parent
 CSV = RAIZ / "resultados"
-SAIDA = RAIZ.parent / "escrita" / "05_capitulo" / "tabelas"
+SAIDA = RAIZ.parent / "escrita" / "06_capitulo" / "tabelas"
 
 TAXAS = list(range(0, 100, 10))   # em %
 FAIXA_RESUMO = range(10, 60, 10)  # 10% a 50%: sem camada no teto (Seção 6.1)
