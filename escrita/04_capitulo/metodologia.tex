@@ -482,24 +482,25 @@ são comparados segundo as métricas e o critério da Seção~\ref{sec:metodolog
 Como a taxa de poda é a mesma, a técnica não busca reduzir o custo, e sim a perda de
 desempenho preditivo que acompanha essa redução.
 
-A técnica de otimização foi escolhida, entre as alternativas consideradas, segundo três
-critérios:
+% A técnica de otimização foi escolhida, entre as alternativas consideradas, segundo três
+% critérios:
 
-\begin{itemize}
-    \item \textbf{O1 --- Aderência à hipótese:} a técnica determina \textit{quanto} podar
-          em cada camada, que é o objeto da hipótese, e preserva o critério de importância
-          da estratégia de poda, que continua a decidir \textit{quais} parâmetros são
-          removidos dentro de cada camada.
-    \item \textbf{O2 --- Ausência de um segundo modelo:} o modelo avaliado é o próprio
-          modelo de referência após a poda, sem que outro modelo seja treinado para
-          substituí-lo, como ocorre na \textit{Knowledge Distillation}.
-    \item \textbf{O3 --- Compatibilidade com o regime \textit{one-shot}:} a técnica se
-          aplica ao modelo pré-treinado sem exigir treinamento durante a poda, como
-          estabelece o critério P2 (Seção~\ref{sec:metodologia_poda_sem}).
-\end{itemize}
+% \begin{itemize}
+%     \item \textbf{O1 --- Aderência à hipótese:} a técnica determina \textit{quanto} podar
+%           em cada camada, que é o objeto da hipótese, e preserva o critério de importância
+%           da estratégia de poda, que continua a decidir \textit{quais} parâmetros são
+%           removidos dentro de cada camada.
+%     \item \textbf{O2 --- Ausência de um segundo modelo:} o modelo avaliado é o próprio
+%           modelo de referência após a poda, sem que outro modelo seja treinado para
+%           substituí-lo, como ocorre na \textit{Knowledge Distillation}.
+%     \item \textbf{O3 --- Compatibilidade com o regime \textit{one-shot}:} a técnica se
+%           aplica ao modelo pré-treinado sem exigir treinamento durante a poda, como
+%           estabelece o critério P2 (Seção~\ref{sec:metodologia_poda_sem}).
+% \end{itemize}
 
-Os três critérios garantem que o modelo podado com otimização difira do modelo podado sem
-otimização em uma única variável: a alocação. Mantidos o modelo, o critério de
+% Os três critérios garantem que o modelo podado com otimização difira do modelo podado sem
+% otimização em uma única variável: a alocação. 
+Mantidos o modelo, o critério de
 importância, a taxa de poda e a ausência de treinamento, qualquer diferença de desempenho
 entre os dois pode ser atribuída à forma como a poda se distribui entre as camadas.
 
@@ -537,8 +538,7 @@ entre os dois pode ser atribuída à forma como a poda se distribui entre as cam
 
 \subsection{Técnica Adotada: Análise de Sensibilidade por Camada}
 
-A técnica de otimização adotada neste trabalho, única entre as consideradas que atende aos
-três critérios, é a \textbf{análise de sensibilidade por camada}. A ideia é medir a
+A técnica de otimização adotada neste trabalho é a \textbf{análise de sensibilidade por camada}. A ideia é medir a
 sensibilidade de cada camada e podar mais as robustas e menos as sensíveis. A medição
 resulta no \textbf{perfil de sensibilidade}: uma degradação por camada.
 
@@ -673,7 +673,7 @@ Como cada estratégia de poda remove unidades de natureza distinta --- pesos ind
 estruturas inteiras ---, o perfil é levantado separadamente para cada uma delas.
 
 O Capítulo~\ref{chap:desenvolvimento} (Seção~\ref{sec:estrategia_otimizada}) apresenta o
-que aqui ficou genérico: a forma exata da medida de degradação, o valor da taxa-sonda, o
+que aqui ficou genérico, a forma exata da medida de degradação, o valor da taxa-sonda, o
 valor do teto, o parâmetro de intensidade e o cálculo do fator, e a aplicação ao modelo
 escolhido.
 
