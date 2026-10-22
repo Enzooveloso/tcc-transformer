@@ -29,8 +29,8 @@ reconhecidas.
 \section{Visão Geral}\label{sec:visao_geral}
 
 A pergunta que orienta o trabalho é empírica e comparativa. Não se pretende demonstrar que
-a poda comprime modelos --- resultado já consolidado pela literatura
-\cite{Han2015, Li2017, Blalock2020} ---, mas responder a duas questões mais específicas,
+a poda comprime modelos, resultado já consolidado pela literatura
+\cite{Han2015, Li2017, Blalock2020}, mas responder a duas questões mais específicas,
 sob condições controladas e reprodutíveis:
 
 \begin{enumerate}
@@ -448,39 +448,59 @@ passo menor que a janela, de modo que cada \textit{token} fosse previsto dispond
 contexto anterior substancial. Apenas os \textit{tokens} ainda não avaliados contribuíram
 para a perda em cada janela; os demais entraram como contexto.
 
+% AJUSTE: 21/10 — o "compromisso usual na literatura" ganha referência
+% (HuggingFacePerplexity usa a mesma janela de 1.024 com passo de 512 no GPT-2).
 Empregou-se janela de 1.024 \textit{tokens} com passo de 512. Passos menores produzem
 estimativas mais precisas ao custo de mais computação; o valor adotado é o compromisso
-usual na literatura, e foi mantido idêntico em todas as configurações avaliadas.
+usual na literatura \cite{HuggingFacePerplexity}, e foi mantido idêntico em todas as
+configurações avaliadas.
 
 \subsubsection{Custo Computacional}\label{subsec:metrica_custo}
 
+% AJUSTE: 21/10 — "elas coincidem" na poda estruturada podia ser lido como comparação
+% com o modelo de referência; explicita-se que coincidem as duas contagens do modelo
+% podado, ambas abaixo das do modelo de referência.
 A contagem de \textbf{parâmetros} é reportada em duas formas complementares. O total
 reflete o que existe na arquitetura; a contagem de não nulos reflete o que sobrou depois da
-poda. Na poda não estruturada as duas divergem --- há zeros, mas a arquitetura é a mesma
----, enquanto na poda estruturada elas coincidem, pois o que foi removido deixou de
-existir. Essa divergência é, por si só, um resultado: ela evidencia a diferença entre
-compressão contábil e compressão física.
+poda. Na poda não estruturada as duas divergem --- há zeros, mas a arquitetura é a mesma.
+Na poda estruturada, as duas contagens do modelo podado coincidem, e ambas ficam abaixo
+das do modelo de referência: as estruturas removidas deixam de existir, em vez de
+permanecerem como zeros. Essa divergência é, por si só, um resultado: ela evidencia a
+diferença entre compressão contábil e compressão física.
 
 A \textbf{esparsidade real} reportada nas tabelas foi sempre calculada sobre o conjunto
 podável, mas a natureza do cálculo acompanha a estratégia: na poda por magnitude é a fração
 de pesos anulados nas 48 matrizes; na poda estruturada é a fração de parâmetros que
 deixaram de existir nas mesmas projeções, vieses incluídos, já que a remoção de uma
 estrutura elimina também o viés que lhe corresponde. As duas grandezas medem a mesma coisa
---- quanto do conjunto podável foi eliminado ---, mas não são idênticas em denominador, e
-diferenças na segunda casa decimal entre estratégias não devem ser interpretadas.
+--- quanto do conjunto podável foi eliminado.
 
-Os \textbf{FLOPs} foram contabilizados por análise do grafo computacional. Registre-se uma
-particularidade da implementação: as projeções internas do GPT-2 não são camadas lineares
-convencionais, e sim um tipo específico de camada que a ferramenta de contagem não
-reconhece por padrão. Sem tratamento, a contagem ignoraria justamente as matrizes que a
-poda modifica, e a métrica sairia constante. Foi necessário, portanto, registrar uma regra
-de contagem própria para esse tipo de camada. Reconhece-se uma limitação remanescente: as
-multiplicações de matriz internas ao mecanismo de atenção não foram contabilizadas pela
-ferramenta em nenhuma configuração. Como a omissão é idêntica para todas as estratégias,
-as comparações permanecem válidas. A implementação prevê ainda um estimador analítico de
+% AJUSTE: 21/10 — o parágrafo dos FLOPs era vago ("camadas lineares não convencionais")
+% e afirmava que a omissão da atenção era idêntica entre estratégias, o que não vale para
+% a poda estruturada. Reescrito sem nomes de biblioteca, com a decomposição medida:
+% projeções 86,97 GFLOPs, cabeça de linguagem 39,52, LayerNorm 0,08 (total 126,58, igual
+% ao CSV); atenção não contada 9,66 GFLOPs a 512 tokens (7,1% de 136,24). "Contagem pelo
+% grafo" passa a "contagem por camadas", em coerência com a nova descrição.
+Os \textbf{FLOPs} foram contabilizados por uma ferramenta que percorre as camadas do modelo
+e soma o custo de cada uma, segundo uma regra associada ao tipo da camada. Em uma camada
+linear, o custo é de duas operações, uma multiplicação e uma soma, por peso da matriz,
+para cada \textit{token} processado. No GPT-2, as projeções dos blocos efetuam essa mesma
+operação, mas são implementadas por um tipo de camada que a ferramenta não reconhece e ao
+qual atribui custo nulo. Sem tratamento, a contagem ignoraria as matrizes que a poda
+modifica, responsáveis por 87,0 dos 126,6 GFLOPs do modelo de referência, e permaneceria
+constante sob qualquer poda. Por isso, aplicou-se a essas projeções a mesma regra de
+contagem das camadas lineares.
+
+As multiplicações de matriz internas ao mecanismo de atenção não ocorrem em camadas e não
+foram contabilizadas em nenhuma configuração. Elas representam cerca de 7\% do custo do
+modelo de referência. Na poda por magnitude, essa parcela é constante; na poda
+estruturada, ela diminui com a remoção de cabeças de atenção, de modo que a redução de
+FLOPs reportada é ligeiramente inferior à real.
+
+A implementação prevê ainda um estimador analítico de
 reserva --- duas operações por parâmetro não pertencente aos \textit{embeddings}, por
-\textit{token} processado ---, acionado apenas se a contagem pelo grafo falhar. Todos os
-valores reportados no Capítulo~\ref{chap:resultados} provêm da contagem pelo grafo, o que
+\textit{token} processado ---, acionado apenas se a contagem por camadas falhar. Todos os
+valores reportados no Capítulo~\ref{chap:resultados} provêm da contagem por camadas, o que
 se verifica pelo fato de os FLOPs variarem com a poda estruturada; o estimador de reserva
 produziria uma grandeza de natureza diferente e não deve ser misturado a eles.
 
@@ -507,7 +527,7 @@ derivadas dele.
 Na segunda etapa, aplicaram-se duas estratégias clássicas de poda: a poda não estruturada
 por magnitude \cite{Han2015} e a poda estruturada por norma $L_1$ \cite{Li2017}, esta
 última adaptada ao \textit{Transformer}. Cada estratégia foi aplicada de forma
-independente e sempre a partir do modelo de referência original, em toda a faixa de
+independente e sempre a partir do modelo base, em toda a faixa de
 esparsidade --- de 10\% a 90\%, em passos de 10 pontos percentuais --- e sob dois escopos
 de alocação distintos. A escolha dessas duas estratégias é deliberada: elas ocupam os dois
 extremos do espectro de granularidade e, como se verá, comportam-se de forma oposta quanto
@@ -581,9 +601,15 @@ a poda pela magnitude dos pesos comprime substancialmente as redes sem reduzir a
 
 \subsection{Parâmetros Podáveis}\label{subsec:parametros_podaveis}
 
+% AJUSTE: 21/10 — (i) a "convenção consolidada na literatura" ganha referência: SparseGPT
+% (Frantar2023, Seç. 4: "prune all linear layers, excluding the embeddings and the head, as
+% standard") e Wanda (Sun2024, Seç. 4: "skipping the first embedding layer and the final
+% classification head"); (ii) "parcela expressiva" dos embeddings vira número: wte + wpe =
+% 39.383.808 de 124.439.808 parâmetros (31,6%).
+
 Uma decisão de implementação que condiciona todos os resultados é a definição de quais
-parâmetros são elegíveis à poda. Adotaram-se, por convenção consolidada na literatura,
-apenas as matrizes de peso das projeções lineares internas aos blocos
+parâmetros são elegíveis à poda. Adotaram-se, por convenção consolidada na literatura
+\cite{Frantar2023,Sun2024}, apenas as matrizes de peso das projeções lineares internas aos blocos
 \textit{Transformer}, a saber, quatro por bloco:
 
 \begin{itemize}
@@ -593,7 +619,8 @@ apenas as matrizes de peso das projeções lineares internas aos blocos
     \item \texttt{mlp.c\_proj} --- segunda transformação linear do MLP.
 \end{itemize}
 
-Com 12 blocos, são 48 matrizes podáveis. Ficaram deliberadamente fora do escopo da poda:
+Com 12 blocos, são 48 matrizes podáveis (Figura~\ref{fig:parametros_podaveis}). Ficaram
+deliberadamente fora do escopo da poda:
 
 \begin{itemize}
     \item as matrizes de \textit{embedding} de \textit{token} (\texttt{wte}) e de posição
@@ -605,9 +632,89 @@ Com 12 blocos, são 48 matrizes podáveis. Ficaram deliberadamente fora do escop
           desproporcionalmente sensíveis.
 \end{itemize}
 
+% AJUSTE: 21/10 — figura nova: a leitura "4 blocos" / "12 blocos dentro de 12 blocos" é
+% possível sem ela. Mostra que os 12 blocos são todos podados, que as 4 matrizes estão
+% dentro de cada bloco e que cabeças e neurônios são fatias dessas matrizes.
+\begin{figure}[htb]
+\centering
+\caption{Localização dos parâmetros podáveis no GPT-2 \textit{small}. O modelo empilha 12
+blocos de estrutura idêntica, detalhada à direita; em cada bloco, as quatro matrizes de
+projeção, em destaque, são podáveis, o que totaliza 48 matrizes. As 12 cabeças de atenção e
+os 3.072 neurônios do MLP de cada bloco não são matrizes à parte, e sim fatias dessas
+projeções. Os componentes tracejados ficam fora da poda.}
+\label{fig:parametros_podaveis}
+\begin{tikzpicture}[font=\scriptsize,
+  podavel/.style={rectangle,rounded corners=2pt,draw,thick,fill=gray!35,
+                  minimum width=6.4cm,minimum height=0.8cm,text width=6.1cm,align=center},
+  fora/.style={rectangle,rounded corners=2pt,draw,dashed,fill=white,
+               minimum width=4.2cm,minimum height=0.6cm,text width=4.0cm,align=center},
+  foralargo/.style={fora,minimum width=6.4cm,text width=6.1cm},
+  bloco/.style={rectangle,rounded corners=2pt,draw,thick,fill=gray!12,
+                minimum width=4.2cm,minimum height=0.6cm,text width=4.0cm,align=center},
+  seta/.style={-{Stealth}}]
+
+  % --- modelo completo (esquerda) ---
+  \node (in) at (0,0) {\textit{tokens} de entrada};
+  \node[fora] (emb) at (0,-0.95) {\textit{Embeddings} de \textit{token}\\ e de posição};
+  \node[bloco] (b1) at (0,-2.1) {\textbf{Bloco 1}};
+  \node[bloco] (b2) at (0,-3.1) {\textbf{Bloco 2}};
+  \node (dots) at (0,-3.85) {$\vdots$};
+  \node[bloco] (b12) at (0,-4.6) {\textbf{Bloco 12}};
+  \node[fora] (lnf) at (0,-5.6) {Normalização final};
+  \node[fora] (head) at (0,-6.75) {Cabeça de linguagem\\ (pesos do \textit{embedding})};
+  \node (out) at (0,-7.8) {próximo \textit{token}};
+  \draw[seta] (in) -- (emb);
+  \draw[seta] (emb) -- (b1);
+  \draw[seta] (b1) -- (b2);
+  \draw (b2) -- (dots);
+  \draw[seta] (dots) -- (b12);
+  \draw[seta] (b12) -- (lnf);
+  \draw[seta] (lnf) -- (head);
+  \draw[seta] (head) -- (out);
+
+  % --- estrutura de um bloco (direita) ---
+  \node[foralargo] (ln1) at (7.6,-0.6) {Normalização de camada};
+  \node[podavel] (cattn) at (7.6,-1.75) {\texttt{attn.c\_attn} \quad 768 $\rightarrow$ 2.304\\
+        consulta, chave e valor (12 cabeças)};
+  \node[podavel] (cproj) at (7.6,-2.95) {\texttt{attn.c\_proj} \quad 768 $\rightarrow$ 768\\
+        saída da atenção};
+  \node[foralargo] (ln2) at (7.6,-4.1) {Normalização de camada};
+  \node[podavel] (cfc) at (7.6,-5.25) {\texttt{mlp.c\_fc} \quad 768 $\rightarrow$ 3.072\\
+        expansão (3.072 neurônios)};
+  \node[podavel] (mproj) at (7.6,-6.45) {\texttt{mlp.c\_proj} \quad 3.072 $\rightarrow$ 768\\
+        retorno à dimensão 768};
+  \draw[seta] (ln1) -- (cattn);
+  \draw[seta] (cattn) -- (cproj);
+  \draw[seta] (cproj) -- (ln2);
+  \draw[seta] (ln2) -- (cfc);
+  \draw[seta] (cfc) -- (mproj);
+  \node[draw,dashed,gray!70,rounded corners=3pt,inner sep=8pt,fit=(ln1)(mproj),
+        label={[font=\scriptsize,text=black]above:\textbf{Cada bloco} (estrutura idêntica nos 12)}]
+        (frame) {};
+  \draw[decorate,decoration={brace,amplitude=4pt}]
+        ($(cattn.north east)+(0.5,0)$) -- ($(cproj.south east)+(0.5,0)$)
+        node[midway,right=5pt] {Atenção};
+  \draw[decorate,decoration={brace,amplitude=4pt}]
+        ($(cfc.north east)+(0.5,0)$) -- ($(mproj.south east)+(0.5,0)$)
+        node[midway,right=5pt] {MLP};
+
+  % --- ampliação do bloco 1 ---
+  \draw[dashed,gray!70] (b1.north east) -- (frame.north west);
+  \draw[dashed,gray!70] (b1.south east) -- (frame.south west);
+
+  % --- legenda ---
+  \node[rectangle,rounded corners=1pt,draw,thick,fill=gray!35,
+        minimum width=0.5cm,minimum height=0.3cm] (lg1) at (4.7,-7.75) {};
+  \node[right=3pt of lg1] {podável: 4 matrizes por bloco, 48 no total};
+  \node[rectangle,rounded corners=1pt,draw,dashed,
+        minimum width=0.5cm,minimum height=0.3cm] (lg2) at (4.7,-8.25) {};
+  \node[right=3pt of lg2] {fora da poda};
+\end{tikzpicture}
+\end{figure}
+
 Essa restrição tem consequência direta na leitura dos resultados: quando se afirma que uma
 configuração tem 50\% de esparsidade, trata-se de 50\% das matrizes podáveis, não do
-modelo inteiro. Como os \textit{embeddings} do GPT-2 concentram parcela expressiva dos
+modelo inteiro. Como os \textit{embeddings} do GPT-2 concentram 31,6\% dos
 parâmetros, a esparsidade sobre o total é sempre menor que a esparsidade sobre o conjunto
 podável, e as duas grandezas são reportadas separadamente.
 
@@ -738,6 +845,8 @@ Seção~\ref{subsec:robustez_sonda}.
 % claros. "Orçamento" passa a "taxa de poda", e a regra é apresentada como generalização
 % do exemplo da Metodologia (Tabela tab:exemplo_alocacao): o papel de α, do teto e de β
 % é ilustrado com os mesmos números (Tabela tab:exemplo_beta).
+% AJUSTE: 21/10 — acompanha a nova ordem das camadas do exemplo da Metodologia
+% (robustezes 2, 5, 1 e 4): a camada mais robusta passa a ser a 2, e a mais sensível, a 3.
 A conversão do perfil em taxas por camada (passos 2 e 3 da
 Seção~\ref{sec:metodologia_poda_com}, exemplificados na Tabela~\ref{tab:exemplo_alocacao})
 foi formalizada pela Equação~\ref{eq:alocacao_dev}. A taxa de cada camada é proporcional à
@@ -761,10 +870,10 @@ Tabela~\ref{tab:exemplo_alocacao}, que corresponde a
 $\beta = 1$, a taxa de poda de 30\% exige $\alpha = 0{,}10$, e a de 15\%, $\alpha = 0{,}05$.
 Enquanto nenhuma camada atinge o teto, $\alpha$ tem expressão direta: é a taxa de poda
 dividida pela média ponderada das robustezes. O teto rompe essa proporcionalidade. No mesmo
-exemplo, a taxa de poda de 60\% exigiria $\alpha = 0{,}20$ e levaria a camada 4 a 100\%;
+exemplo, a taxa de poda de 60\% exigiria $\alpha = 0{,}20$ e levaria a camada 2 a 100\%;
 limitada a 95\%, essa camada deixa de acompanhar $\alpha$, e os cinco pontos percentuais
 que excederiam o teto precisam ser absorvidos pelas outras três, o que eleva o fator a
-aproximadamente 0,207 e as taxas dessas camadas a 20,7\%, 41,4\% e 82,9\%. Como a média das
+aproximadamente 0,207 e as taxas das camadas 1, 3 e 4 a 41,4\%, 20,7\% e 82,9\%. Como a média das
 taxas cresce monotonamente com $\alpha$, com ou sem camadas no teto, o fator foi obtido
 numericamente, por bisseção, procedimento que atende aos dois casos.
 
@@ -778,9 +887,9 @@ O expoente $\beta$ é o parâmetro de intensidade do passo 3 da
 Seção~\ref{sec:metodologia_poda_com}: controla o quanto o perfil é levado a sério. Com $\beta = 1$ emprega-se
 o inverso puro da degradação, como na Tabela~\ref{tab:exemplo_alocacao}; valores
 intermediários amortecem a razão entre camadas. A Tabela~\ref{tab:exemplo_beta} aplica a
-regra ao mesmo exemplo: com $\beta = 0{,}5$, as robustezes 1, 2, 4 e 5 são substituídas por
-suas raízes quadradas, e a camada 4 deixa de perder cinco vezes mais elementos que a
-camada 1 para perder 2,24 vezes mais. Esse amortecimento não é um detalhe: a razão de
+regra ao mesmo exemplo: com $\beta = 0{,}5$, as robustezes 2, 5, 1 e 4 são substituídas por
+suas raízes quadradas, e a camada 2 deixa de perder cinco vezes mais elementos que a
+camada 3 para perder 2,24 vezes mais. Esse amortecimento não é um detalhe: a razão de
 robustez entre duas camadas é ilimitada, e sem controle uma única camada muito robusta
 concentraria praticamente toda a poda. Os experimentos avaliaram $\beta = 1{,}0$ e
 $\beta = 0{,}5$ sobre o mesmo perfil, o que forneceu a ablação da função de alocação sem
@@ -798,8 +907,8 @@ valores do expoente $\beta$. Nenhuma camada atinge o teto $r_{\max}$.}
 $\boldsymbol{\beta}$ & $\boldsymbol{\alpha}$ & \textbf{Camada 1} & \textbf{Camada 2} &
 \textbf{Camada 3} & \textbf{Camada 4} & \textbf{Média} \\
 \hline
-1,0 & 0,100 & 10,0\% & 20,0\% & 40,0\% & 50,0\% & 30\% \\
-0,5 & 0,180 & 18,0\% & 25,5\% & 36,1\% & 40,3\% & 30\% \\
+1,0 & 0,100 & 20,0\% & 50,0\% & 10,0\% & 40,0\% & 30\% \\
+0,5 & 0,180 & 25,5\% & 40,3\% & 18,0\% & 36,1\% & 30\% \\
 0   & 0,300 & 30,0\% & 30,0\% & 30,0\% & 30,0\% & 30\% \\
 \hline
 \end{tabular}

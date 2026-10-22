@@ -460,7 +460,7 @@ tamanhos diferentes, a média é ponderada pelo tamanho de cada uma. O conjunto 
 camada adotado para atingir uma taxa de poda é a \textbf{alocação}.
 
 Uma mesma taxa de poda admite muitas alocações. Em um modelo de quatro camadas de mesmo
-tamanho, podar 30\% de cada camada e podar 10\%, 20\%, 40\% e 50\% das camadas 1 a 4 são
+tamanho, podar 30\% de cada camada e podar 20\%, 50\%, 10\% e 40\% das camadas 1 a 4 são
 duas alocações para a mesma taxa de poda de 30\%: ambas removem o mesmo número de elementos
 e diferem apenas nas camadas de onde eles saem. Como as camadas não necessariamente reagem
 da mesma forma à remoção, as alocações podem produzir modelos de qualidades diferentes.
@@ -590,10 +590,10 @@ mesmo perfil.}
 O procedimento, para uma estratégia de poda e uma taxa de poda dadas, tem cinco passos.
 
 \begin{enumerate}
-    \item \textbf{Medir o perfil (fase 1).} Para cada camada, parte-se do modelo intacto e
+    \item \textbf{Medir o perfil (fase 1).} Para cada camada, parte-se do modelo base e
           remove-se, só daquela camada, uma fração dos elementos denominada
           \textbf{taxa-sonda}. Mede-se a \textit{perplexity} (Seção~\ref{sec:metodologia_metricas})
-          e compara-se com a do modelo intacto; a \textbf{degradação} da camada é a medida desse
+          e compara-se com a do modelo base; a \textbf{degradação} da camada é a medida desse
           aumento. Antes de passar à camada seguinte, o modelo é restaurado. A taxa-sonda é
           a mesma para todas as camadas, para que as degradações sejam comparáveis. Ela serve
           apenas à medição e não gera modelo final. O perfil é medido uma só vez por
@@ -621,6 +621,10 @@ Os passos 2 a 5 repetem-se para cada taxa de poda avaliada; só o passo 1 não s
 
 \subsubsection*{Exemplo}
 
+% AJUSTE: 21/10 — as camadas do exemplo deixam de seguir a ordem crescente de robustez
+% (1, 2, 4 e 5 passam a 2, 5, 1 e 4), para que a tabela não sugira que a taxa de poda
+% cresce com a posição da camada. Os valores, a média e o fator 0,10 não mudam; o
+% Desenvolvimento (tab:exemplo_beta e o exemplo do teto) acompanha a nova ordem.
 A Tabela~\ref{tab:exemplo_alocacao} percorre os passos 1 a 3 em um modelo hipotético de
 quatro camadas de mesmo tamanho, podado à taxa de poda de 30\%.
 
@@ -638,29 +642,29 @@ na Seção~\ref{subsec:fase1}.}
 \hline
  & \textbf{Camada 1} & \textbf{Camada 2} & \textbf{Camada 3} & \textbf{Camada 4} & \textbf{Média} \\
 \hline
-Degradação (passo 1) & 1,00 & 0,50 & 0,25 & 0,20 & --- \\
-Robustez (passo 2) & 1 & 2 & 4 & 5 & 3 \\
+Degradação (passo 1) & 0,50 & 0,20 & 1,00 & 0,25 & --- \\
+Robustez (passo 2) & 2 & 5 & 1 & 4 & 3 \\
 \hline
 \multicolumn{6}{l}{\textit{Taxa de poda por camada, por alocação (passo 3)}} \\
 Uniforme & 30\% & 30\% & 30\% & 30\% & 30\% \\
-Com análise de sensibilidade & 10\% & 20\% & 40\% & 50\% & 30\% \\
+Com análise de sensibilidade & 20\% & 50\% & 10\% & 40\% & 30\% \\
 \hline
 \end{tabular}
 \end{table}
 
 No passo 1, cada camada é podada sozinha à taxa-sonda, e a \textit{perplexity} do modelo
-resultante é comparada à do modelo intacto. Supõe-se que a camada 1 produza a maior
-degradação e a camada 4, a menor, com os valores da primeira linha da tabela: a camada 1 é
-a mais sensível, e a camada 4, a mais robusta. No passo 2, a degradação é invertida: a
-camada 4, que degradou o modelo cinco vezes menos que a camada 1, é cinco vezes mais
-robusta. As robustezes 1, 2, 4 e 5 indicam que a camada 4 deve perder cinco vezes mais
-elementos que a camada 1.
+resultante é comparada à do modelo intacto. Supõe-se que a camada 3 produza a maior
+degradação e a camada 2, a menor, com os valores da primeira linha da tabela: a camada 3 é
+a mais sensível, e a camada 2, a mais robusta. No passo 2, a degradação é invertida: a
+camada 2, que degradou o modelo cinco vezes menos que a camada 3, é cinco vezes mais
+robusta. As robustezes 2, 5, 1 e 4 indicam que a camada 2 deve perder cinco vezes mais
+elementos que a camada 3.
 
 No passo 3, todas as robustezes são multiplicadas pelo mesmo fator. Como a média das
 robustezes é 3, o fator que leva a média das taxas a 30\% é 0,10, e as taxas por camada
-resultam em 10\%, 20\%, 40\% e 50\% --- a mesma alocação usada como exemplo no início da
+resultam em 20\%, 50\%, 10\% e 40\% --- a mesma alocação usada como exemplo no início da
 seção. Se a taxa de poda fosse de 15\%, o fator seria 0,05, e
-as taxas, 5\%, 10\%, 20\% e 25\%. No passo 4, cada camada perde essa fração dos elementos de
+as taxas, 10\%, 25\%, 5\% e 20\%. No passo 4, cada camada perde essa fração dos elementos de
 menor pontuação segundo o critério da estratégia. O perfil de sensibilidade decide, portanto,
 como a poda se distribui entre as camadas; a taxa de poda decide quanto se remove no total.
 
