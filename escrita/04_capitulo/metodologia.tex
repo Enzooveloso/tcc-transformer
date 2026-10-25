@@ -12,12 +12,12 @@ Este capítulo apresenta a metodologia adotada neste trabalho, organizada em qua
 sequenciais:
 
 \begin{itemize}
-    \item \textbf{Etapa 1 --- Modelo de Referência} (Seção~\ref{sec:metodologia_modelo}):
-          seleção do modelo de referência e da base de dados sobre a qual ele é avaliado,
+    \item \textbf{Etapa 1 --- Modelo Base} (Seção~\ref{sec:metodologia_modelo}):
+          seleção do modelo base e da base de dados sobre a qual ele é avaliado,
           e definição das métricas registradas para esse modelo e para todos os modelos
           podados;
     \item \textbf{Etapa 2 --- Poda sem Otimização} (Seção~\ref{sec:metodologia_poda_sem}):
-          aplicação de estratégias clássicas de poda ao modelo de referência;
+          aplicação de estratégias clássicas de poda ao modelo base;
     \item \textbf{Etapa 3 --- Poda com Otimização} (Seção~\ref{sec:metodologia_poda_com}):
           aplicação das mesmas estratégias combinadas a uma técnica de otimização, que
           redistribui a poda entre as camadas do modelo;
@@ -37,10 +37,10 @@ Capítulo~\ref{chap:desenvolvimento}, organizado nas mesmas quatro etapas, na me
 % AJUSTE: revisão 30/09 — a seção vira a Etapa 1 e reúne as três definições de que a
 % etapa depende: modelo, base de dados (antes na seção de métricas) e métricas (antes a
 % quinta etapa). Abertura segundo o esboço do orientador.
-\section{Etapa 1 --- Modelo de Referência}\label{sec:metodologia_modelo}
+\section{Etapa 1 --- Modelo Base}\label{sec:metodologia_modelo}
 % -------------------------------------------------------
 
-Na primeira etapa, seleciona-se o modelo de referência (\textit{baseline}), a versão
+Na primeira etapa, seleciona-se o modelo base (\textit{baseline}), a versão
 original de um modelo de linguagem de grande escala (\textit{Large Language Model} ---
 LLM), antes de qualquer processo de poda. O modelo é executado sem nenhuma modificação e
 avaliado sobre uma base de dados, registrando-se métricas de desempenho preditivo, de custo
@@ -54,7 +54,7 @@ avaliado e as métricas registradas.
 
 \subsection{Seleção do Modelo}\label{subsec:metodologia_selecao_modelo}
 
-Para a seleção do modelo de referência, foram adotados os seguintes critérios:
+Para a seleção do modelo base, foram adotados os seguintes critérios:
 
 \begin{itemize}
     \item \textbf{C1 --- Arquitetura:} ser um \textit{Transformer} composto apenas pelo
@@ -89,7 +89,7 @@ Para a seleção do modelo de referência, foram adotados os seguintes critério
           aplicada.
     \item \textbf{C5 --- Resultado de referência:} ter \textit{perplexity} na base de dados
           de avaliação adotada publicada em artigo científico --- pelos autores do modelo ou
-          em trabalho posterior, o que permite situar o modelo de referência
+          em trabalho posterior, o que permite situar o modelo base
           reproduzido em relação à literatura.
     \item \textbf{C6 --- Implementação disponível:} possuir arquitetura implementada
           nativamente na biblioteca \texttt{transformers} \cite{Wolf2020}, que opera sobre
@@ -126,13 +126,13 @@ apresentada no Capítulo~\ref{chap:desenvolvimento} (Tabela~\ref{tab:candidatos_
 % para a Etapa 1, ao lado dos critérios do modelo, com os quais são aplicados em conjunto.
 \subsection{Seleção da Base de Dados}\label{subsec:metodologia_base}
 
-O modelo de referência e todos os modelos podados nas etapas seguintes são avaliados sobre
+O modelo base e todos os modelos podados nas etapas seguintes são avaliados sobre
 uma mesma base de dados --- a coleção de textos sobre a qual se mede o desempenho dos
 modelos ---, selecionada pelos seguintes critérios:
 
 \begin{itemize}
-    \item \textbf{D1 --- Resultado de referência:} \textit{perplexity} do modelo de
-          referência na base de dados publicada em artigo científico; é a exigência do
+    \item \textbf{D1 --- Resultado de referência:} \textit{perplexity} publicada em
+          artigo científico para o modelo base avaliado na base de dados; é a exigência do
           critério C5 vista do lado da base de dados.
     \item \textbf{D2 --- Texto sem pré-processamento destrutivo:} a base de dados preserva caixa,
           pontuação, números e palavras raras, e mantém a continuidade dos documentos;
@@ -159,13 +159,13 @@ Capítulo~\ref{chap:desenvolvimento} (Tabela~\ref{tab:candidatos_dataset}).
 
 \adicionadomarcelo{As métricas de avaliação são organizadas em três dimensões: desempenho preditivo, custo
 computacional e impacto ambiental. Elas são registradas pelo mesmo procedimento, e sobre a
-mesma base de dados, para o modelo de referência e para cada modelo podado nas Etapas 2 a
+mesma base de dados, para o modelo base e para cada modelo podado nas Etapas 2 a
 4. Para cada métrica, descreve-se o que ela representa e
 como é obtida operacionalmente.
 
 \subsubsection*{Desempenho preditivo}
 
-Como o modelo de referência é um modelo de linguagem autorregressivo, a métrica de
+Como o modelo base é um modelo de linguagem autorregressivo, a métrica de
 desempenho preditivo adotada é a \textit{perplexity}, padrão para essa classe de modelos.
 Ela quantifica o grau de ``surpresa'' do modelo diante de cada \textit{token} do conjunto
 de avaliação, constituindo uma medida da qualidade da modelagem probabilística da
@@ -256,7 +256,7 @@ O impacto ambiental é mensurado por meio de dois indicadores:
 \subsubsection*{Comparação entre configurações}
 
 As configurações são comparadas taxa a taxa: em cada taxa de poda, a \textit{perplexity} e
-a energia de cada alocação são confrontadas com as do modelo de referência e com as das
+a energia de cada alocação são confrontadas com as do modelo base e com as das
 demais alocações. Três indicadores sintetizam essa comparação, em linha com a recomendação
 de tratar a eficiência como critério de avaliação ao lado do desempenho preditivo
 \cite{Schwartz2020} e de relatar sistematicamente a energia consumida
@@ -264,36 +264,36 @@ de tratar a eficiência como critério de avaliação ao lado do desempenho pred
 padronização das métricas, que dificulta a comparação entre métodos de poda
 \cite{Blalock2020}.
 
-\textbf{Redução relativa de energia ($\Delta E$):} fração da energia do modelo de
-referência economizada pelo modelo podado,
+\textbf{Redução relativa de energia ($\Delta E$):} fração da energia do modelo
+base economizada pelo modelo podado,
 \begin{equation}\label{eq:delta_e}
 \Delta E = \frac{E_0 - E}{E_0} \times 100\ [\%],
 \end{equation}
-em que $E$ é a energia consumida pelo modelo podado e $E_0$, a do modelo de referência
+em que $E$ é a energia consumida pelo modelo podado e $E_0$, a do modelo base
 medida na mesma sessão de execução. A referência na mesma sessão é necessária porque a
 energia medida de um mesmo modelo varia entre sessões do ambiente de execução; por isso,
 a energia é sempre comparada em termos relativos, e nunca em valores absolutos.
 
 \textbf{Eficiência relativa ($\eta$):} relaciona o desempenho preditivo à energia
 consumida. Como valores menores de \textit{perplexity} indicam melhor desempenho, a
-razão de qualidade é tomada em relação ao modelo de referência, de modo invertido:
+razão de qualidade é tomada em relação ao modelo base, de modo invertido:
 \begin{equation}\label{eq:eta}
 \eta = \frac{\text{PPL}_0}{\text{PPL}} \times \frac{E_0}{E},
 \end{equation}
 em que $\text{PPL}$ e $\text{PPL}_0$ são as \textit{perplexities} do modelo podado e do
-modelo de referência. O modelo de referência tem $\eta = 1$; valores acima de 1 indicam
+modelo base. O modelo base tem $\eta = 1$; valores acima de 1 indicam
 mais desempenho preditivo por unidade de energia do que ele. Como usa apenas razões, o
 indicador respeita a restrição de comparar a energia em termos relativos. Quando a
 diferença de energia está abaixo do ruído de medição, porém, $\eta$ passa a refletir só a
 \textit{perplexity} e esse ruído.
 
 \textbf{Ponto de eficiência ($S^*_E$):} maior taxa de poda cuja \textit{perplexity} não
-excede em mais de 5\% a do modelo de referência:
+excede em mais de 5\% a do modelo base:
 \begin{equation}\label{eq:ponto_eficiencia}
 S^*_E = \max \left\{ s \;\middle|\; \text{PPL}(s) \leq 1{,}05 \cdot \text{PPL}_0 \right\},
 \end{equation}
-em que $s$ é a taxa de poda. A referência é o modelo de referência no mesmo regime: sem
-retreinamento, o modelo pré-treinado; após o \textit{fine-tuning}, o modelo de referência
+em que $s$ é a taxa de poda. A referência é o modelo base no mesmo regime: sem
+retreinamento, o modelo pré-treinado; após o \textit{fine-tuning}, o modelo base
 submetido ao mesmo retreinamento. O limite de 5\% foi fixado antes da análise dos
 resultados, e não ajustado a eles.
 
@@ -316,9 +316,9 @@ retreinamento, que cobrem todas as taxas; as configurações submetidas ao
 % -------------------------------------------------------
 
 % AJUSTE: revisão 30/09 — abertura da Etapa 2 segundo o esboço do orientador.
-Na segunda etapa, aplicam-se ao modelo de referência estratégias clássicas de poda, sem
+Na segunda etapa, aplicam-se ao modelo base estratégias clássicas de poda, sem
 nenhuma técnica de otimização. Cada estratégia, em cada taxa de poda avaliada, é aplicada
-de forma independente e sempre a partir do modelo de referência original, nunca de um
+de forma independente e sempre a partir do modelo base original, nunca de um
 modelo já podado, de modo que o resultado de uma configuração não dependa das anteriores.
 Os modelos podados são avaliados pelas mesmas métricas e sobre a mesma base de dados da
 Etapa 1 (Seção~\ref{sec:metodologia_modelo}).
@@ -562,7 +562,7 @@ mesmo perfil.}
   fase/.style={rectangle,draw,dashed,gray!80,inner sep=6pt}]
 
   % --- linha 1: fase 1 ---
-  \node[caixa] (ref) at (-5.1,0) {\textbf{Modelo de referência}\\ intacto};
+  \node[caixa] (ref) at (-5.1,0) {\textbf{Modelo base}\\ intacto};
   \node[caixa] (f1)  at (0,0)    {\textbf{Fase 1}\\ poda de uma camada por vez à taxa-sonda; mede a degradação};
   \node[dado]  (per) at (5.1,0)  {\textbf{Perfil de sensibilidade}\\ uma degradação\\ por camada};
   \draw[-{Stealth}] (ref) -- (f1);

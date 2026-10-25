@@ -100,7 +100,7 @@ def delta_e(s, taxa):
 # ---------------------------------------------------------------- qualidade
 def tabela_qualidade(estrategia):
     linhas = [r"\begin{tabular}{c cc cc}", r"\toprule", *CAB_ALOCACOES, r"\midrule",
-              rf"0\,\% & \multicolumn{{4}}{{c}}{{{br(PPL0)} (modelo denso)}} \\"]
+              rf"0\,\% & \multicolumn{{4}}{{c}}{{{br(PPL0)} (modelo base)}} \\"]
     for t in TAXAS[1:]:
         vals = [ppl(CONFIGS[(estrategia, a)][t]) for a in ALOCACOES]
         menor = min(vals)
@@ -241,7 +241,7 @@ linhas = [r"\begin{tabular}{l r r r c}", r"\toprule",
           r"\textbf{Configuração} & \textbf{PPL} & $\boldsymbol{\Delta E}$ \textbf{(\%)}"
           r" & $\boldsymbol{\eta}$ & $\boldsymbol{S^*_E}$ \\", r"\midrule",
           r"\multicolumn{5}{l}{\textbf{Sem retreinamento} (médias de 10\,\% a 50\,\%)} \\",
-          rf"Modelo denso & {br(PPL0)} & 0,0 & 1,000 & --- \\"]
+          rf"Modelo base & {br(PPL0)} & 0,0 & 1,000 & --- \\"]
 for estrategia, nome in (("mag", "Poda por magnitude"), ("est", "Poda estruturada")):
     linhas.append(SUB.format(nome))
     for a in ALOCACOES:
@@ -252,7 +252,7 @@ for estrategia, nome in (("mag", "Poda por magnitude"), ("est", "Poda estruturad
         linhas.append(rf"\qquad {NOME_ALOC[a]} & {br(geo)} & {br(de, 1)} & {br(eta, 3)}"
                       rf" & {ponto_eficiencia(s)} \\")
 linhas += [r"\midrule", r"\multicolumn{5}{l}{\textbf{Após o \textit{fine-tuning} de recuperação}} \\",
-           rf"Modelo denso retreinado & {br(PPL0_FT)} & 0,0 & 1,000 & --- \\"]
+           rf"Modelo base retreinado & {br(PPL0_FT)} & 0,0 & 1,000 & --- \\"]
 CONFIGS_FT = [("Poda por magnitude", "magnitude", "uniforme", 30),
               ("Poda por magnitude", "magnitude", "uniforme", 50),
               ("Poda estruturada", "estruturada", "global", 10),
