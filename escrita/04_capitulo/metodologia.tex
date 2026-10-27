@@ -464,8 +464,16 @@ tamanho, podar 30\% de cada camada e podar 20\%, 50\%, 10\% e 40\% das camadas 1
 duas alocações para a mesma taxa de poda de 30\%: ambas removem o mesmo número de elementos
 e diferem apenas nas camadas de onde eles saem. Como as camadas não necessariamente reagem
 da mesma forma à remoção, as alocações podem produzir modelos de qualidades diferentes.
+% AJUSTE: 26/10 — pedido do Enzo: "robustez"/"robusta" passam a "tolerância à
+% poda"/"tolerante" em todo o texto (capítulos 2, 4, 5 e 6). Motivos: (i) é o termo usado
+% na literatura para o inverso da sensibilidade ("tolerances to pruning"; a documentação
+% do Distiller identifica "which layers tolerate filter removal"), que em geral não ganha
+% nome próprio, e nenhum trabalho consultado o chama de "robustness"; (ii) o
+% Desenvolvimento já usava "tolera"/"tolerância" nesse sentido (Escopos de Alocação), e o
+% ESTILO pede um termo só; (iii) "robustez" fica reservada ao sentido de estabilidade
+% (Seção "Robustez do Perfil à Taxa-Sonda").
 Chama-se \textbf{sensível} a camada cuja poda degrada muito o desempenho preditivo do
-modelo, e \textbf{robusta}, a que o degrada pouco.
+modelo, e \textbf{tolerante} à poda, a que o degrada pouco.
 
 As duas alocações da Etapa~2 (Seção~\ref{sec:metodologia_poda_sem}) têm uma limitação
 comum: nenhuma mede o quanto cada camada é sensível. A uniforme ignora a questão e trata as
@@ -475,7 +483,7 @@ ilustra a diferença entre a alocação uniforme e uma alocação que segue a se
 
 \subsection{Hipótese, Desenho e Critérios de Escolha da Técnica}
 
-A hipótese é a de que podar mais as camadas robustas e menos as sensíveis produz, na mesma
+A hipótese é a de que podar mais as camadas tolerantes e menos as sensíveis produz, na mesma
 taxa de poda, menor perda de desempenho preditivo do que as alocações uniforme e global.
 Para testá-la, fixa-se a taxa de poda e varia-se apenas a alocação, e os modelos obtidos
 são comparados segundo as métricas e o critério da Seção~\ref{sec:metodologia_metricas}.
@@ -539,7 +547,7 @@ entre os dois pode ser atribuída à forma como a poda se distribui entre as cam
 \subsection{Técnica Adotada: Análise de Sensibilidade por Camada}
 
 A técnica de otimização adotada neste trabalho é a \textbf{análise de sensibilidade por camada}. A ideia é medir a
-sensibilidade de cada camada e podar mais as robustas e menos as sensíveis. A medição
+sensibilidade de cada camada e podar mais as tolerantes e menos as sensíveis. A medição
 resulta no \textbf{perfil de sensibilidade}: uma degradação por camada.
 
 A técnica tem duas fases (Figura~\ref{fig:fluxo_sensibilidade}). A fase 1 mede o perfil e
@@ -570,7 +578,7 @@ mesmo perfil.}
   \node[fase,fit=(f1)(per),label={[font=\scriptsize\itshape,text=black]above:fase 1: uma vez por estratégia de poda}] (box1) {};
 
   % --- linha 2: fase 2 (da direita para a esquerda) ---
-  \node[caixa] (f2)  at (5.1,-2.7)  {\textbf{Fase 2}\\ robustez (inverso da degradação) $\times$ fator comum};
+  \node[caixa] (f2)  at (5.1,-2.7)  {\textbf{Fase 2}\\ tolerância (inverso da degradação) $\times$ fator comum};
   \node[dado]  (tax) at (0,-2.7)    {\textbf{Taxas por camada}\\ média igual à taxa de poda};
   \node[caixa] (pod) at (-5.1,-2.7) {\textbf{Poda}\\ em cada camada, saem os elementos de menor pontuação};
   \draw[-{Stealth}] (per.south) -- (f2.north);
@@ -598,11 +606,11 @@ O procedimento, para uma estratégia de poda e uma taxa de poda dadas, tem cinco
           a mesma para todas as camadas, para que as degradações sejam comparáveis. Ela serve
           apenas à medição e não gera modelo final. O perfil é medido uma só vez por
           estratégia e reaproveitado em todas as taxas de poda.
-    \item \textbf{Converter degradação em robustez.} A \textbf{robustez} de uma camada é o
-          inverso de sua degradação: quanto menos a camada degrada o modelo, mais robusta
-          ela é. As robustezes fixam apenas a proporção entre as taxas por camada, e não o
+    \item \textbf{Converter degradação em tolerância.} A \textbf{tolerância à poda} de uma
+          camada, ou simplesmente tolerância, é o inverso de sua degradação: quanto menos a
+          camada degrada o modelo, mais tolerante ela é. As tolerâncias fixam apenas a proporção entre as taxas por camada, e não o
           seu valor.
-    \item \textbf{Escalar à taxa de poda.} Todas as robustezes são multiplicadas por um
+    \item \textbf{Escalar à taxa de poda.} Todas as tolerâncias são multiplicadas por um
           mesmo fator, escolhido para que a média das taxas resultantes seja a taxa de poda
           pretendida. As taxas resultantes formam a \textbf{alocação com análise
           de sensibilidade}. Um teto impede que uma camada seja removida por inteiro: quando
@@ -632,8 +640,8 @@ quatro camadas de mesmo tamanho, podado à taxa de poda de 30\%.
 \centering
 \caption{Exemplo dos passos 1 a 3 da análise de sensibilidade em um modelo hipotético de
 quatro camadas de mesmo tamanho, à taxa de poda de 30\%. Valores ilustrativos, não
-medidos; a robustez é o inverso da degradação, e cada taxa da alocação com análise de
-sensibilidade é a robustez multiplicada por 0,10. A medida de degradação adotada é definida
+medidos; a tolerância é o inverso da degradação, e cada taxa da alocação com análise de
+sensibilidade é a tolerância multiplicada por 0,10. A medida de degradação adotada é definida
 na Seção~\ref{subsec:fase1}.}
 \label{tab:exemplo_alocacao}
 \small
@@ -643,7 +651,7 @@ na Seção~\ref{subsec:fase1}.}
  & \textbf{Camada 1} & \textbf{Camada 2} & \textbf{Camada 3} & \textbf{Camada 4} & \textbf{Média} \\
 \hline
 Degradação (passo 1) & 0,50 & 0,20 & 1,00 & 0,25 & --- \\
-Robustez (passo 2) & 2 & 5 & 1 & 4 & 3 \\
+Tolerância (passo 2) & 2 & 5 & 1 & 4 & 3 \\
 \hline
 \multicolumn{6}{l}{\textit{Taxa de poda por camada, por alocação (passo 3)}} \\
 Uniforme & 30\% & 30\% & 30\% & 30\% & 30\% \\
@@ -655,13 +663,13 @@ Com análise de sensibilidade & 20\% & 50\% & 10\% & 40\% & 30\% \\
 No passo 1, cada camada é podada sozinha à taxa-sonda, e a \textit{perplexity} do modelo
 resultante é comparada à do modelo intacto. Supõe-se que a camada 3 produza a maior
 degradação e a camada 2, a menor, com os valores da primeira linha da tabela: a camada 3 é
-a mais sensível, e a camada 2, a mais robusta. No passo 2, a degradação é invertida: a
+a mais sensível, e a camada 2, a mais tolerante. No passo 2, a degradação é invertida: a
 camada 2, que degradou o modelo cinco vezes menos que a camada 3, é cinco vezes mais
-robusta. As robustezes 2, 5, 1 e 4 indicam que a camada 2 deve perder cinco vezes mais
+tolerante. As tolerâncias 2, 5, 1 e 4 indicam que a camada 2 deve perder cinco vezes mais
 elementos que a camada 3.
 
-No passo 3, todas as robustezes são multiplicadas pelo mesmo fator. Como a média das
-robustezes é 3, o fator que leva a média das taxas a 30\% é 0,10, e as taxas por camada
+No passo 3, todas as tolerâncias são multiplicadas pelo mesmo fator. Como a média das
+tolerâncias é 3, o fator que leva a média das taxas a 30\% é 0,10, e as taxas por camada
 resultam em 20\%, 50\%, 10\% e 40\% --- a mesma alocação usada como exemplo no início da
 seção. Se a taxa de poda fosse de 15\%, o fator seria 0,05, e
 as taxas, 10\%, 25\%, 5\% e 20\%. No passo 4, cada camada perde essa fração dos elementos de

@@ -1011,7 +1011,7 @@ causam a uma camada danos de natureza diferente. A poda por magnitude anula meta
 pesos podáveis da camada, escolhidos um a um entre os de menor valor absoluto, onde quer
 que estejam. Os pesos anulados ficam distribuídos entre as cabeças e os neurônios, de modo
 que nenhum deles é eliminado por inteiro: as 12 cabeças e os 3.072 neurônios continuam em
-operação, cada um com parte de seus pesos. A poda estruturada, por sua vez, remove seis das
+operação, cada um com parte de seus pesos. A poda estruturada, por sua vez, remove 6 das
 12 cabeças e 1.536 dos 3.072 neurônios, cada um com todos os seus pesos, pequenos ou
 grandes, e mantém intactos os demais. A diferença se assemelha à de duas formas de cortar
 pela metade as horas de trabalho de uma equipe: reduzir a jornada de todos os membros ou
@@ -1036,13 +1036,17 @@ alocação dessa estratégia.
 % estava registrado em nenhum lugar (texto, código, notas); a justificativa de (iii) foi
 % formulada nesta revisão, sem recorrer a resultados. "Artefato do regime em que a sonda
 % opera" sai por ser jargão.
+% AJUSTE: 26/10 — daqui em diante, "robusta(s)"/"robustez" passam a "tolerante(s)"/
+% "tolerância" (motivo no comentário da definição, na Metodologia); "classificada como
+% robusta a 50%" vira "tolerante na medição a 50%", porque "tolerante a 50%" sugeriria
+% tolerar 50% de poda.
 A taxa-sonda de 50\%, porém, é uma escolha arbitrária: nenhum critério a torna preferível
 a outras taxas próximas. Isso levanta uma dúvida: a ordenação das camadas --- quais são as
-mais sensíveis e quais as mais robustas --- reflete uma característica das próprias
+mais sensíveis e quais as mais tolerantes --- reflete uma característica das próprias
 camadas ou apenas da taxa-sonda escolhida? A dúvida importa porque o perfil é medido uma
 única vez, a 50\%, mas orienta a alocação em todas as taxas de poda avaliadas, de 10\% a
-90\%. Se a ordenação mudasse com a taxa-sonda, uma camada classificada como robusta a
-50\% poderia não sê-lo em outras taxas, e a alocação podaria mais justamente onde não
+90\%. Se a ordenação mudasse com a taxa-sonda, uma camada classificada como tolerante na
+medição a 50\% poderia não o ser em outras taxas, e a alocação podaria mais justamente onde não
 deveria.
 
 Para responder a essa dúvida, o perfil completo foi medido novamente, nas duas
@@ -1091,10 +1095,10 @@ apresentar a regra adotada e os três elementos que a compõem: o fator, o teto 
 parâmetro de intensidade.
 
 A regra parte da ideia da Tabela~\ref{tab:exemplo_alocacao}: podar mais as camadas
-robustas e menos as sensíveis. As robustezes indicam apenas a proporção entre as taxas por
-camada. No exemplo, as robustezes 2, 5, 1 e 4 indicam que a camada 2 deve perder cinco
+tolerantes e menos as sensíveis. As tolerâncias indicam apenas a proporção entre as taxas por
+camada. No exemplo, as tolerâncias 2, 5, 1 e 4 indicam que a camada 2 deve perder cinco
 vezes mais elementos que a camada 3, mas não quanto cada uma perde. Esse valor é dado pelo
-\textbf{fator}: todas as robustezes são multiplicadas por um mesmo número, escolhido para
+\textbf{fator}: todas as tolerâncias são multiplicadas por um mesmo número, escolhido para
 que a média das taxas por camada seja igual à taxa de poda pretendida. À taxa de poda de
 30\%, o fator é 0,10, e as taxas por camada são 20\%, 50\%, 10\% e 40\%, cuja média é
 30\%. À taxa de 15\%, o fator cai pela metade, para 0,05, e todas as taxas também. Em
@@ -1102,8 +1106,8 @@ resumo, o perfil decide como a poda se distribui entre as camadas, e o fator dec
 se remove no total.
 
 O \textbf{teto} limita a taxa de cada camada a 95\%. Sem ele, taxas de poda altas poderiam
-levar a camada mais robusta a perder todos os seus elementos. No mesmo exemplo, à taxa de
-poda de 60\%, o fator dobraria para 0,20, e a camada 2, de robustez 5, receberia 100\%:
+levar a camada mais tolerante a perder todos os seus elementos. No mesmo exemplo, à taxa de
+poda de 60\%, o fator dobraria para 0,20, e a camada 2, de tolerância 5, receberia 100\%:
 seria inteiramente podada. Com o teto, ela fica em 95\%, e os 5 pontos percentuais que
 deixa de perder passam às outras três camadas, para que a média continue em 60\%. O fator
 sobe, então, para cerca de 0,207, e as camadas 1, 3 e 4 passam a 41,4\%, 20,7\% e 82,9\%.
@@ -1111,17 +1115,35 @@ Como, nessa situação, o fator não resulta de uma simples divisão, ele foi ca
 tentativas sucessivas: ajusta-se o fator até que a média das taxas por camada coincida com
 a taxa de poda.
 
-O \textbf{parâmetro de intensidade}, representado pelo expoente $\beta$, controla o quanto
-a alocação segue as diferenças do perfil. Com $\beta = 1$, as taxas seguem as robustezes na
-proporção exata, como na Tabela~\ref{tab:exemplo_alocacao}. Com $\beta = 0{,}5$, cada
-robustez é substituída por sua raiz quadrada, o que aproxima as taxas por camada entre si
-sem alterar a ordem das camadas: a camada 2, que perdia cinco vezes mais elementos que a
-camada 3, passa a perder 2,24 vezes mais (Tabela~\ref{tab:exemplo_beta}). Esse controle é
-necessário porque não há limite para a diferença de robustez entre duas camadas: uma camada
-que quase não degrada o modelo teria robustez muito alta e, sem amortecimento,
-concentraria praticamente toda a poda. Os experimentos avaliaram $\beta = 1$ e
-$\beta = 0{,}5$ sobre o mesmo perfil, o que permitiu comparar as duas intensidades sem
-repetir a fase 1, a etapa de maior custo.
+% AJUSTE: 26/10 — pedido do Enzo: "controla o quanto a alocação segue as diferenças do
+% perfil" não deixava claro que a alocação pode não segui-las, nem por que o parâmetro é
+% necessário. Desdobrado em quatro parágrafos, sobre o mesmo exemplo: (i) os três regimes
+% (integral, parcial, nenhum); (ii) o que β muda e o que não muda, com analogia; (iii) os
+% dois problemas de fixar β = 1; (iv) o que a comparação entre intensidades mostrou.
+% A tabela tab:exemplo_beta sobe para junto dos parágrafos que a usam. Números de (iv):
+% tabelas/qualidade_magnitude.tex e qualidade_estruturada.tex; razões 42,9 e 11,3 de
+% sensibilidade_perfil.csv. "5 de 9" = vitórias da alocação com análise de sensibilidade
+% na magnitude só com β = 1 (20, 30, 60, 70 e 80%), contra 7 de 9 com a melhor intensidade.
+O \textbf{parâmetro de intensidade}, representado pelo expoente $\beta$, define quanto das
+diferenças de tolerância entre as camadas passa para as taxas por camada. Cada tolerância é
+elevada a $\beta$ antes de ser multiplicada pelo fator, e o efeito depende do valor adotado
+(Tabela~\ref{tab:exemplo_beta}). Com $\beta = 1$, as diferenças passam integralmente: as
+taxas seguem as tolerâncias na proporção exata, como na Tabela~\ref{tab:exemplo_alocacao},
+e a camada 2, cinco vezes mais tolerante que a camada 3, perde cinco vezes mais elementos. Com
+$\beta = 0{,}5$, passam parcialmente: cada tolerância é substituída por sua raiz quadrada, e
+a camada 2 passa a perder 2,24 vezes mais elementos que a camada 3. Com $\beta = 0$, não
+passam: toda tolerância elevada a zero vale 1, todas as camadas recebem a mesma taxa, como na
+alocação uniforme da Etapa 2, e o perfil deixa de ter efeito. Este último caso não foi
+usado como alocação, e sim como verificação, descrita ao final desta subseção.
+
+O parâmetro de intensidade não altera a taxa de poda, que o fator mantém igual à média das
+taxas por camada, nem a ordem das camadas: com qualquer $\beta$ maior que zero, a camada
+mais tolerante continua a ser a mais podada. Ele altera apenas a distribuição da poda entre
+as camadas. Na Tabela~\ref{tab:exemplo_beta}, a passagem de $\beta = 1$ para
+$\beta = 0{,}5$ retira 9,7 pontos percentuais da camada 2, a mais tolerante, e acrescenta 8
+pontos percentuais à camada 3, a mais sensível. O efeito se assemelha ao do controle de
+contraste de uma imagem: reduzi-lo aproxima os tons entre si sem inverter a ordem do mais
+claro ao mais escuro, e anulá-lo deixa a imagem com um único tom.
 
 \begin{table}[htb]
 \centering
@@ -1143,6 +1165,33 @@ $\boldsymbol{\beta}$ & \textbf{Fator} & \textbf{Camada 1} & \textbf{Camada 2} &
 \end{tabular}
 \end{table}
 
+Sem o parâmetro de intensidade, a regra equivaleria a fixar $\beta = 1$: a alocação
+seguiria integralmente as diferenças do perfil, quaisquer que fossem, o que traria dois
+problemas. O primeiro é que não há limite para a diferença de tolerância entre duas camadas:
+uma camada que quase não degrada o modelo teria tolerância muito alta e, sem amortecimento,
+concentraria praticamente toda a poda. O segundo é que o perfil é uma medição aproximada.
+Ele é obtido com cada camada podada isoladamente, a uma única taxa-sonda, e a degradação de
+camadas podadas em conjunto supera a soma de suas degradações individuais
+(Seção~\ref{subsec:limitacoes_perfil}). Por isso, o perfil é mais confiável quanto à ordem
+das camadas do que quanto à proporção exata entre elas, e, com $\beta$ fixo em 1, um erro
+nessa proporção passaria inteiro às taxas por camada. Valores de $\beta$ entre 0 e 1
+preservam a ordem medida e atenuam a proporção, e a comparação entre intensidades indica o
+quanto convém confiar nela.
+
+Os experimentos avaliaram $\beta = 1$ e $\beta = 0{,}5$ sobre o mesmo perfil, o que
+permitiu comparar as duas intensidades sem repetir a fase 1, a etapa de maior custo. A
+comparação mostrou que a intensidade adequada depende da estratégia
+(Seção~\ref{subsec:ablacao_beta}). Na poda estruturada, cujo perfil tem razão de 42,9
+entre a degradação da camada mais sensível e a da mais tolerante, $\beta = 1$ obteve
+perplexity menor que $\beta = 0{,}5$ em todas as taxas de poda até 80\%. Na poda por
+magnitude, cuja razão é de 11,3, ocorreu o contrário de 20\% a 50\%, e essa diferença
+decidiu a comparação com a alocação sem análise de sensibilidade. A 40\%, por exemplo, a
+perplexity foi de 57,30 com $\beta = 0{,}5$, de 104,82 com a alocação uniforme, a melhor
+sem análise de sensibilidade nessa taxa, e de 193,83 com $\beta = 1$. Apenas com
+$\beta = 1$, a alocação com análise de sensibilidade teria sido superior à alocação sem ela
+em 5 das 9 taxas de poda da magnitude, e não em 7: a 40\% e a 50\%, teria resultado em
+perplexity maior, e não menor.
+
 Para referência, a regra completa pode ser escrita de forma compacta na
 Equação~\ref{eq:alocacao_dev}:
 
@@ -1153,7 +1202,7 @@ r_{\ell} = \min\!\left(\alpha \cdot \Delta_{\ell}^{-\beta},\ r_{\max}\right),
 \end{equation}
 
 \noindent em que $r_{\ell}$ é a taxa de poda da camada $\ell$; $\Delta_{\ell}$ é a sua
-degradação (Equação~\ref{eq:delta_perfil}), cujo inverso é a robustez; $\alpha$ é o fator;
+degradação (Equação~\ref{eq:delta_perfil}), cujo inverso é a tolerância; $\alpha$ é o fator;
 $\beta$, o parâmetro de intensidade; $r_{\max} = 0{,}95$, o teto; e $s$, a taxa de poda. A
 segunda parte da equação exige que a média das taxas das 12 camadas seja igual à taxa de
 poda. Na implementação, essa média é ponderada pelo número de parâmetros podáveis de cada
@@ -1161,9 +1210,8 @@ camada, o que permite aplicar a regra a modelos com camadas de tamanhos diferent
 GPT-2, cujas camadas têm o mesmo tamanho, ela coincide com a média simples.
 
 O valor $\beta = 0$ também foi avaliado, mas como verificação, e não como alocação
-candidata. Com ele, todas as robustezes passam a valer 1, todas as camadas recebem a mesma
-taxa --- última linha da Tabela~\ref{tab:exemplo_beta} --- e a regra deve reproduzir a
-varredura uniforme da Etapa 2. Se reproduzir, confirma-se que a regra está corretamente
+candidata. Como, com ele, todas as camadas recebem a mesma taxa --- última linha da
+Tabela~\ref{tab:exemplo_beta} ---, a regra deve reproduzir a varredura uniforme da Etapa 2. Se reproduzir, confirma-se que a regra está corretamente
 implementada. Na poda estruturada, a reprodução deve ser exata. Na poda por magnitude, não:
 a regra usa um único limiar para as quatro matrizes de cada camada, enquanto a varredura
 uniforme usa um limiar para cada matriz. As duas removem a mesma fração de cada camada, mas
@@ -1173,9 +1221,9 @@ Seção~\ref{subsec:controle_beta_zero}.
 Por fim, a implementação inclui uma precaução que a equação não mostra. Se a poda de uma
 camada na fase 1 não aumentasse a \textit{perplexity} --- o que pode ocorrer, pois há casos
 em que remover cabeças de atenção a \textit{melhora} \cite{Michel2019} ---, a degradação
-dessa camada seria nula ou negativa, e a robustez, que é o seu inverso, não poderia ser
-calculada. Por isso, no cálculo da robustez, a degradação nunca fica abaixo de um valor
-mínimo positivo, 0,0001, e uma camada nessa situação entra na alocação como a mais robusta.
+dessa camada seria nula ou negativa, e a tolerância, que é o seu inverso, não poderia ser
+calculada. Por isso, no cálculo da tolerância, a degradação nunca fica abaixo de um valor
+mínimo positivo, 0,0001, e uma camada nessa situação entra na alocação como a mais tolerante.
 Nos perfis usados nas alocações, essa precaução não chegou a ser acionada: a menor
 degradação foi de 0,0346, mais de 300 vezes esse valor mínimo.
 
@@ -1364,8 +1412,7 @@ Precisão numérica & mista (FP16 e FP32) \\
 Semente aleatória & 42 \\
 \hline
 \end{tabular}\\
-\textit{Fonte: Elaboração própria, com valores de \texttt{codigo/finetune.py} e de
-\texttt{codigo/resultados/finetune.csv}.}
+\textit{Fonte: Elaboração própria}
 \end{table}
 
 Os gradientes de quatro lotes consecutivos, de quatro blocos cada, foram acumulados antes

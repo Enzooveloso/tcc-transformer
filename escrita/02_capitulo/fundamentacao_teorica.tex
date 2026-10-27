@@ -480,12 +480,15 @@ central: a magnitude é uma propriedade dos pesos, disponível sem custo algum, 
 correlacionada com a importância; a sensibilidade é uma propriedade medida do
 comportamento do modelo, cara de obter, porém direta.
 
+% AJUSTE: 26/10 — "robustas"/"robustez" passam a "tolerantes à poda"/"tolerância" (motivo
+% no comentário da definição, na Metodologia, Seção "O Problema: Quanto Podar em Cada
+% Camada").
 \begin{figure}[htb]
 \centering
 \caption{Duas formas de atingir a mesma taxa de poda, de 30\,\%, nas camadas de uma rede. À
 esquerda, a alocação uniforme, que ignora qualquer medida de importância; à direita, a
 alocação com análise de sensibilidade, que poupa as camadas mais sensíveis e compensa nas mais
-robustas. Ambas removem a mesma fração total de parâmetros: a linha tracejada indica a taxa
+tolerantes à poda. Ambas removem a mesma fração total de parâmetros: a linha tracejada indica a taxa
 de poda do modelo, que é a média das taxas por camada nos dois casos. Figura esquemática.}
 \label{fig:alocacao_sensibilidade}
 \begin{tikzpicture}[font=\scriptsize]
@@ -517,7 +520,7 @@ de poda do modelo, que é a média das taxas por camada nos dois casos. Figura e
          node[right,font=\tiny,black] {30\,\%};
     \draw[-{Stealth},thick] (0.17,{0.05*\h+0.15}) ++(0,0.45) -- ++(0,-0.4);
     \node[above,font=\tiny,align=center] at (0.17,{0.05*\h+0.62}) {camada\\sensível\\poupada};
-    \node[below,align=center] at (1.5,-0.35) {\textbf{com análise de sensibilidade}\\ taxa proporcional à robustez};
+    \node[below,align=center] at (1.5,-0.35) {\textbf{com análise de sensibilidade}\\ taxa proporcional à tolerância};
   \end{scope}
 \end{tikzpicture}
 % \fonte{Elaborada pelo autor.}
@@ -549,7 +552,7 @@ Duas ressalvas conceituais acompanham o método e delimitam o que ele pode ofere
 A primeira é que a sensibilidade medida por ablação de uma camada por vez não captura
 interações entre camadas. A degradação causada por podar duas camadas simultaneamente não
 é, em geral, a soma das degradações individuais, de modo que o perfil deve ser tratado
-como uma \textbf{ordenação relativa de robustez}, e não como um modelo capaz de prever a
+como uma \textbf{ordenação relativa de tolerância à poda}, e não como um modelo capaz de prever a
 qualidade de uma configuração completa. A segunda é que a sensibilidade não é uma
 propriedade absoluta da camada: ela é medida em relação a uma estratégia de poda
 específica, porque remover pesos de menor magnitude e remover cabeças de atenção inteiras

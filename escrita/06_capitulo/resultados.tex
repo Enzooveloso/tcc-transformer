@@ -226,9 +226,12 @@ truncada.}
 \fonte{Elaborada pelo autor.}
 \end{figure}
 
+% AJUSTE: 26/10 — "robusta(s)"/"robustez" passam a "tolerante(s)"/"tolerância" em todo o
+% capítulo (motivo no comentário da definição, na Metodologia). Ficam "Robustez do Perfil
+% à Taxa-Sonda" e "robusto às três", em que a palavra tem o sentido de estabilidade.
 O primeiro resultado confirma a premissa da técnica: a sensibilidade está longe de ser
 uniforme. Sob poda por magnitude, a camada mais frágil degrada o modelo 11,3 vezes mais
-que a mais robusta; sob poda estruturada, 42,9 vezes mais, à taxa-sonda de 50\%. Tratar as
+que a mais tolerante; sob poda estruturada, 42,9 vezes mais, à taxa-sonda de 50\%. Tratar as
 12 camadas como intercambiáveis --- que é exatamente o que a alocação uniforme faz ---
 ignora uma diferença de uma ordem de grandeza no custo de podar cada uma delas.
 
@@ -260,7 +263,7 @@ apresenta $\Delta_{11} = 0{,}663$, quase cinco vezes a mediana das camadas
 intermediárias. O perfil estruturado tem, assim, formato aproximado de ``U'':
 as bordas da pilha são críticas e o miolo é comparativamente barato. Esse
 padrão não se repete na poda por magnitude, cujo perfil decai após um pico
-inicial e mantém as últimas camadas entre as mais robustas.
+inicial e mantém as últimas camadas entre as mais tolerantes.
 
 \subsection{Os Perfis Dependem da Estratégia}\label{subsec:perfis_divergem}
 
@@ -268,9 +271,9 @@ O terceiro resultado tem consequência metodológica direta: os dois perfis
 \textbf{não} são o mesmo. A correlação de postos de Spearman entre eles é
 $\rho = 0{,}50$ --- há concordância, mas parcial. As duas estratégias
 coincidem em eleger a camada 0 como a mais crítica e em considerar as camadas
-1 e 7 entre as mais robustas, e divergem em praticamente todo o resto: a
+1 e 7 entre as mais tolerantes, e divergem em praticamente todo o resto: a
 camada 11 é a segunda mais sensível sob poda estruturada e apenas a oitava sob
-poda por magnitude; a camada 3 é a segunda mais robusta sob magnitude e a
+poda por magnitude; a camada 3 é a segunda mais tolerante sob magnitude e a
 quarta mais sensível sob poda estruturada.
 
 A implicação prática é que não existe um perfil de sensibilidade único do
@@ -288,7 +291,7 @@ global (que decide com base nessas grandezas) acerte em um caso e erre no outro.
 O perfil é um diagnóstico; para virar estratégia, precisa ser convertido em
 uma taxa de poda por camada. Essa conversão é a Equação~\ref{eq:alocacao_dev},
 apresentada na Seção~\ref{subsec:fase2}: a taxa de cada camada é proporcional
-à sua robustez --- o inverso da degradação medida --- elevada ao expoente
+à sua tolerância --- o inverso da degradação medida --- elevada ao expoente
 $\beta$, escalada por um fator único obtido por bisseção de modo que a
 taxa de poda pretendida seja respeitada, e limitada pelo teto $r_{\max} = 0{,}95$.
 Interessa aqui apenas o que ela produz na prática.
@@ -326,7 +329,7 @@ A correlação de postos de Spearman entre as duas sondas é $\rho = 0{,}944$ na
 poda por magnitude e $\rho = 0{,}713$ na poda estruturada. A ordenação é,
 portanto, substancialmente estável --- e os achados que sustentam a estratégia
 otimizada sobrevivem à troca de sonda. Na magnitude, as três camadas mais
-sensíveis (0, 4 e 5) e as três mais robustas (1, 3 e 7) são \textbf{as mesmas}
+sensíveis (0, 4 e 5) e as três mais tolerantes (1, 3 e 7) são \textbf{as mesmas}
 nos dois levantamentos. Na estruturada, a camada 0 e a camada 11 ocupam os dois
 primeiros postos em ambos, de modo que o formato em ``U'' discutido na
 Seção~\ref{subsec:camada_zero} não depende da taxa-sonda; a camada 0 responde
