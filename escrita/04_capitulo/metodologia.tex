@@ -26,6 +26,8 @@ sequenciais:
           medir quanto da degradação causada pela poda pode ser recuperada.
 \end{itemize}
 
+
+
 Cada etapa é descrita aqui de forma genérica: o que nela se faz e os critérios que orientam
 suas decisões. As decisões concretas, o modelo e a base de dados selecionados, as
 configurações de poda e os parâmetros do retreinamento, são apresentadas no
@@ -33,26 +35,39 @@ Capítulo~\ref{chap:desenvolvimento}, organizado nas mesmas quatro etapas, na me
 % AJUSTE: revisão 24/09 — comentário "teve também o uso das métricas para avaliar o
 % modelo" atendido; desde 03/10 as métricas integram a Etapa 1.
 
+\comentariolinha{Remover o texto anterior e adotar o seguinte texto: }
+
+
+
+\adicionarmarcelo{Este capítulo apresenta a metodologia adotada neste trabalho. A Seção~\ref{sec:metodologia_modelo} descreve os procedimentos utilizados para selecionar o modelo de referência, as bases de dados e as métricas empregadas na avaliação dos modelos. A Seção~\ref{sec:metodologia_poda_sem} apresenta as estratégias clássicas de poda aplicadas ao modelo de referência. A Seção~\ref{sec:metodologia_poda_com} descreve a estratégia de poda otimizada proposta neste trabalho, baseada na definição de taxas de poda variáveis para as diferentes camadas do modelo. Por fim, a Seção~\ref{sec:metodologia_finetuning} apresenta a estratégia de retreinamento dos modelos podados, com o objetivo de avaliar em que medida a degradação de desempenho decorrente da poda pode ser revertida. \\ Este capítulo se limita à descrição metodológica das estratégias adotadas, apresentando os procedimentos gerais e os critérios que orientam as decisões. As escolhas específicas de implementação, incluindo o modelo de referência, as bases de dados, as configurações de poda e os parâmetros de retreinamento, são detalhadas no Capítulo~\ref{chap:desenvolvimento}, que segue a mesma estrutura deste capítulo. Essa divisão tem como finalidade distinguir as decisões metodológicas, que definem os procedimentos e critérios da investigação, das decisões de implementação, que especificam como esses procedimentos são concretizados.}
+
 % -------------------------------------------------------
 % AJUSTE: revisão 30/09 — a seção vira a Etapa 1 e reúne as três definições de que a
 % etapa depende: modelo, base de dados (antes na seção de métricas) e métricas (antes a
 % quinta etapa). Abertura segundo o esboço do orientador.
-\section{Etapa 1 --- Modelo Base}\label{sec:metodologia_modelo}
+%\section{Etapa 1 --- Modelo Base}\label{sec:metodologia_modelo}
+\section{Modelo Base, Base de Dados e Métricas}\label{sec:metodologia_modelo}
 % -------------------------------------------------------
 
-Na primeira etapa, seleciona-se o modelo base (\textit{baseline}), a versão
-original de um modelo de linguagem de grande escala (\textit{Large Language Model} ---
-LLM), antes de qualquer processo de poda. O modelo é executado sem nenhuma modificação e
-avaliado sobre uma base de dados, registrando-se métricas de desempenho preditivo, de custo
-computacional e de consumo de energia. Os valores obtidos constituem o referencial de
-comparação de todo o trabalho, as métricas de cada modelo podado nas etapas seguintes são
-comparadas às desse modelo original, o que permite mensurar a perda de desempenho e o
-ganho de eficiência introduzidos pela compressão.
+\adicionarmarcelo{Esta seção apresenta os procedimentos adotados para a seleção do modelo de referência, das bases de dados e das métricas utilizadas na avaliação dos modelos testados. O modelo de referência fornece os valores iniciais das métricas e constitui o ponto de partida para a geração dos modelos podados. As bases de dados são utilizadas para avaliar o desempenho dos modelos, enquanto as métricas permitem quantificar e comparar os resultados obtidos de acordo com os objetivos do trabalho.}
 
-A etapa depende, portanto, de três definições, apresentadas a seguir: o modelo, a base de dados sobre a qual ele é
-avaliado e as métricas registradas.
 
 \subsection{Seleção do Modelo}\label{subsec:metodologia_selecao_modelo}
+
+\st{Na} \adicionarmarcelo{Nesta} primeira etapa, seleciona-se o modelo de referência (\textit{baseline}), \adicionarmarcelo{que é } a versão
+original de um modelo de linguagem de grande escala (\textit{Large Language Model} ---
+LLM), antes de qualquer processo de poda. O modelo é executado \st{sem nenhuma modificação} e
+avaliado sobre uma base de dados, registrando-se métricas de desempenho preditivo, de custo
+computacional e de consumo de energia. Os valores obtidos constituem o referencial de
+comparação de todo o trabalho\st{, as métricas de cada modelo podado nas etapas seguintes são
+comparadas às desse modelo original, o que permite mensurar a perda de desempenho e o
+ganho de eficiência introduzidos pela compressão.} \comentariolinha{Frase risca é boa, mas acho que ficará mais adequada no momento que estiver falando sobre os modelos podados}
+
+\st{A etapa depende, portanto, de três definições, apresentadas a seguir: o modelo, a base de dados sobre a qual ele é
+avaliado e as métricas registradas.}
+
+%TODO Verificar
+%\subsection{Seleção do Modelo}\label{subsec:metodologia_selecao_modelo}
 
 Para a seleção do modelo base, foram adotados os seguintes critérios:
 
@@ -66,6 +81,7 @@ Para a seleção do modelo base, foram adotados os seguintes critérios:
           \cite{HuggingFacePerplexity}. Como indicador complementar de adoção, registra-se para cada
           candidato o número de \textit{downloads} na plataforma Hugging Face
           (Tabela~\ref{tab:candidatos_modelo}).
+    \item \comentariolinha{\textbf{C1 --- Arquitetura:} ser um \textit{Transformer} exclusivamente decodificador, treinado de forma autorregressiva para predizer o próximo \textit{token}. Esse critério delimita a classe arquitetural de interesse, representada por modelos generativos de pesos abertos, como OPT e Llama 2 \cite{Zhang2022,Touvron2023}. Além disso, essa arquitetura deve ser compatível compatível com a métrica \textit{perplexity}.}
     \item \textbf{C2 --- Pesos abertos:} dispor de pesos pré-treinados com \textit{download}
           direto na plataforma que os hospeda, sem exigência de aprovação prévia de acesso,
           sob licença que permita uso acadêmico. O pré-treinamento a partir do zero está
@@ -73,6 +89,7 @@ Para a seleção do modelo base, foram adotados os seguintes critérios:
           texto --- o WebText, empregado no pré-treinamento da família GPT-2, reúne pouco
           mais de 8 milhões de documentos e 40 GB de texto \cite{Radford2019} --- e tem
           custo computacional e energético elevado \cite{Strubell2019}.
+    \item \comentariolinha{\textbf{C2 --- Disponibilidade de pesos pré-treinados:} disponibilização de pesos pré-treinados para \textit{download} direto, sob licença que permita o uso acadêmico. Esse critério dispensa o pré-treinamento dos modelos, atividade fora do escopo deste trabalho devido aos custos computacionais e energéticos envolvidos. A dimensão desses custos é ilustrada pelo pré-treinamento da família GPT-2, que utilizou o WebText, uma base composta por mais de 8 milhões de documentos e aproximadamente 40 GB de texto \cite{Radford2019}, e apresentou elevado custo computacional e energético \cite{Strubell2019}.}
     \item \textbf{C3 --- Viabilidade do \textit{fine-tuning}:} a memória exigida pelo
           \textit{fine-tuning} completo do modelo deve caber na GPU disponível. Como
           estimativa, o treinamento com o otimizador Adam em precisão mista exige, no
