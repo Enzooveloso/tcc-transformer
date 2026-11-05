@@ -8,38 +8,15 @@
 % mesmas etapas numeradas, a Metodologia genérica e o Desenvolvimento concreto. As cinco
 % etapas anteriores passam a quatro: a base de dados e as métricas, antes uma quinta
 % etapa, integram a Etapa 1, onde são aplicadas pela primeira vez.
-Este capítulo apresenta a metodologia adotada neste trabalho, organizada em quatro etapas
-sequenciais:
-
-\begin{itemize}
-    \item \textbf{Etapa 1 --- Modelo Base} (Seção~\ref{sec:metodologia_modelo}):
-          seleção do modelo base e da base de dados sobre a qual ele é avaliado,
-          e definição das métricas registradas para esse modelo e para todos os modelos
-          podados;
-    \item \textbf{Etapa 2 --- Poda sem Otimização} (Seção~\ref{sec:metodologia_poda_sem}):
-          aplicação de estratégias clássicas de poda ao modelo base;
-    \item \textbf{Etapa 3 --- Poda com Otimização} (Seção~\ref{sec:metodologia_poda_com}):
-          aplicação das mesmas estratégias combinadas a uma técnica de otimização, que
-          redistribui a poda entre as camadas do modelo;
-    \item \textbf{Etapa 4 --- \textit{Fine-tuning} de Recuperação}
-          (Seção~\ref{sec:metodologia_finetuning}): retreinamento dos modelos podados, para
-          medir quanto da degradação causada pela poda pode ser recuperada.
-\end{itemize}
-
-
-
-Cada etapa é descrita aqui de forma genérica: o que nela se faz e os critérios que orientam
-suas decisões. As decisões concretas, o modelo e a base de dados selecionados, as
-configurações de poda e os parâmetros do retreinamento, são apresentadas no
-Capítulo~\ref{chap:desenvolvimento}, organizado nas mesmas quatro etapas, na mesma ordem.
 % AJUSTE: revisão 24/09 — comentário "teve também o uso das métricas para avaliar o
 % modelo" atendido; desde 03/10 as métricas integram a Etapa 1.
+% AJUSTE: 31/10 — revisão do orientador (29/10): "Remover o texto anterior e adotar o
+% seguinte texto". A abertura antiga (lista das quatro etapas e parágrafo sobre a divisão
+% entre Metodologia e Desenvolvimento) sai; entra o texto proposto por ele, que apresenta
+% o capítulo seção a seção. O "\\" do texto dele virou quebra de parágrafo.
+Este capítulo apresenta a metodologia adotada neste trabalho. A Seção~\ref{sec:metodologia_modelo} descreve os procedimentos utilizados para selecionar o modelo de referência, as bases de dados e as métricas empregadas na avaliação dos modelos. A Seção~\ref{sec:metodologia_poda_sem} apresenta as estratégias clássicas de poda aplicadas ao modelo de referência. A Seção~\ref{sec:metodologia_poda_com} descreve a estratégia de poda otimizada proposta neste trabalho, baseada na definição de taxas de poda variáveis para as diferentes camadas do modelo. Por fim, a Seção~\ref{sec:metodologia_finetuning} apresenta a estratégia de retreinamento dos modelos podados, com o objetivo de avaliar em que medida a degradação de desempenho decorrente da poda pode ser revertida.
 
-\comentariolinha{Remover o texto anterior e adotar o seguinte texto: }
-
-
-
-\adicionarmarcelo{Este capítulo apresenta a metodologia adotada neste trabalho. A Seção~\ref{sec:metodologia_modelo} descreve os procedimentos utilizados para selecionar o modelo de referência, as bases de dados e as métricas empregadas na avaliação dos modelos. A Seção~\ref{sec:metodologia_poda_sem} apresenta as estratégias clássicas de poda aplicadas ao modelo de referência. A Seção~\ref{sec:metodologia_poda_com} descreve a estratégia de poda otimizada proposta neste trabalho, baseada na definição de taxas de poda variáveis para as diferentes camadas do modelo. Por fim, a Seção~\ref{sec:metodologia_finetuning} apresenta a estratégia de retreinamento dos modelos podados, com o objetivo de avaliar em que medida a degradação de desempenho decorrente da poda pode ser revertida. \\ Este capítulo se limita à descrição metodológica das estratégias adotadas, apresentando os procedimentos gerais e os critérios que orientam as decisões. As escolhas específicas de implementação, incluindo o modelo de referência, as bases de dados, as configurações de poda e os parâmetros de retreinamento, são detalhadas no Capítulo~\ref{chap:desenvolvimento}, que segue a mesma estrutura deste capítulo. Essa divisão tem como finalidade distinguir as decisões metodológicas, que definem os procedimentos e critérios da investigação, das decisões de implementação, que especificam como esses procedimentos são concretizados.}
+Este capítulo se limita à descrição metodológica das estratégias adotadas, apresentando os procedimentos gerais e os critérios que orientam as decisões. As escolhas específicas de implementação, incluindo o modelo de referência, as bases de dados, as configurações de poda e os parâmetros de retreinamento, são detalhadas no Capítulo~\ref{chap:desenvolvimento}, que segue a mesma estrutura deste capítulo. Essa divisão tem como finalidade distinguir as decisões metodológicas, que definem os procedimentos e critérios da investigação, das decisões de implementação, que especificam como esses procedimentos são concretizados.
 
 % -------------------------------------------------------
 % AJUSTE: revisão 30/09 — a seção vira a Etapa 1 e reúne as três definições de que a
@@ -49,47 +26,50 @@ Capítulo~\ref{chap:desenvolvimento}, organizado nas mesmas quatro etapas, na me
 \section{Modelo Base, Base de Dados e Métricas}\label{sec:metodologia_modelo}
 % -------------------------------------------------------
 
-\adicionarmarcelo{Esta seção apresenta os procedimentos adotados para a seleção do modelo de referência, das bases de dados e das métricas utilizadas na avaliação dos modelos testados. O modelo de referência fornece os valores iniciais das métricas e constitui o ponto de partida para a geração dos modelos podados. As bases de dados são utilizadas para avaliar o desempenho dos modelos, enquanto as métricas permitem quantificar e comparar os resultados obtidos de acordo com os objetivos do trabalho.}
-
+% AJUSTE: 31/10 — abertura da seção escrita pelo orientador (revisão de 29/10).
+Esta seção apresenta os procedimentos adotados para a seleção do modelo de referência, das bases de dados e das métricas utilizadas na avaliação dos modelos testados. O modelo de referência fornece os valores iniciais das métricas e constitui o ponto de partida para a geração dos modelos podados. As bases de dados são utilizadas para avaliar o desempenho dos modelos, enquanto as métricas permitem quantificar e comparar os resultados obtidos de acordo com os objetivos do trabalho.
 
 \subsection{Seleção do Modelo}\label{subsec:metodologia_selecao_modelo}
 
-\st{Na} \adicionarmarcelo{Nesta} primeira etapa, seleciona-se o modelo de referência (\textit{baseline}), \adicionarmarcelo{que é } a versão
+% AJUSTE: 31/10 — revisão do orientador (29/10): "Na" → "Nesta", "que é" inserido; saem
+% "sem nenhuma modificação" e a frase que anunciava as três definições da etapa. A frase
+% sobre a comparação dos modelos podados com o modelo base sai daqui ("ficará mais
+% adequada no momento que estiver falando sobre os modelos podados") e passa para a
+% abertura da Etapa 2 (sec:metodologia_poda_sem), onde os modelos podados aparecem.
+Nesta primeira etapa, seleciona-se o modelo de referência (\textit{baseline}), que é a versão
 original de um modelo de linguagem de grande escala (\textit{Large Language Model} ---
-LLM), antes de qualquer processo de poda. O modelo é executado \st{sem nenhuma modificação} e
+LLM), antes de qualquer processo de poda. O modelo é executado e
 avaliado sobre uma base de dados, registrando-se métricas de desempenho preditivo, de custo
 computacional e de consumo de energia. Os valores obtidos constituem o referencial de
-comparação de todo o trabalho\st{, as métricas de cada modelo podado nas etapas seguintes são
-comparadas às desse modelo original, o que permite mensurar a perda de desempenho e o
-ganho de eficiência introduzidos pela compressão.} \comentariolinha{Frase risca é boa, mas acho que ficará mais adequada no momento que estiver falando sobre os modelos podados}
-
-\st{A etapa depende, portanto, de três definições, apresentadas a seguir: o modelo, a base de dados sobre a qual ele é
-avaliado e as métricas registradas.}
+comparação de todo o trabalho.
 
 %TODO Verificar
 %\subsection{Seleção do Modelo}\label{subsec:metodologia_selecao_modelo}
 
 Para a seleção do modelo base, foram adotados os seguintes critérios:
 
+% AJUSTE: 31/10 — revisão do orientador (29/10): C1 e C2 substituídos pelas versões que
+% ele escreveu (em vermelho, abaixo das originais); corrigido o "compatível compatível"
+% repetido. Saem com as versões antigas: a referência à Seção subsec:llm_gpt2, a citação
+% HuggingFacePerplexity, a frase do número de downloads como indicador complementar de
+% adoção (a coluna Downl. da Tabela tab:candidatos_modelo continua no Desenvolvimento) e
+% o "sem exigência de aprovação prévia de acesso" do C2 (a exclusão do Llama 2 por C2, no
+% Desenvolvimento, fica apoiada em "download direto").
 \begin{itemize}
-    \item \textbf{C1 --- Arquitetura:} ser um \textit{Transformer} composto apenas pelo
-          componente decodificador, treinado de forma autorregressiva para a predição do
-          próximo \textit{token} (Seção~\ref{subsec:llm_gpt2}). A representatividade é
-          definida pela classe arquitetural: a mesma de modelos generativos de pesos
-          abertos como OPT e Llama 2 \cite{Zhang2022,Touvron2023}, e a classe para a qual
-          a \textit{perplexity} é diretamente definida como métrica de desempenho
-          \cite{HuggingFacePerplexity}. Como indicador complementar de adoção, registra-se para cada
-          candidato o número de \textit{downloads} na plataforma Hugging Face
-          (Tabela~\ref{tab:candidatos_modelo}).
-    \item \comentariolinha{\textbf{C1 --- Arquitetura:} ser um \textit{Transformer} exclusivamente decodificador, treinado de forma autorregressiva para predizer o próximo \textit{token}. Esse critério delimita a classe arquitetural de interesse, representada por modelos generativos de pesos abertos, como OPT e Llama 2 \cite{Zhang2022,Touvron2023}. Além disso, essa arquitetura deve ser compatível compatível com a métrica \textit{perplexity}.}
-    \item \textbf{C2 --- Pesos abertos:} dispor de pesos pré-treinados com \textit{download}
-          direto na plataforma que os hospeda, sem exigência de aprovação prévia de acesso,
-          sob licença que permita uso acadêmico. O pré-treinamento a partir do zero está
-          fora do alcance deste trabalho: exige bases de dados da ordem de dezenas de gigabytes de
-          texto --- o WebText, empregado no pré-treinamento da família GPT-2, reúne pouco
-          mais de 8 milhões de documentos e 40 GB de texto \cite{Radford2019} --- e tem
-          custo computacional e energético elevado \cite{Strubell2019}.
-    \item \comentariolinha{\textbf{C2 --- Disponibilidade de pesos pré-treinados:} disponibilização de pesos pré-treinados para \textit{download} direto, sob licença que permita o uso acadêmico. Esse critério dispensa o pré-treinamento dos modelos, atividade fora do escopo deste trabalho devido aos custos computacionais e energéticos envolvidos. A dimensão desses custos é ilustrada pelo pré-treinamento da família GPT-2, que utilizou o WebText, uma base composta por mais de 8 milhões de documentos e aproximadamente 40 GB de texto \cite{Radford2019}, e apresentou elevado custo computacional e energético \cite{Strubell2019}.}
+    \item \textbf{C1 --- Arquitetura:} ser um \textit{Transformer} exclusivamente
+          decodificador, treinado de forma autorregressiva para predizer o próximo
+          \textit{token}. Esse critério delimita a classe arquitetural de interesse,
+          representada por modelos generativos de pesos abertos, como OPT e Llama 2
+          \cite{Zhang2022,Touvron2023}. Além disso, essa arquitetura deve ser compatível
+          com a métrica \textit{perplexity}.
+    \item \textbf{C2 --- Disponibilidade de pesos pré-treinados:} disponibilização de pesos
+          pré-treinados para \textit{download} direto, sob licença que permita o uso
+          acadêmico. Esse critério dispensa o pré-treinamento dos modelos, atividade fora do
+          escopo deste trabalho devido aos custos computacionais e energéticos envolvidos. A
+          dimensão desses custos é ilustrada pelo pré-treinamento da família GPT-2, que
+          utilizou o WebText, uma base composta por mais de 8 milhões de documentos e
+          aproximadamente 40 GB de texto \cite{Radford2019}, e apresentou elevado custo
+          computacional e energético \cite{Strubell2019}.
     \item \textbf{C3 --- Viabilidade do \textit{fine-tuning}:} a memória exigida pelo
           \textit{fine-tuning} completo do modelo deve caber na GPU disponível. Como
           estimativa, o treinamento com o otimizador Adam em precisão mista exige, no
@@ -124,8 +104,11 @@ vez, do modelo. Por essa razão, modelo e base de dados são selecionados em con
 par formado por modelo e base de dados é admissível quando o modelo atende a C1--C6 e a 
 base de dados atende a D1--D4 em relação a esse modelo.
 
+% AJUSTE: 30/10 — primeira menção a "varredura", definida adiante (subsec:metodologia_taxas);
+% ganha a referência.
 Havendo mais de um candidato que atenda simultaneamente a todos os critérios, adota-se o
-de menor número de parâmetros: as varreduras experimentais deste trabalho exigem um grande
+de menor número de parâmetros: as varreduras experimentais deste trabalho
+(Seção~\ref{subsec:metodologia_taxas}) exigem um grande
 número de avaliações completas do modelo, e o custo computacional de cada avaliação cresce
 com o tamanho do modelo. A aplicação desses critérios a um conjunto de modelos candidatos é
 apresentada no Capítulo~\ref{chap:desenvolvimento} (Tabela~\ref{tab:candidatos_modelo}).
@@ -172,10 +155,13 @@ Capítulo~\ref{chap:desenvolvimento} (Tabela~\ref{tab:candidatos_dataset}).
 
 % AJUSTE: reunião 13/05 — reescrita completa da Seção 3.4 (métricas explicadas em detalhe)
 % AJUSTE: revisão 30/09 — deixa de ser a quinta etapa e passa a integrar a Etapa 1.
+% AJUSTE: 04/11 — a pedido do Enzo, a dimensão "impacto ambiental" passa a "consumo de
+% energia": os indicadores de comparação usam só a energia e nenhum resultado usa as
+% emissões de CO2. A razão está na subseção "Consumo de energia", abaixo.
 \subsection{Métricas de Avaliação}\label{sec:metodologia_metricas}
 
 \adicionadomarcelo{As métricas de avaliação são organizadas em três dimensões: desempenho preditivo, custo
-computacional e impacto ambiental. Elas são registradas pelo mesmo procedimento, e sobre a
+computacional e consumo de energia. Elas são registradas pelo mesmo procedimento, e sobre a
 mesma base de dados, para o modelo base e para cada modelo podado nas Etapas 2 a
 4. Para cada métrica, descreve-se o que ela representa e
 como é obtida operacionalmente.
@@ -227,30 +213,43 @@ O custo computacional é avaliado por meio de quatro indicadores complementares:
 % durante a inferência, por profiling), que o experimento não mediu: codigo/eval.py
 % (model_size_mb) soma os bytes dos parâmetros, como na Tabela~tab:metricas.
 
-\subsubsection*{Impacto ambiental}
+\subsubsection*{Consumo de energia}
 
-O impacto ambiental é mensurado por meio de dois indicadores:
-
-\begin{itemize}
 % AJUSTE: 05/10 — os nomes das ferramentas (thop, profiling do PyTorch, CodeCarbon)
 % saem da Metodologia, segundo o esboço do orientador; constam da Tabela~tab:metricas e
 % da Seção sec:framework (Desenvolvimento).
-    \item \textbf{Consumo energético:} estimado por meio de ferramentas de monitoramento do
-          uso de \textit{hardware} (CPU e GPU), que integram leituras periódicas do consumo
-          elétrico dos componentes e registram a energia total consumida (em kWh) durante
-          o intervalo de inferência;
+% AJUSTE: 04/11 — a pedido do Enzo, a lista de dois indicadores dá lugar a uma única
+% métrica, a energia, seguida da razão de as emissões não serem adotadas. Texto anterior:
+% O impacto ambiental é mensurado por meio de dois indicadores:
+% \begin{itemize}
+%     \item \textbf{Consumo energético:} estimado por meio de ferramentas de monitoramento do
+%           uso de \textit{hardware} (CPU e GPU), que integram leituras periódicas do consumo
+%           elétrico dos componentes e registram a energia total consumida (em kWh) durante
+%           o intervalo de inferência;
+%     \item \textbf{Emissões equivalentes de CO\textsubscript{2}:} calculadas a partir do
+%           consumo energético registrado, multiplicado por um fator de intensidade carbônica
+%           da matriz energética da região onde os experimentos são executados. As mesmas
+%           ferramentas de monitoramento mantêm bases desses fatores e realizam essa
+%           conversão automaticamente.
+%           Cabe uma ressalva sobre o alcance desse indicador: como o fator de intensidade
+%           carbônica depende da localidade em que o código executa, ele não é controlado pelo
+%           experimento e pode variar entre execuções. As emissões devem, por isso, ser lidas
+%           como aproximações de ordem de grandeza, e a comparação entre configurações
+%           apoia-se no consumo energético, não nas emissões dele derivadas.
+% \end{itemize}
+O consumo de energia é estimado por meio de ferramentas de monitoramento do uso de
+\textit{hardware} (CPU e GPU), que integram leituras periódicas do consumo elétrico dos
+componentes e registram a energia total consumida (em kWh) durante o intervalo de
+inferência.
 
-    \item \textbf{Emissões equivalentes de CO\textsubscript{2}:} calculadas a partir do
-          consumo energético registrado, multiplicado por um fator de intensidade carbônica
-          da matriz energética da região onde os experimentos são executados. As mesmas
-          ferramentas de monitoramento mantêm bases desses fatores e realizam essa
-          conversão automaticamente.
-          Cabe uma ressalva sobre o alcance desse indicador: como o fator de intensidade
-          carbônica depende da localidade em que o código executa, ele não é controlado pelo
-          experimento e pode variar entre execuções. As emissões devem, por isso, ser lidas
-          como aproximações de ordem de grandeza, e a comparação entre configurações
-          apoia-se no consumo energético, não nas emissões dele derivadas.
-\end{itemize}
+As emissões equivalentes de CO\textsubscript{2} não são adotadas como métrica, pois não
+acrescentam informação à comparação entre os modelos. Essas emissões resultam da
+multiplicação da energia consumida por um fator de intensidade carbônica, que indica quanto
+CO\textsubscript{2} é emitido para gerar cada kWh na rede elétrica do local de execução e
+não é controlado pelo experimento. Quando o fator é o mesmo, a redução relativa das emissões
+coincide com a redução relativa de energia: se a poda reduz o consumo em 10\%, as emissões
+também diminuem 10\%. Quando os fatores diferem, a comparação deixa de refletir o modelo: um
+mesmo consumo de energia resulta em emissões diferentes apenas porque a rede elétrica mudou.
 
 % AJUSTE: revisão 30/09 — esboço do orientador (Etapas 1 e 2 da Metodologia e do
 % Desenvolvimento) incorporado às aberturas das etapas nos dois capítulos; o \comentline
@@ -301,8 +300,13 @@ em que $\text{PPL}$ e $\text{PPL}_0$ são as \textit{perplexities} do modelo pod
 modelo base. O modelo base tem $\eta = 1$; valores acima de 1 indicam
 mais desempenho preditivo por unidade de energia do que ele. Como usa apenas razões, o
 indicador respeita a restrição de comparar a energia em termos relativos. Quando a
-diferença de energia está abaixo do ruído de medição, porém, $\eta$ passa a refletir só a
-\textit{perplexity} e esse ruído.
+diferença de energia está abaixo do limiar de detecção do protocolo
+(Seção~\ref{sec:res_custo}), porém, $\eta$ passa a refletir só a \textit{perplexity} e
+variações abaixo desse limiar.
+% AJUSTE: 04/11 — a pedido do Enzo, "ruído de medição" passa a "limiar de detecção", com
+% referência à seção que o define. O limiar segue definido nos Resultados, e não aqui, porque
+% saiu dos resultados da poda por magnitude. Texto anterior: "abaixo do ruído de medição,
+% porém, $\eta$ passa a refletir só a \textit{perplexity} e esse ruído."
 
 \textbf{Ponto de eficiência ($S^*_E$):} maior taxa de poda cuja \textit{perplexity} não
 excede em mais de 5\% a do modelo base:
@@ -338,7 +342,12 @@ nenhuma técnica de otimização. Cada estratégia, em cada taxa de poda avaliad
 de forma independente e sempre a partir do modelo base original, nunca de um
 modelo já podado, de modo que o resultado de uma configuração não dependa das anteriores.
 Os modelos podados são avaliados pelas mesmas métricas e sobre a mesma base de dados da
-Etapa 1 (Seção~\ref{sec:metodologia_modelo}).
+Etapa 1 (Seção~\ref{sec:metodologia_modelo}). As métricas de cada modelo podado, nesta e
+nas etapas seguintes, são comparadas às do modelo base, o que permite mensurar a perda de
+desempenho e o ganho de eficiência introduzidos pela compressão.
+% AJUSTE: 31/10 — frase trazida da Seleção do Modelo a pedido do orientador (revisão de
+% 29/10); "nas etapas seguintes" virou "nesta e nas etapas seguintes" e "desse modelo
+% original" virou "do modelo base", para fazer sentido no novo lugar.
 
 % AJUSTE: reunião 13/05 — duas estratégias (magnitude + estruturada), "avaliadas" em vez de "consideradas"
 % AJUSTE: 05/10 — segundo o esboço do orientador (revisão 30/09), a Metodologia não
@@ -355,16 +364,188 @@ menor pontuação são removidos até que se atinja a taxa de poda pretendida.
 % AJUSTE: 12/10 — reunião com o orientador: "alocação", "uniforme" e "global" só eram
 % apresentadas no Desenvolvimento (Seção subsec:escopos), e a Etapa 3 as usava sem
 % defini-las. Passam a ser introduzidas aqui, de forma genérica, sem nomear as estratégias.
+% AJUSTE: 30/10 — pedido do orientador: a alocação "global" passa a chamar-se "não
+% uniforme" em todo o texto; a definição (uma única ordenação de todo o modelo) não muda.
 A \textbf{taxa de poda} é a fração dos elementos podáveis do modelo --- pesos ou
 estruturas, conforme a estratégia --- que é removida, como 30\% ou 50\%. O critério de
 importância pode ser aplicado de duas formas, que decidem quanto sai de cada camada. Na
 \textbf{alocação uniforme}, cada camada perde a mesma fração, e o critério decide, dentro de
-cada uma, quais elementos saem. Na \textbf{alocação global}, uma única ordenação de todos os
+cada uma, quais elementos saem. Na \textbf{alocação não uniforme}, uma única ordenação de todos os
 elementos do modelo decide o que sai, de modo que as camadas cujos elementos têm pontuação
 mais baixa perdem mais. Como ambas se baseiam apenas em pontuações calculadas a partir dos
 pesos, nenhuma mede o efeito da remoção sobre o desempenho do modelo; essa questão é tratada na
 Etapa~3 (Seção~\ref{sec:metodologia_poda_com}). A implementação das duas alocações é
 apresentada no Capítulo~\ref{chap:desenvolvimento} (Seção~\ref{subsec:escopos}).
+
+% AJUSTE: 30/10 — reunião com o orientador: a explicação dos parâmetros podáveis era uma
+% subseção do Desenvolvimento (subsec:parametros_podaveis), entre a seleção das
+% estratégias e a explicação de cada uma, onde quebrava a sequência seleção → métodos. O
+% orientador a considerou uma questão metodológica: vale para qualquer modelo
+% Transformer e para qualquer estratégia de poda, pois a taxa de poda não é absoluta, é
+% relativa aos parâmetros podáveis. Entra logo depois da definição da taxa de poda, de
+% forma genérica e com o GPT-2 small apenas como exemplo (permitido por ele), sem nomes de
+% módulos nem outros detalhes de implementação, que ficam no Desenvolvimento (Seção
+% subsec:metodo_magnitude e Figura fig:parametros_podaveis). Correção na mudança: o
+% texto antigo dizia que os vieses "não participam da seleção", mas head_importances e
+% mlp_importances (prune_structured.py) somam os vieses de c_attn e de c_fc à norma L1;
+% a frase sai.
+% Números do exemplo: podáveis = 12 x (768x2.304 + 768x768 + 768x3.072 + 3.072x768) =
+% 84.934.656 pesos (85.017.600 com os vieses das mesmas projeções), 68,3% de 124.439.808;
+% wte + wpe = 39.383.808 (31,6%); vieses + LayerNorm = 82.944 + 38.400 = 121.344 (0,098%).
+% Taxa de 50%: 42.467.328 pesos, 34,1% do total (Tabela tab:custo: 124,4 M -> 82,0 M não
+% nulos); 50% de 124,4 M seriam 62,2 M.
+% Histórico trazido do Desenvolvimento:
+% AJUSTE: 21/10 — (i) a "convenção consolidada na literatura" ganha referência: SparseGPT
+% (Frantar2023, Seç. 4: "prune all linear layers, excluding the embeddings and the head, as
+% standard") e Wanda (Sun2024, Seç. 4: "skipping the first embedding layer and the final
+% classification head"); (ii) "parcela expressiva" dos embeddings vira número: wte + wpe =
+% 39.383.808 de 124.439.808 parâmetros (31,6%).
+% AJUSTE: 24/10 — os três itens excluídos diziam o que cada componente é, mas não por que
+% fica fora da poda. Cada item ganha a razão: (i) embeddings são consulta a tabela, sem
+% multiplicação de matrizes, e não contêm cabeças nem neurônios; (ii) lm_head é o mesmo
+% tensor de wte (weight tying), custa 39,52 GFLOPs (decomposição de 21/10) e podá-la
+% espalharia o efeito pela entrada e pela saída, o que quebra a atribuição por camada;
+% (iii) vieses + LayerNorm = 82.944 + 38.400 = 121.344 parâmetros (0,098% de 124.439.808),
+% LayerNorm 0,08 GFLOPs; sensibilidade ancorada em Kovaleva2021 (Findings ACL 2021, que
+% inclui GPT-2). "Numericamente baratos e desproporcionalmente sensíveis" sai por ser vago.
+\subsection{Parâmetros Podáveis e Não Podáveis}\label{subsec:metodologia_podaveis}
+
+A taxa de poda não é absoluta: ela é relativa aos \textbf{parâmetros podáveis}, o conjunto
+de parâmetros que as estratégias de poda podem remover, e não ao total de parâmetros do
+modelo. Os demais, denominados \textbf{não podáveis}, permanecem intactos em todas as
+configurações, qualquer que seja a estratégia ou a taxa de poda.
+
+Em modelos baseados na arquitetura \textit{Transformer}, adotam-se como podáveis, por
+convenção consolidada na literatura de poda de LLMs \cite{Frantar2023,Sun2024}, apenas as
+matrizes de peso das projeções lineares internas às camadas: as da atenção multi-cabeça,
+que produzem a consulta, a chave e o valor e projetam a saída das cabeças
+(Seção~\ref{subsec:autoatencao}), e as das duas transformações lineares do MLP
+(Seção~\ref{subsec:bloco_transformer}). É sobre essas matrizes que incidem as
+multiplicações de matriz das camadas, responsáveis pela maior parte do custo de inferência
+--- no GPT-2 \textit{small}, por exemplo, 87,0 dos 126,6 GFLOPs do modelo
+(Seção~\ref{subsec:metrica_custo}). Nelas estão também os elementos podáveis da definição
+de taxa de poda: os pesos individuais são valores dessas matrizes, e as estruturas, como as
+cabeças de atenção e os neurônios do MLP, são fatias delas.
+
+Ficam fora do conjunto podável os demais parâmetros, cada grupo por uma razão própria:
+
+\begin{itemize}
+    \item as matrizes de \textit{embedding} de \textit{token} e de posição
+          (Seção~\ref{subsec:llm_gpt2}). Seu uso não envolve multiplicação de matrizes: a
+          cada \textit{token}, o modelo apenas copia as linhas correspondentes ao
+          \textit{token} e à sua posição. Anular valores dessas matrizes reduziria o
+          armazenamento, mas não o custo computacional, cuja redução é o objetivo deste
+          trabalho. Elas tampouco contêm cabeças de atenção ou neurônios do MLP: remover
+          uma linha eliminaria um \textit{token} do vocabulário ou uma posição da
+          sequência, e remover uma coluna alteraria a dimensão das representações, que é a
+          dimensão de entrada e de saída de todas as camadas;
+    \item a cabeça de linguagem, matriz que converte a representação entregue pela última
+          camada em uma pontuação para cada \textit{token} do vocabulário. Diferentemente
+          dos \textit{embeddings}, ela efetua multiplicação de matrizes, mas também não
+          contém as unidades da poda estruturada: cada uma de suas linhas corresponde a um
+          \textit{token}. Além disso, em modelos que reutilizam na cabeça a matriz de
+          \textit{embedding} de \textit{token}, como o GPT-2, um peso anulado na cabeça
+          seria anulado também no \textit{embedding}, e a poda alteraria simultaneamente a
+          entrada e a saída do modelo, o que impediria atribuir seu efeito a uma única
+          camada, premissa da análise de sensibilidade por camada
+          (Seção~\ref{sec:metodologia_poda_com});
+    \item os vieses e os parâmetros de normalização de camada. São uma fração ínfima do
+          modelo --- menos de 0,1\% no GPT-2 \textit{small} --- e efetuam apenas somas e
+          produtos elemento a elemento, de custo desprezível diante das multiplicações de
+          matriz: mesmo eliminados por inteiro, não reduziriam o custo de forma
+          mensurável. O risco, em contrapartida, é alto: um parâmetro de normalização
+          multiplica uma dimensão inteira da representação que entra na atenção ou no MLP,
+          enquanto um peso de matriz é apenas uma entre centenas ou milhares de parcelas de
+          uma soma. \citeonline{Kovaleva2021} mostraram que anular os parâmetros de
+          normalização associados a uma única dimensão --- menos de 0,0001\% dos pesos do
+          modelo --- degrada significativamente o desempenho de modelos
+          \textit{Transformer} pré-treinados, efeito também identificado no GPT-2. Os
+          vieses não são removidos isoladamente; na poda estruturada, o viés de uma
+          estrutura removida sai junto com ela.
+\end{itemize}
+
+Como os parâmetros não podáveis permanecem no modelo, a fração do total de parâmetros
+removida é sempre menor que a taxa de poda. No GPT-2 \textit{small}, por exemplo, os
+\textit{embeddings} reúnem 31,6\% dos 124,4 milhões de parâmetros, e o conjunto podável,
+cerca de 85 milhões, 68,3\% do total. Uma taxa de poda de 50\% remove, assim, cerca de 42,5
+milhões de parâmetros, metade do conjunto podável, e não 62,2 milhões, metade do modelo: a
+redução no total de parâmetros é de 34\%, e não de 50\%. Por essa razão, a fração removida
+do conjunto podável e o número de parâmetros remanescentes no modelo inteiro
+(Seção~\ref{sec:metodologia_metricas}) são reportados separadamente.
+
+O conjunto podável é o mesmo para todas as estratégias de poda, o que mantém comparáveis as
+suas taxas: uma taxa de 50\%, em qualquer estratégia, incide sobre as mesmas matrizes. A
+identificação dos parâmetros podáveis no modelo selecionado é apresentada no
+Capítulo~\ref{chap:desenvolvimento} (Seção~\ref{subsec:metodo_magnitude} e
+Figura~\ref{fig:parametros_podaveis}).
+
+% AJUSTE: 30/10 — pedido do Enzo: a explicação das taxas de poda avaliadas, que estava no
+% Desenvolvimento (subsec:taxas), passa para cá. A faixa de 0% a 90%, a definição de
+% varredura, a função da taxa de 0% e a independência entre taxas valem para qualquer
+% estratégia e qualquer alocação, como os parâmetros podáveis. O texto foi reescrito no
+% presente e de forma genérica: as estratégias não são nomeadas ("granularidade fina" e
+% "grossa", como em P3); o GPT-2 entra só como exemplo dos tamanhos de neurônio e cabeça; o
+% resultado da verificação a 0% fica no Desenvolvimento. Acrescentou-se a segunda função
+% da taxa de 0%, que o texto antigo não mencionava: a medição a 0% de cada varredura
+% fornece o E_0 da mesma sessão (gerar_tabelas.py usa esparsidade_alvo == 0 de cada série).
+% Conferido nos CSVs: as 14 varreduras (magnitude: 2; estruturada: 6, com os alvos
+% isolados; sensibilidade: 6, com beta = 1,0, 0,5 e 0) têm as dez taxas, e todas
+% reproduzem a 0% a perplexity 25,170412. O passo de 10 pontos não tem justificativa
+% registrada; não se inventou uma.
+% Histórico trazido do Desenvolvimento:
+% AJUSTE: 24/10 — seção reescrita para ficar mais didática, com os termos do restante do
+% texto: "nível" → "taxa de poda"; "modelo base" → "modelo de referência"; "controle
+% interno" passa a ser explicado; "ponto de colapso" (só aparecia aqui) vira a descrição
+% do que se observa, com exemplo dos CSVs (magnitude global 26,87 a 20% e 165,20 a 40%;
+% uniforme 104,82 a 40%; estruturada global 356,20 a 10% = 14x 25,17); "varredura", usada
+% em todo o texto sem definição, é definida aqui; "recarregado do zero" (lia-se como
+% retreinado) vira "a partir do modelo de referência original", como na Metodologia.
+% AJUSTE: 24/10 (2) — pedido do Enzo: o parágrafo não antecipa resultados. Sai o exemplo
+% numérico dos CSVs; a justificativa passa a ser a diferença de granularidade entre as
+% estratégias (neurônio: 768 + 768 = 1.536 pesos; cabeça: 768x192 + 64x768 = 196.608).
+% Termo padronizado em todo o texto: "modelo base" (antes "modelo de referência").
+\subsection{Taxas de Poda Avaliadas}\label{subsec:metodologia_taxas}
+
+Cada estratégia de poda é avaliada, com cada alocação, em dez taxas de poda igualmente
+espaçadas: 0\%, 10\%, 20\% e assim por diante, até 90\%. O conjunto das dez avaliações de
+uma mesma estratégia com uma mesma alocação é denominado, ao longo do texto,
+\textbf{varredura}: as dez avaliações de uma estratégia com a alocação uniforme, por
+exemplo, formam a varredura uniforme dessa estratégia. As alocações com análise de
+sensibilidade da Etapa~3 (Seção~\ref{sec:metodologia_poda_com}) são avaliadas nas mesmas
+taxas, o que permite comparar todas as alocações de uma estratégia taxa a taxa, como prevê
+a Seção~\ref{sec:metodologia_metricas}.
+
+Avalia-se toda a faixa, de 10\% a 90\%, porque não se sabe de antemão a partir de qual taxa
+de poda cada estratégia passa a degradar o modelo de forma acentuada, e não há razão para
+supor que essa taxa seja a mesma em estratégias de granularidades diferentes
+(Seção~\ref{sec:pruning}), que removem elementos de tamanhos muito diferentes. A poda de
+granularidade fina remove pesos individuais; a de granularidade grossa remove estruturas
+inteiras, cada uma formada por muitos pesos --- no GPT-2 \textit{small}, por exemplo, um
+neurônio do MLP reúne 1.536 pesos, e uma cabeça de atenção, 196.608
+(Seção~\ref{subsec:metodo_estruturado}). Avaliar apenas parte da faixa, como somente as
+taxas baixas, poderia deixar de fora justamente a taxa em que a degradação de uma delas se
+acentua.
+
+A taxa de 0\% corresponde ao modelo base, sem nenhuma poda, e é incluída em cada varredura
+com duas funções. A primeira é de verificação: avaliado pelo mesmo procedimento das demais
+taxas, o modelo base deve reproduzir a \textit{perplexity} medida na Etapa~1
+(Seção~\ref{sec:metodologia_modelo}), e uma divergência indicaria erro no procedimento de
+poda ou de avaliação, e não efeito da poda. A segunda é de referência: a energia medida a
+0\% é a energia $E_0$ do modelo base na mesma sessão de execução das demais taxas da
+varredura, contra a qual se calcula a redução relativa de energia
+(Equação~\ref{eq:delta_e}).
+
+Por fim, como estabelecido no início desta seção, cada taxa parte do modelo base original,
+e não do modelo podado na taxa anterior: a configuração de 30\%, por exemplo, é obtida
+removendo 30\% dos elementos podáveis do modelo base, e não acrescentando 20 pontos
+percentuais à poda da configuração de 10\%. A aplicação dessas taxas às estratégias
+selecionadas é apresentada no Capítulo~\ref{chap:desenvolvimento}
+(Seção~\ref{subsec:taxas}).
+
+% AJUSTE: 30/10 — com as subseções acima, o restante da Etapa 2 (papel das estratégias e
+% critérios P1 a P3) passa a ter título próprio, o mesmo da subseção correspondente do
+% Desenvolvimento (subsec:selecao_estrategias). O texto não mudou.
+\subsection{Seleção das Estratégias}\label{subsec:metodologia_selecao_estrategias}
 
 % AJUSTE: revisão 24/09 — comentário "por que essas estratégias, considerando que
 % existem outras opções?" atendido pelos critérios P1--P3 e pela
@@ -426,7 +607,7 @@ compressão \cite{Blalock2020}. Uma estratégia preserva melhor o desempenho pre
 outra converte a compressão em economia efetiva de tempo e de energia. Avaliá-las sob as
 mesmas condições permite medir esse compromisso, que nenhuma das duas revelaria
 isoladamente e que constitui uma das perguntas do trabalho
-(Seção~\ref{sec:visao_geral}).
+(Capítulo~\ref{chap:desenvolvimento}).
 
 % Como indicador complementar de representatividade, registra-se para cada estratégia
 % candidata o número de citações do artigo que a propôs, na base Semantic Scholar. O
@@ -494,14 +675,14 @@ modelo, e \textbf{tolerante} à poda, a que o degrada pouco.
 
 As duas alocações da Etapa~2 (Seção~\ref{sec:metodologia_poda_sem}) têm uma limitação
 comum: nenhuma mede o quanto cada camada é sensível. A uniforme ignora a questão e trata as
-camadas como intercambiáveis. A global a infere dos pesos, o que é uma aproximação, e não
+camadas como intercambiáveis. A não uniforme a infere dos pesos, o que é uma aproximação, e não
 uma medida. A Seção~\ref{subsec:sensibilidade} (Figura~\ref{fig:alocacao_sensibilidade})
 ilustra a diferença entre a alocação uniforme e uma alocação que segue a sensibilidade.
 
 \subsection{Hipótese, Desenho e Critérios de Escolha da Técnica}
 
 A hipótese é a de que podar mais as camadas tolerantes e menos as sensíveis produz, na mesma
-taxa de poda, menor perda de desempenho preditivo do que as alocações uniforme e global.
+taxa de poda, menor perda de desempenho preditivo do que as alocações uniforme e não uniforme.
 Para testá-la, fixa-se a taxa de poda e varia-se apenas a alocação, e os modelos obtidos
 são comparados segundo as métricas e o critério da Seção~\ref{sec:metodologia_metricas}.
 Como a taxa de poda é a mesma, a técnica não busca reduzir o custo, e sim a perda de
@@ -606,7 +787,7 @@ mesmo perfil.}
   % --- entrada e saída ---
   \node[caixa] (tp) at (5.1,-5.4) {\textbf{Taxa de poda}\\ cada valor avaliado};
   \draw[-{Stealth}] (tp.north) -- (f2.south);
-  \node[caixa] (av) at (-5.1,-5.4) {\textbf{Avaliação}\\ comparação com as alocações uniforme e global};
+  \node[caixa] (av) at (-5.1,-5.4) {\textbf{Avaliação}\\ comparação com as alocações uniforme e não uniforme};
   \draw[-{Stealth}] (pod.south) -- (av.north);
 \end{tikzpicture}
 \fonte{Elaboração própria.}
@@ -639,7 +820,7 @@ O procedimento, para uma estratégia de poda e uma taxa de poda dadas, tem cinco
           elementos saem.
     \item \textbf{Avaliar e comparar.} O modelo podado é avaliado pelas métricas da
           Seção~\ref{sec:metodologia_metricas} e comparado aos modelos das alocações
-          uniforme e global, na mesma taxa de poda.
+          uniforme e não uniforme, na mesma taxa de poda.
 \end{enumerate}
 
 Os passos 2 a 5 repetem-se para cada taxa de poda avaliada; só o passo 1 não se repete.
@@ -695,8 +876,8 @@ como a poda se distribui entre as camadas; a taxa de poda decide quanto se remov
 
 As duas alocações da Tabela~\ref{tab:exemplo_alocacao} têm a mesma média e, por isso,
 removem o mesmo número de elementos; diferem apenas nas camadas de onde eles saem. A
-alocação global da Etapa~2 também difere da uniforme, mas suas taxas por camada resultam da
-pontuação dos pesos, e não de uma medida de degradação.
+alocação não uniforme da Etapa~2 também atribui taxas diferentes às camadas, mas elas
+resultam da pontuação dos pesos, e não de uma medida de degradação.
 
 Como cada estratégia de poda remove unidades de natureza distinta --- pesos individuais ou
 estruturas inteiras ---, o perfil é levantado separadamente para cada uma delas.

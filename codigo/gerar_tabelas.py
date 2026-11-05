@@ -83,7 +83,7 @@ CAB_ALOCACOES = [
     r"& \multicolumn{2}{c}{\textbf{Sem análise de sensibilidade}}"
     r" & \multicolumn{2}{c}{\textbf{Com análise de sensibilidade}} \\",
     r"\cmidrule(lr){2-3} \cmidrule(lr){4-5}",
-    r"\textbf{Taxa de poda} & \textbf{Global} & \textbf{Uniforme}"
+    r"\textbf{Taxa de poda} & \textbf{Não uniforme} & \textbf{Uniforme}"
     r" & $\boldsymbol{\beta = 1{,}0}$ & $\boldsymbol{\beta = 0{,}5}$ \\",
 ]
 
@@ -130,9 +130,12 @@ linhas += [r"\bottomrule", r"\end{tabular}"]
 escrever("custo", linhas)
 
 # ---------------------------------------------------------------- energia (ΔE)
-ROTULO = {"global": "Global", "uniforme": "Uniforme",
+# A alocação "global" do código aparece no texto como "não uniforme" (orientador, 30/10/2026).
+ROTULO = {"global": "Não uniforme", "uniforme": "Uniforme",
           "b1": r"$\beta = 1{,}0$", "b05": r"$\beta = 0{,}5$"}
-linhas = [r"\begin{tabular}{p{2.8cm} l " + "r" * 9 + "}", r"\toprule",
+# Espaçamento menor: com o rótulo "Não uniforme", a tabela excedia a margem em 17 pt.
+linhas = [r"\setlength{\tabcolsep}{5pt}",
+          r"\begin{tabular}{p{2.8cm} l " + "r" * 9 + "}", r"\toprule",
           r"& & \multicolumn{9}{c}{\textbf{Taxa de poda}} \\", r"\cmidrule(lr){3-11}",
           r"\textbf{Análise} & \textbf{Alocação} & " + " & ".join(pct(t) for t in TAXAS[1:]) + r" \\"]
 for estrategia, nome in (("mag", "Poda não estruturada --- poda por magnitude"),
@@ -232,7 +235,7 @@ def ponto_eficiencia(s):
     return pct(melhor) if melhor else "---"
 
 
-NOME_ALOC = {"global": "Sem análise de sensibilidade --- global",
+NOME_ALOC = {"global": "Sem análise de sensibilidade --- não uniforme",
              "uniforme": "Sem análise de sensibilidade --- uniforme",
              "b1": r"Com análise de sensibilidade --- $\beta = 1{,}0$",
              "b05": r"Com análise de sensibilidade --- $\beta = 0{,}5$"}
