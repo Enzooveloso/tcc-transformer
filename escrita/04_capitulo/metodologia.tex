@@ -81,7 +81,6 @@ Para a seleção do modelo base, foram adotados os seguintes critérios:
           \cite{HuggingFacePerplexity}. Como indicador complementar de adoção, registra-se para cada
           candidato o número de \textit{downloads} na plataforma Hugging Face
           (Tabela~\ref{tab:candidatos_modelo}).
-    \item \comentariolinha{\textbf{C1 --- Arquitetura:} ser um \textit{Transformer} exclusivamente decodificador, treinado de forma autorregressiva para predizer o próximo \textit{token}. Esse critério delimita a classe arquitetural de interesse, representada por modelos generativos de pesos abertos, como OPT e Llama 2 \cite{Zhang2022,Touvron2023}. Além disso, essa arquitetura deve ser compatível compatível com a métrica \textit{perplexity}.}
     \item \textbf{C2 --- Pesos abertos:} dispor de pesos pré-treinados com \textit{download}
           direto na plataforma que os hospeda, sem exigência de aprovação prévia de acesso,
           sob licença que permita uso acadêmico. O pré-treinamento a partir do zero está
@@ -100,17 +99,22 @@ Para a seleção do modelo base, foram adotados os seguintes critérios:
           disponibilizada pela plataforma Kaggle ---, o critério restringe os candidatos a
           modelos de até cerca de 1 bilhão de parâmetros (16 GB $\div$ 16 bytes por parâmetro);
           como a estimativa não inclui as ativações, o limite prático é inferior.
+    ```latex
+    \item \comentariolinha{\textbf{C3 --- Viabilidade do \textit{fine-tuning}:} a memória necessária para o \textit{fine-tuning} completo do modelo deve ser compatível com a capacidade da GPU disponível. O treinamento com o otimizador Adam em precisão mista exige, como estimativa mínima, 16 bytes por parâmetro para armazenar pesos, gradientes e estados do otimizador \cite{Rajbhandari2020}. Além disso, as ativações também ocupam memória, o que torna essa estimativa um limite inferior. No ambiente adotado, a GPU NVIDIA Tesla T4, disponibilizada pela plataforma Kaggle, possui 16 GB de memória \cite{NVIDIA2019T4}. Assim, esse critério restringe os candidatos a modelos com menos de aproximadamente 1 bilhão de parâmetros, considerando que a memória necessária para armazenar as ativações reduz esse limite.}
     \item \textbf{C4 --- Modelo original:} não ser derivado de um processo prévio de
           compressão (destilação, poda ou quantização), de modo que a degradação
           medida ao longo deste trabalho seja atribuível exclusivamente à poda aqui
           aplicada.
+    \item \comentariolinha{\textbf{C4 --- Modelo original:} não ter sido submetido previamente a processos de compressão, como destilação, poda ou quantização. Esse critério permite atribuir à poda aplicada neste trabalho a degradação observada no modelo.}
     \item \textbf{C5 --- Resultado de referência:} ter \textit{perplexity} na base de dados
           de avaliação adotada publicada em artigo científico --- pelos autores do modelo ou
           em trabalho posterior, o que permite situar o modelo base
           reproduzido em relação à literatura.
+    \item \comentariolinha{\textbf{C5 --- Resultado de referência:} possuir valores de \textit{perplexity} publicados em artigo científico para a base de dados de avaliação adotada. Esses valores, apresentados pelos autores do modelo ou por trabalhos posteriores, permitem comparar o modelo base reproduzido com os resultados disponíveis na literatura.}
     \item \textbf{C6 --- Implementação disponível:} possuir arquitetura implementada
           nativamente na biblioteca \texttt{transformers} \cite{Wolf2020}, que opera sobre
           a biblioteca PyTorch, dispensando a implementação própria da arquitetura.
+    \item \comentariolinha{\textbf{C6 --- Implementação disponível:} possuir arquitetura implementada nativamente na biblioteca \texttt{transformers} \cite{Wolf2020}, o que dispensa a implementação própria do modelo e permite utilizar a infraestrutura da biblioteca PyTorch.}
 \end{itemize}
 
 % AJUSTE: revisão 24/09 — comentário "refinar para deixar critérios mais objetivos
@@ -124,11 +128,15 @@ vez, do modelo. Por essa razão, modelo e base de dados são selecionados em con
 par formado por modelo e base de dados é admissível quando o modelo atende a C1--C6 e a 
 base de dados atende a D1--D4 em relação a esse modelo.
 
+\comentariolinha{Nota-se que o critério C5 depende da seleção da base de dados de avaliação. Além disso, a seleção da base de dados também depende do modelo, conforme descrito na Seção~\ref{subsec:metodologia_base}. Dessa forma, a seleção do modelo e da base de dados são interdependentes e devem ser realizadas em conjunto.}
+
 Havendo mais de um candidato que atenda simultaneamente a todos os critérios, adota-se o
 de menor número de parâmetros: as varreduras experimentais deste trabalho exigem um grande
 número de avaliações completas do modelo, e o custo computacional de cada avaliação cresce
 com o tamanho do modelo. A aplicação desses critérios a um conjunto de modelos candidatos é
 apresentada no Capítulo~\ref{chap:desenvolvimento} (Tabela~\ref{tab:candidatos_modelo}).
+
+\comentariolinha{Quando mais de um candidato atende simultaneamente a todos os critérios, seleciona-se aquele com o menor número de parâmetros. Essa escolha considera o custo computacional das varreduras experimentais, que exigem numerosas avaliações completas do modelo e cujo custo aumenta com o tamanho do modelo. O resumo da aplicação desses critérios ao conjunto de modelos candidatos é apresentado na Tabela~\ref{tab:candidatos_modelo}.}
 
 % AJUSTE: reunião 13/05 — Hugging Face como plataforma, não biblioteca
 % AJUSTE: 05/10 — segundo o esboço do orientador (revisão 30/09), as ferramentas usadas
@@ -147,20 +155,26 @@ O modelo base e todos os modelos podados nas etapas seguintes são avaliados sob
 uma mesma base de dados --- a coleção de textos sobre a qual se mede o desempenho dos
 modelos ---, selecionada pelos seguintes critérios:
 
+\comentariolinha{O modelo base e todos os modelos podados são avaliados sobre a mesma base de dados, composta pela coleção de textos utilizada para medir o desempenho dos modelos. A seleção dessa base considera os seguintes critérios:}
+
 \begin{itemize}
     \item \textbf{D1 --- Resultado de referência:} \textit{perplexity} publicada em
           artigo científico para o modelo base avaliado na base de dados; é a exigência do
           critério C5 vista do lado da base de dados.
+    \item \comentariolinha{\textbf{D1 --- Resultado de referência:} possuir valores de \textit{perplexity} publicados em artigo científico para o modelo base avaliado na base de dados selecionada. Esse critério corresponde à exigência de C5 sob a perspectiva da base de dados.}
     \item \textbf{D2 --- Texto sem pré-processamento destrutivo:} a base de dados preserva caixa,
           pontuação, números e palavras raras, e mantém a continuidade dos documentos;
           modelos com tokenização por subpalavras são pré-treinados sobre texto bruto e
           seriam avaliados fora de sua distribuição em texto normalizado.
+  	\item \comentariolinha{\textbf{D2 --- Preservação das características do texto:} preservar caixa, pontuação, números, palavras raras e continuidade dos documentos. Esse critério considera que modelos com tokenização por subpalavras são pré-treinados sobre texto bruto e, portanto, devem ser avaliados em textos que preservem essas características, evitando alterações na distribuição dos dados.}
     \item \textbf{D3 --- Divisão oficial:} partições oficiais de treino, validação e teste,
           de modo que o \textit{fine-tuning} use o treino e a avaliação use o teste, sem
           particionamento arbitrário.
+    \item \comentariolinha{\textbf{D3 --- Divisão oficial:} possuir partições oficiais de treino, validação e teste. Esse critério permite utilizar a partição de treino no \textit{fine-tuning} e a partição de teste na avaliação, dispensando a criação de divisões arbitrárias.}
     \item \textbf{D4 --- Ausência de sobreposição com o pré-treinamento:} a base de dados não
           integra nem reproduz os dados de pré-treinamento do modelo; do contrário, a
           \textit{perplexity} mediria em parte memorização.
+    \item \comentariolinha{\textbf{D4 --- Ausência de sobreposição com o pré-treinamento:} não conter dados utilizados no pré-treinamento do modelo, evitando que a \textit{perplexity} reflita, ainda que parcialmente, a memorização dos textos utilizados durante o treinamento.}
 \end{itemize}
 
 Os critérios D2 e D3 dizem respeito apenas à base de dados; D1 e D4 dependem do modelo, e
@@ -170,17 +184,21 @@ treino, pois é ele que determina o custo do \textit{fine-tuning}. A aplicação
 critérios a um conjunto de bases de dados candidatas é apresentada no
 Capítulo~\ref{chap:desenvolvimento} (Tabela~\ref{tab:candidatos_dataset}).
 
+\comentariolinha{Observa-se que os critérios D1 e D4 dependem tanto da base de dados quanto do modelo, o que justifica a seleção conjunta. Em caso de empate na aplicação desses critérios, seleciona-se a base de dados com o menor número de tokens no conjunto de treino, pois essa quantidade influencia o custo computacional do \textit{fine-tuning}. Um resumo dos candidatos é apresentado na Tabela~\ref{tab:candidatos_dataset}.}
+
 % AJUSTE: reunião 13/05 — reescrita completa da Seção 3.4 (métricas explicadas em detalhe)
 % AJUSTE: revisão 30/09 — deixa de ser a quinta etapa e passa a integrar a Etapa 1.
 \subsection{Métricas de Avaliação}\label{sec:metodologia_metricas}
 
-\adicionadomarcelo{As métricas de avaliação são organizadas em três dimensões: desempenho preditivo, custo
+As métricas de avaliação são organizadas em três dimensões: desempenho preditivo, custo
 computacional e impacto ambiental. Elas são registradas pelo mesmo procedimento, e sobre a
 mesma base de dados, para o modelo base e para cada modelo podado nas Etapas 2 a
 4. Para cada métrica, descreve-se o que ela representa e
 como é obtida operacionalmente.
 
-\subsubsection*{Desempenho preditivo}
+\comentariolinha{As métricas de avaliação são organizadas em três dimensões: desempenho preditivo, custo computacional e impacto ambiental. Todas são obtidas pelo mesmo procedimento e sobre a mesma base de dados, tanto para o modelo base quanto para os modelos podados nas Etapas 2 a 4. Para cada métrica, são apresentados seu significado e o procedimento utilizado para obtê-la.}
+
+\subsubsection{Desempenho preditivo}
 
 Como o modelo base é um modelo de linguagem autorregressivo, a métrica de
 desempenho preditivo adotada é a \textit{perplexity}, padrão para essa classe de modelos.
@@ -189,22 +207,28 @@ de avaliação, constituindo uma medida da qualidade da modelagem probabilístic
 linguagem \cite{Goodfellow2016}. Valores mais baixos de \textit{perplexity} indicam melhor
 capacidade preditiva.
 
+\comentariolinha{Como o modelo base é autorregressivo, adota-se a métrica \textit{perplexity} para avaliar seu desempenho preditivo, por ser amplamente utilizada nessa classe de modelos. Essa métrica quantifica o grau de ``surpresa'' do modelo diante dos \textit{tokens} do conjunto de avaliação e permite avaliar a qualidade de sua modelagem probabilística da linguagem \cite{Goodfellow2016}. Valores menores de \textit{perplexity} indicam melhor desempenho preditivo.}
+
 A adoção da \textit{perplexity}, em lugar de métricas de tarefas descendentes --- como a
 acurácia em uma tarefa de classificação ---, decorre de ela ser uma métrica intrínseca:
 pode ser medida diretamente sobre a base de dados de avaliação, sem exigir o \textit{fine-tuning}
 do modelo em uma tarefa específica, procedimento que tornaria a comparação entre
 configurações dependente de um segundo treinamento. O procedimento de cálculo adotado é
-descrito no Capítulo~\ref{chap:desenvolvimento}.}
+descrito no Capítulo~\ref{chap:desenvolvimento}.
 
-\adicionadomarcelo{\subsubsection*{Custo computacional}
+\comentariolinha{A adoção da \textit{perplexity}, em vez de métricas de tarefas descendentes, como a acurácia em uma tarefa de classificação, deve-se ao fato de ser uma métrica intrínseca, calculada diretamente sobre a base de dados de avaliação, sem exigir o \textit{fine-tuning} do modelo em uma tarefa específica. Esse procedimento evita que a comparação entre as configurações dependa de um treinamento adicional. O procedimento de cálculo é descrito no Capítulo~\ref{chap:desenvolvimento}.}
+
+\adicionadomarcelo{\subsubsection{Custo computacional}
 
 O custo computacional é avaliado por meio de quatro indicadores complementares:
+
+\comentariolinha{O custo computacional é avaliado por meio de quatro indicadores complementares, descritos a seguir:}
 
 \begin{itemize}
     \item \textbf{Número de parâmetros remanescentes:} contagem direta dos tensores de pesos
           não-zerados (no caso de poda não estruturada) ou existentes (no caso de poda
           estruturada) no modelo após a aplicação da técnica;
-
+	\item \comentariolinha{\textbf{Número de parâmetros remanescentes:} contagem dos elementos não nulos dos tensores de pesos, no caso da poda não estruturada, ou dos parâmetros existentes após a remoção de estruturas, no caso da poda estruturada;}
     \item \textbf{Operações de ponto flutuante (FLOPs):} contagem das operações matemáticas
           necessárias para uma inferência completa, obtida por análise estática do grafo
           computacional do modelo: ferramentas de contagem percorrem cada camada do modelo
@@ -213,23 +237,26 @@ O custo computacional é avaliado por meio de quatro indicadores complementares:
           exigem o registro de regras de contagem próprias, sob pena de serem silenciosamente
           ignoradas. O tratamento efetivamente necessário no modelo adotado, bem como as
           omissões remanescentes, são detalhados no Capítulo~\ref{chap:desenvolvimento};
-
+	\item \comentariolinha{\textbf{Operações de ponto flutuante (FLOPs):} contagem das operações matemáticas necessárias para uma inferência completa, obtida por análise estática do grafo computacional do modelo. As ferramentas de contagem percorrem as camadas do modelo e acumulam as operações correspondentes. Essa automação, entretanto, é parcial, pois abrange apenas os tipos de camada previstos no catálogo da ferramenta. Camadas não contempladas exigem regras de contagem próprias, caso contrário, são ignoradas. O tratamento dessas camadas no modelo adotado e as omissões remanescentes são detalhados no Capítulo~\ref{chap:desenvolvimento};}
     \item \textbf{Tempo de inferência:} medido empiricamente, registrando o tempo decorrido
           durante o processamento de uma entrada representativa em condições controladas de
           \textit{hardware}. Múltiplas medições são agregadas por meio de média e
           desvio-padrão para mitigar a variância natural de execução;
-
+	\item \comentariolinha{\textbf{Tempo de inferência:} tempo decorrido durante o processamento de uma entrada representativa, medido empiricamente em condições controladas de \textit{hardware}. Para reduzir os efeitos da variabilidade natural da execução, são realizadas múltiplas medições, cujos resultados são expressos por meio da média e do desvio-padrão;}
     \item \textbf{Tamanho do modelo:} memória ocupada pelos parâmetros, calculada como o
           produto entre o número de parâmetros e o número de \textit{bytes} usado para
           representar cada um.
+    \item \comentariolinha{\textbf{Tamanho do modelo:} memória necessária para armazenar os parâmetros, calculada pelo produto entre o número de parâmetros e a quantidade de \textit{bytes} utilizada para representar cada um;}
 \end{itemize}
 % AJUSTE: 05/10 — o tamanho do modelo era descrito em duas dimensões (disco e memória
 % durante a inferência, por profiling), que o experimento não mediu: codigo/eval.py
 % (model_size_mb) soma os bytes dos parâmetros, como na Tabela~tab:metricas.
 
-\subsubsection*{Impacto ambiental}
+\subsubsection{Impacto ambiental}
 
 O impacto ambiental é mensurado por meio de dois indicadores:
+
+\comentariolinha{O impacto ambiental é avaliado por meio de dois indicadores, descritos a seguir:}
 
 \begin{itemize}
 % AJUSTE: 05/10 — os nomes das ferramentas (thop, profiling do PyTorch, CodeCarbon)
@@ -239,7 +266,7 @@ O impacto ambiental é mensurado por meio de dois indicadores:
           uso de \textit{hardware} (CPU e GPU), que integram leituras periódicas do consumo
           elétrico dos componentes e registram a energia total consumida (em kWh) durante
           o intervalo de inferência;
-
+	\item \comentariolinha{\textbf{Consumo energético:} energia total consumida durante o intervalo de inferência, estimada por ferramentas de monitoramento do \textit{hardware} (CPU e GPU), que integram leituras periódicas do consumo elétrico dos componentes. O resultado é expresso em kWh;}
     \item \textbf{Emissões equivalentes de CO\textsubscript{2}:} calculadas a partir do
           consumo energético registrado, multiplicado por um fator de intensidade carbônica
           da matriz energética da região onde os experimentos são executados. As mesmas
@@ -250,6 +277,7 @@ O impacto ambiental é mensurado por meio de dois indicadores:
           experimento e pode variar entre execuções. As emissões devem, por isso, ser lidas
           como aproximações de ordem de grandeza, e a comparação entre configurações
           apoia-se no consumo energético, não nas emissões dele derivadas.
+	\item \comentariolinha{\textbf{Emissões equivalentes de CO\textsubscript{2}:} estimadas a partir do consumo energético registrado e de um fator de intensidade carbônica da matriz energética da região onde os experimentos são executados. As ferramentas de monitoramento utilizam bases de dados desses fatores e realizam a conversão automaticamente. Como esse fator depende da localidade de execução, não é controlado pelo experimento e pode variar entre execuções. Por essa razão, as emissões são consideradas estimativas de ordem de grandeza, e a comparação entre as configurações é realizada com base no consumo energético, não nas emissões dele derivadas.}
 \end{itemize}
 
 % AJUSTE: revisão 30/09 — esboço do orientador (Etapas 1 e 2 da Metodologia e do
@@ -270,7 +298,9 @@ O impacto ambiental é mensurado por meio de dois indicadores:
 % métrica do trabalho é a perplexity (menor é melhor), a razão de qualidade é invertida.
 % O artigo não foi publicado e não pode ser citado; no lugar dele entram as referências
 % que o próprio artigo usa para fundamentar suas métricas (Schwartz, Henderson, Blalock).
-\subsubsection*{Comparação entre configurações}
+\subsubsection{Comparação entre configurações}
+
+\comentline{Quais configurações? Parâmetros? Tentar deixar claro no título.}
 
 As configurações são comparadas taxa a taxa: em cada taxa de poda, a \textit{perplexity} e
 a energia de cada alocação são confrontadas com as do modelo base e com as das
@@ -281,6 +311,8 @@ de tratar a eficiência como critério de avaliação ao lado do desempenho pred
 padronização das métricas, que dificulta a comparação entre métodos de poda
 \cite{Blalock2020}.
 
+\comentariolinha{As configurações são comparadas para cada taxa de poda, considerando a \textit{perplexity} e o consumo energético de cada alocação em relação ao modelo base e às demais alocações. Essa comparação é sintetizada por três indicadores, seguindo a recomendação de considerar a eficiência como critério de avaliação, além do desempenho preditivo \cite{Schwartz2020}, e de relatar sistematicamente o consumo energético \cite{Henderson2020}. A definição explícita desses indicadores também busca reduzir os problemas decorrentes da falta de padronização das métricas, que dificulta a comparação entre métodos de poda \cite{Blalock2020}.}
+
 \textbf{Redução relativa de energia ($\Delta E$):} fração da energia do modelo
 base economizada pelo modelo podado,
 \begin{equation}\label{eq:delta_e}
@@ -290,6 +322,12 @@ em que $E$ é a energia consumida pelo modelo podado e $E_0$, a do modelo base
 medida na mesma sessão de execução. A referência na mesma sessão é necessária porque a
 energia medida de um mesmo modelo varia entre sessões do ambiente de execução; por isso,
 a energia é sempre comparada em termos relativos, e nunca em valores absolutos.
+
+\comentariolinha{\textbf{Redução relativa de energia ($\Delta E$):} percentual de energia economizada pelo modelo podado em relação ao modelo base, calculado por:
+\begin{equation}\label{eq:delta_e}
+\Delta E = \frac{E_0 - E}{E_0} \times 100\ [\%],
+\end{equation}
+em que $E$ representa a energia consumida pelo modelo podado e $E_0$, a energia consumida pelo modelo base na mesma sessão de execução. Essa referência é necessária porque o consumo energético de um mesmo modelo pode variar entre sessões do ambiente de execução. Por essa razão, a comparação é realizada em termos relativos, e não por meio de valores absolutos.}
 
 \textbf{Eficiência relativa ($\eta$):} relaciona o desempenho preditivo à energia
 consumida. Como valores menores de \textit{perplexity} indicam melhor desempenho, a
@@ -304,8 +342,18 @@ indicador respeita a restrição de comparar a energia em termos relativos. Quan
 diferença de energia está abaixo do ruído de medição, porém, $\eta$ passa a refletir só a
 \textit{perplexity} e esse ruído.
 
+
+\comentariolinha{\textbf{Eficiência relativa ($\eta$):} relaciona o desempenho preditivo à energia consumida. Como valores menores de \textit{perplexity} indicam melhor desempenho, a razão entre as métricas é calculada de forma inversa em relação ao modelo base:
+\begin{equation}\label{eq:eta}
+\eta = \frac{\text{PPL}_0}{\text{PPL}} \times \frac{E_0}{E},
+\end{equation}
+em que $\text{PPL}$ e $\text{PPL}_0$ representam as \textit{perplexities} do modelo podado e do modelo base, respectivamente. O modelo base apresenta $\eta = 1$, enquanto valores superiores a 1 indicam maior desempenho preditivo por unidade de energia. Por utilizar apenas razões, esse indicador mantém a comparação energética em termos relativos. Entretanto, quando a diferença de consumo energético está abaixo do ruído de medição, $\eta$ passa a refletir predominantemente a variação da \textit{perplexity} e o próprio ruído de medição.}
+
+
 \textbf{Ponto de eficiência ($S^*_E$):} maior taxa de poda cuja \textit{perplexity} não
 excede em mais de 5\% a do modelo base:
+
+\comentariolinha{\textbf{Ponto de eficiência ($S^*_E$):} maior taxa de poda para a qual a \textit{perplexity} não apresenta aumento superior a 5\% em relação à do modelo base:}
 \begin{equation}\label{eq:ponto_eficiencia}
 S^*_E = \max \left\{ s \;\middle|\; \text{PPL}(s) \leq 1{,}05 \cdot \text{PPL}_0 \right\},
 \end{equation}
@@ -313,6 +361,8 @@ em que $s$ é a taxa de poda. A referência é o modelo base no mesmo regime: se
 retreinamento, o modelo pré-treinado; após o \textit{fine-tuning}, o modelo base
 submetido ao mesmo retreinamento. O limite de 5\% foi fixado antes da análise dos
 resultados, e não ajustado a eles.
+
+\comentariolinha{em que $s$ representa a taxa de poda. A comparação utiliza como referência o modelo base no mesmo regime: sem retreinamento, considera-se o modelo pré-treinado; após o \textit{fine-tuning}, considera-se o modelo base submetido ao mesmo retreinamento. O limite de 5\% foi definido antes da análise dos resultados, sem ajustes posteriores em função dos valores obtidos.}
 
 \textbf{Resumo por configuração:} para comparar estratégias e alocações por um único
 valor, adota-se a média sobre as taxas de poda consideradas. Para a
@@ -327,6 +377,12 @@ camadas, e a comparação entre alocações perde o objeto. As taxas acima desse
 reportadas, mas não entram nas médias. O resumo aplica-se às varreduras sem
 retreinamento, que cobrem todas as taxas; as configurações submetidas ao
 \textit{fine-tuning}, avaliadas em poucas taxas, são comparadas taxa a taxa.
+
+\comentariolinha{\textbf{Resumo por configuração:} para comparar estratégias e alocações por um único valor, calcula-se a média dos resultados nas taxas de poda consideradas. Para a \textit{perplexity}, utiliza-se a média geométrica, pois, nas avaliações sem retreinamento, seus valores variam por ordens de grandeza entre as taxas. Nesse cenário, a média aritmética seria fortemente influenciada pelos resultados das maiores taxas de poda, enquanto a média geométrica equivale à média da degradação logarítmica, utilizada na análise de sensibilidade. Para $\Delta E$, utiliza-se a média aritmética, e $\eta$ é calculado a partir das duas médias. São consideradas apenas as taxas até a maior em que nenhuma camada atinge o teto da alocação com análise de sensibilidade (Seção~\ref{sec:metodologia_poda_com}). Acima desse limite, a alocação deixa de diferenciar as camadas, comprometendo a comparação entre as alocações. Essas taxas são reportadas, mas não entram no cálculo das médias. Esse resumo aplica-se às varreduras sem retreinamento, que abrangem todas as taxas de poda. As configurações submetidas ao \textit{fine-tuning}, avaliadas em um número menor de taxas, são comparadas taxa a taxa.}
+
+\comentline{O parágrafo anterior parece estar falando das taxas de compressão? Seria interessando já apresentar as taxas usadas}
+
+\comentline{Quando você diz "Comparadas taxa a taxa", está se referendo a uma comparação pareada, a compressão de 90\% com outro  de 90\%?}
 
 % -------------------------------------------------------
 \section{Etapa 2 --- Poda sem Otimização}\label{sec:metodologia_poda_sem}
