@@ -497,7 +497,7 @@ analisadas, pelas razões expostas na Seção~\ref{sec:metodologia_metricas}. Os
 confirmaram essa decisão: o fator de intensidade carbônica, obtido pela razão entre as
 emissões e a energia registradas, variou de 0,139 a 0,453~kg de $\text{CO}_2$ por kWh entre
 as varreduras. O modelo base, avaliado sem nenhuma poda, ilustra a consequência: de uma
-varredura para outra, sua energia caiu cerca de 6\%, de 1.572 para 1.481~mWh, enquanto suas
+varredura para outra, sua energia caiu cerca de 6\%, de 1,572 para 1,481~Wh, enquanto suas
 emissões estimadas caíram cerca de 71\%, de 0,711 para 0,205~g, embora o modelo fosse o mesmo.
 
 \section{Poda sem Otimização}\label{sec:metodos_poda}
@@ -1210,7 +1210,8 @@ que condicionam a validade da medição e os parâmetros do treinamento.
 O retreinamento foi aplicado às seguintes configurações das Etapas 2 e 3:
 
 \begin{itemize}
-    \item \textbf{Controle denso:} o modelo base, sem poda, cuja função é
+    % AJUSTE: 04/11 — decisão do Enzo: "controle denso" passa a "modelo base retreinado".
+    \item \textbf{Modelo base retreinado:} o modelo base, sem poda, cuja função é
           descrita na Seção~\ref{subsec:ft_validade};
     \item \textbf{Poda não estruturada --- poda por magnitude}, com escopo uniforme, a
           30\% e a 50\% de esparsidade;
@@ -1254,8 +1255,10 @@ permite compará-las também depois do retreinamento, e ambas estão na faixa de
 em que, em regime \textit{one-shot}, a alocação com análise de sensibilidade obteve
 \textit{perplexity} menor que a não uniforme (Seção~\ref{sec:res_estruturada}). Na poda por
 magnitude, escolheram-se duas taxas com danos de intensidades diferentes: 30\%, a primeira
-taxa acima da região utilizável em regime \textit{one-shot} --- as taxas de até 20\%, em que
-a poda quase não degrada o modelo ---, e 50\%, em que a degradação já é severa, com
+taxa acima das de até 20\%, em que o acréscimo de \textit{perplexity} é de até 2,1 pontos, e
+% AJUSTE: 04/11 — a pedido do Enzo: sai "região utilizável", sem critério e em conflito com o
+% limite de 5%, que a 20% já é excedido (sec:res_magnitude).
+50\%, em que a degradação já é severa, com
 \textit{perplexity} de 473,28 (Seção~\ref{sec:res_magnitude}). Com isso, o retreinamento é
 observado tanto sobre um dano moderado quanto sobre um dano severo.
 
@@ -1315,7 +1318,7 @@ parada antecipada nem seleção do melhor ponto do treinamento. Com isso, a quan
 retreinamento é idêntica em todas as configurações, condição para que suas
 \textit{perplexities} pós-retreinamento sejam comparáveis entre si.
 
-\subsection{Controle Denso e Preservação da Esparsidade}\label{subsec:ft_validade}
+\subsection{Modelo Base Retreinado e Preservação da Esparsidade}\label{subsec:ft_validade}
 
 Duas decisões de implementação merecem registro por afetarem a validade dos resultados.
 
@@ -1324,7 +1327,7 @@ Duas decisões de implementação merecem registro por afetarem a validade dos r
 % justificativa da base de dados), (ii) a definição, com referência (Gururangan2020, que
 % mostra o ganho de continuar o treinamento sobre textos do domínio), e (iii) o caso
 % concreto: os artigos da Wikipédia do WikiText-2.
-A primeira é o \textbf{controle denso}. O GPT-2 não foi pré-treinado no WikiText-2, e sim
+A primeira é o \textbf{modelo base retreinado}. O GPT-2 não foi pré-treinado no WikiText-2, e sim
 no WebText, composto por páginas da web obtidas de \textit{links} publicados no Reddit e do
 qual os documentos da Wikipédia foram removidos (Seção~\ref{sec:dataset}).
 Por isso, o simples \textit{fine-tuning} do modelo base no WikiText-2 já reduz a
@@ -1728,7 +1731,7 @@ o resultado no \textit{fine-tuning}, a única etapa estocástica do trabalho.
 
 O segundo é que as medições de \textbf{tempo e energia dependem da sessão}. O mesmo modelo
 base, sem qualquer poda, registrou tempos de inferência de 40,5, 54,0 e 46,3~ms por janela
-em três sessões diferentes, e consumos de energia entre 1.176 e 1.572~mWh por avaliação
+em três sessões diferentes, e consumos de energia entre 1,176 e 1,572~Wh por avaliação
 completa do conjunto de teste (Seção~\ref{sec:res_protocolo}). A variação é atribuída às
 diferenças entre as máquinas físicas alocadas a cada sessão e à carga concorrente nelas.
 Por essa razão, comparações de custo entre varreduras executadas em sessões distintas
