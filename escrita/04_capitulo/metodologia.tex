@@ -396,17 +396,22 @@ modelo já podado, de modo que o resultado de uma configuração não dependa da
 Os modelos podados são avaliados pelas mesmas métricas e sobre a mesma base de dados da
 Etapa 1 (Seção~\ref{sec:metodologia_modelo}).
 
+\comentariolinha{Na segunda etapa, aplicam-se estratégias clássicas de poda ao modelo base, sem o uso de técnicas de otimização. Cada estratégia é aplicada independentemente para cada taxa de poda, sempre a partir do modelo base original, e não de modelos previamente podados. Dessa forma, os resultados de cada configuração não dependem da aplicação das estratégias anteriores. Os modelos podados são avaliados pelas mesmas métricas e sobre a mesma base de dados descritos na Seção~\ref{sec:metodologia_modelo}.}
+
 % AJUSTE: reunião 13/05 — duas estratégias (magnitude + estruturada), "avaliadas" em vez de "consideradas"
 % AJUSTE: 05/10 — segundo o esboço do orientador (revisão 30/09), a Metodologia não
 % antecipa as estratégias escolhidas: a lista das duas estratégias e suas funções de
 % importância passaram para o Desenvolvimento (Seções subsec:metodo_magnitude e
 % subsec:metodo_estruturado, que já as descreviam); o critério de importância é
 % definido aqui de forma genérica.
-\adicionadomarcelo{As estratégias de poda sem otimização têm por objetivo reduzir o número de parâmetros de um
+As estratégias de poda sem otimização têm por objetivo reduzir o número de parâmetros de um
 modelo pré-treinado, eliminando pesos ou estruturas avaliadas como menos relevantes para o
-desempenho preditivo.} A relevância é estimada por um critério de importância, que atribui
+desempenho preditivo. A relevância é estimada por um critério de importância, que atribui
 uma pontuação a cada parâmetro ou a cada unidade arquitetural removível; os elementos de
 menor pontuação são removidos até que se atinja a taxa de poda pretendida.
+
+\comentariolinha{As estratégias de poda sem otimização buscam reduzir o número de parâmetros de um modelo pré-treinado por meio da remoção de pesos ou estruturas \st{considerados menos relevantes para o desempenho preditivo. Essa relevância é estimada por critérios de importância, que atribuem uma pontuação a cada parâmetro ou unidade arquitetural removível. Os elementos com menores pontuações são removidos até que se atinja a taxa de poda pretendida}.}
+
 
 % AJUSTE: 12/10 — reunião com o orientador: "alocação", "uniforme" e "global" só eram
 % apresentadas no Desenvolvimento (Seção subsec:escopos), e a Etapa 3 as usava sem
@@ -421,6 +426,10 @@ mais baixa perdem mais. Como ambas se baseiam apenas em pontuações calculadas 
 pesos, nenhuma mede o efeito da remoção sobre o desempenho do modelo; essa questão é tratada na
 Etapa~3 (Seção~\ref{sec:metodologia_poda_com}). A implementação das duas alocações é
 apresentada no Capítulo~\ref{chap:desenvolvimento} (Seção~\ref{subsec:escopos}).
+
+
+
+\comentariolinha{A \textbf{taxa de poda} corresponde à fração de elementos removidos do modelo (por exemplo, 30\% ou 50\%). O critério de poda determina como essas remoções são distribuídas entre as camadas, podendo ser aplicado de duas formas. Na \textbf{alocação uniforme}, a taxa de corte é fixada igualmente para todas as camadas, e o critério atua apenas localmente para selecionar os pesos removidos dentro de cada uma delas. Na \textbf{alocação global}, os pesos de todo o modelo são ordenados conjuntamente. Assim, a taxa de corte varia por camada, concentrando as remoções naquelas que possuem maior proporção de elementos de menor magnitude.}
 
 % AJUSTE: revisão 24/09 — comentário "por que essas estratégias, considerando que
 % existem outras opções?" atendido pelos critérios P1--P3 e pela
@@ -439,10 +448,14 @@ autores, e os modelos que produzem servem de referência para avaliar a estraté
 otimização (Seção~\ref{sec:metodologia_poda_com}), que constitui a contribuição central do
 trabalho.
 
+\comentariolinha{As estratégias desta etapa não constituem a contribuição principal deste trabalho. Elas são aplicadas segundo os critérios de importância propostos por seus respectivos autores, e os modelos resultantes servem de referência para avaliar a estratégia com otimização (Seção~\ref{sec:metodologia_poda_com}), que representa a contribuição central do trabalho.}
+
 % AJUSTE: revisão 24/09 — critérios vagos (representatividade, complementaridade,
 % viabilidade) substituídos por critérios verificáveis, aplicados às alternativas no Cap. 5
 A escolha das estratégias, entre as alternativas disponíveis na literatura, seguiu
 três critérios:
+
+\comentariolinha{A escolha das estratégias, entre as alternativas disponíveis na literatura, baseou-se em três critérios:}
 
 \begin{itemize}
     \item \textbf{P1 --- Importância calculada apenas a partir dos pesos:} o critério de
@@ -452,13 +465,16 @@ três critérios:
           contribuição se pretende medir; um critério-base que já utilizasse dados
           misturaria as duas fontes de informação e impediria atribuir à alocação por
           sensibilidade a diferença observada.
+    \item \comentariolinha{\textbf{P1 — Critério de poda restrito aos pesos:} A seleção dos elementos a serem removidos não deve empregar gradientes ou dados de calibração. A incorporação de informações baseadas em dados introduziria um viés experimental, impossibilitando distinguir se o desempenho final decorre da eficácia da técnica de poda avaliada ou do simples acesso a esses dados.}
     \item \textbf{P2 --- Aplicação \textit{one-shot}:} a poda é aplicada ao modelo
           pré-treinado sem treinamento durante o processo, de modo que o efeito da remoção
           seja medido separadamente do efeito do \textit{fine-tuning} de recuperação
           (Seção~\ref{sec:metodologia_finetuning}).
+  	\item \comentariolinha{\textbf{P2 --- Aplicação \textit{one-shot}:} a poda é aplicada diretamente ao modelo pré-treinado, sem treinamento durante o processo. Dessa forma, o efeito da remoção de parâmetros é avaliado separadamente daquele decorrente do \textit{fine-tuning} de recuperação (Seção~\ref{sec:metodologia_finetuning}).}
     \item \textbf{P3 --- Cobertura das granularidades:} o conjunto de estratégias inclui
           uma de granularidade fina, que remove parâmetros individuais, e uma de
           granularidade grossa, que remove unidades arquiteturais inteiras.
+  	\item \comentariolinha{\textbf{P3 --- Cobertura das granularidades:} o conjunto de estratégias contempla duas granularidades de poda: fina, que remove parâmetros individuais, e grossa, que remove unidades arquiteturais inteiras.}
 \end{itemize}
 
 % AJUSTE: revisão 30/09 — três comentários do orientador sobre os critérios antigos
@@ -483,6 +499,9 @@ outra converte a compressão em economia efetiva de tempo e de energia. Avaliá-
 mesmas condições permite medir esse compromisso, que nenhuma das duas revelaria
 isoladamente e que constitui uma das perguntas do trabalho
 (Seção~\ref{sec:visao_geral}).
+
+
+\comentariolinha{O critério P3 se justifica pelas vantagens contrastantes oferecidas pelas duas granularidades (Figura~\ref{fig:nao_estruturada_vs_estruturada}). De um lado a poda de granularidade fina geralmente alcança taxas de compressão elevadas com perda reduzida de desempenho preditivo \cite{Blalock2020}. Entretanto, os pesos removidos são apenas anulados: as matrizes conservam suas dimensões, e o \textit{hardware} convencional continua a executar multiplicações por zero. Assim, a redução do número de parâmetros não se traduz necessariamente em redução do tempo de inferência ou do consumo de energia. Por sua vez, a poda de granularidade grossa produz matrizes menores e densas, reduzindo efetivamente o custo de inferência em \textit{hardware} convencional \cite{Li2017}, mas pode provocar maior perda de desempenho preditivo para uma mesma taxa de compressão \cite{Blalock2020}. Portanto, enquanto a primeira tende a preservar melhor o desempenho preditivo, a segunda permite converter a compressão em economia efetiva de tempo e energia. Avaliar ambas sob as mesmas condições permite quantificar essa relação de compromisso (\textit{trade-off}), que não poderia ser caracterizada pela análise isolada de cada granularidade e constitui uma das questões centrais deste trabalho (Seção~\ref{sec:visao_geral}).}
 
 % Como indicador complementar de representatividade, registra-se para cada estratégia
 % candidata o número de citações do artigo que a propôs, na base Semantic Scholar. O
