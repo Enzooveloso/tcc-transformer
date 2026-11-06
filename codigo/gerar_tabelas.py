@@ -47,12 +47,12 @@ def serie(linhas, **filtro):
 
 
 def br(x, casas=2):
-    """Número no padrão do texto: vírgula decimal, sem separador de milhar."""
-    return f"{x:.{casas}f}".replace(".", ",")
+    """Número no padrão do texto: ponto de milhar e vírgula decimal."""
+    return f"{x:,.{casas}f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
 
 def pct(x):
-    return f"{x}\\,\\%"
+    return f"{x}\\%"
 
 
 def escrever(nome, linhas):
@@ -82,8 +82,8 @@ PPL0 = float(CONFIGS[("mag", "global")][0]["perplexity"])
 CAB_ALOCACOES = [
     r"& \multicolumn{2}{c}{\textbf{Sem análise de sensibilidade}}"
     r" & \multicolumn{2}{c}{\textbf{Com análise de sensibilidade}} \\",
-    r"\cmidrule(lr){2-3} \cmidrule(lr){4-5}",
-    r"\textbf{Taxa de poda} & \textbf{Global} & \textbf{Uniforme}"
+    r"\cline{2-3} \cline{4-5}",
+    r"\textbf{Taxa de poda} & \textbf{Não uniforme} & \textbf{Uniforme}"
     r" & $\boldsymbol{\beta = 1{,}0}$ & $\boldsymbol{\beta = 0{,}5}$ \\",
 ]
 
@@ -99,14 +99,14 @@ def delta_e(s, taxa):
 
 # ---------------------------------------------------------------- qualidade
 def tabela_qualidade(estrategia):
-    linhas = [r"\begin{tabular}{c cc cc}", r"\toprule", *CAB_ALOCACOES, r"\midrule",
-              rf"0\,\% & \multicolumn{{4}}{{c}}{{{br(PPL0)} (modelo base)}} \\"]
+    linhas = [r"\begin{tabular}{c cc cc}", r"\hline", *CAB_ALOCACOES, r"\hline",
+              rf"0\% & \multicolumn{{4}}{{c}}{{{br(PPL0)} (modelo base)}} \\"]
     for t in TAXAS[1:]:
         vals = [ppl(CONFIGS[(estrategia, a)][t]) for a in ALOCACOES]
         menor = min(vals)
         cels = [rf"\textbf{{{br(v)}}}" if v == menor else br(v) for v in vals]
         linhas.append(f"{pct(t)} & " + " & ".join(cels) + r" \\")
-    linhas += [r"\bottomrule", r"\end{tabular}"]
+    linhas += [r"\hline", r"\end{tabular}"]
     escrever(f"qualidade_{'magnitude' if estrategia == 'mag' else 'estruturada'}", linhas)
 
 
@@ -115,29 +115,31 @@ tabela_qualidade("est")
 
 # ---------------------------------------------------------------- custo teórico
 cm, ce = CONFIGS[("mag", "uniforme")], CONFIGS[("est", "global")]
-linhas = [r"\begin{tabular}{c cc cc cc}", r"\toprule",
+linhas = [r"\begin{tabular}{c cc cc cc}", r"\hline",
           r"& \multicolumn{2}{c}{\textbf{Parâmetros (M)}} & \multicolumn{2}{c}{\textbf{Tamanho (MB)}}"
           r" & \multicolumn{2}{c}{\textbf{FLOPs (G)}} \\",
-          r"\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7}",
-          r"\textbf{Taxa de poda}" + r" & \textbf{Magn.} & \textbf{Estrut.}" * 3 + r" \\", r"\midrule"]
+          r"\cline{2-3} \cline{4-5} \cline{6-7}",
+          r"\textbf{Taxa de poda}" + r" & \textbf{Magn.} & \textbf{Estrut.}" * 3 + r" \\", r"\hline"]
 for t in TAXAS:
     a, b = cm[t], ce[t]
     linhas.append(f"{pct(t)} & {br(int(a['parametros_nao_zerados']) / 1e6, 1)}"
                   f" & {br(int(b['parametros_total']) / 1e6, 1)}"
                   f" & {br(float(a['tamanho_mb']), 1)} & {br(float(b['tamanho_mb']), 1)}"
                   f" & {br(float(a['flops']) / 1e9, 1)} & {br(float(b['flops']) / 1e9, 1)} \\\\")
-linhas += [r"\bottomrule", r"\end{tabular}"]
+linhas += [r"\hline", r"\end{tabular}"]
 escrever("custo", linhas)
 
 # ---------------------------------------------------------------- energia (ΔE)
-ROTULO = {"global": "Global", "uniforme": "Uniforme",
+# A alocação "global" do código aparece no texto como "não uniforme" (orientador, 30/10/2026).
+ROTULO = {"global": "Não uniforme", "uniforme": "Uniforme",
           "b1": r"$\beta = 1{,}0$", "b05": r"$\beta = 0{,}5$"}
-linhas = [r"\begin{tabular}{p{2.8cm} l " + "r" * 9 + "}", r"\toprule",
-          r"& & \multicolumn{9}{c}{\textbf{Taxa de poda}} \\", r"\cmidrule(lr){3-11}",
+# Espaçamento menor: com o rótulo "Não uniforme", a tabela excedia a margem em 17 pt.
+linhas = [r"\setlength{\tabcolsep}{5pt}",
+          r"\begin{tabular}{p{2.8cm} l " + "r" * 9 + "}", r"\hline",
+          r"& & \multicolumn{9}{c}{\textbf{Taxa de poda}} \\", r"\cline{3-11}",
           r"\textbf{Análise} & \textbf{Alocação} & " + " & ".join(pct(t) for t in TAXAS[1:]) + r" \\"]
-for estrategia, nome in (("mag", "Poda não estruturada --- poda por magnitude"),
-                         ("est", "Poda estruturada --- cabeças de atenção e neurônios do MLP")):
-    linhas += [r"\midrule", rf"\multicolumn{{11}}{{l}}{{\textit{{{nome}}}}} \\"]
+for estrategia, nome in (("mag", "Poda por magnitude"), ("est", "Poda estruturada")):
+    linhas += [r"\hline", rf"\multicolumn{{11}}{{l}}{{\textit{{{nome}}}}} \\"]
     for i, a in enumerate(ALOCACOES):
         grupo = ""
         if i == 0:
@@ -147,7 +149,7 @@ for estrategia, nome in (("mag", "Poda não estruturada --- poda por magnitude")
         s = CONFIGS[(estrategia, a)]
         linhas.append(f"{grupo} & {ROTULO[a]} & "
                       + " & ".join(br(delta_e(s, t), 1) for t in TAXAS[1:]) + r" \\")
-linhas += [r"\bottomrule", r"\end{tabular}"]
+linhas += [r"\hline", r"\end{tabular}"]
 escrever("energia", linhas)
 
 # ---------------------------------------------------------------- perfil (duas sondas)
@@ -162,27 +164,27 @@ def postos(d):
 
 
 colunas = [deltas(p, e) for e in ("magnitude", "estruturada") for p in (perfil30, perfil50)]
-linhas = [r"\begin{tabular}{c cc cc}", r"\toprule",
+linhas = [r"\begin{tabular}{c cc cc}", r"\hline",
           r"& \multicolumn{2}{c}{\textbf{Poda por magnitude}} & \multicolumn{2}{c}{\textbf{Poda estruturada}} \\",
-          r"\cmidrule(lr){2-3} \cmidrule(lr){4-5}",
-          r"\textbf{Camada} & \textbf{Sonda 30\,\%} & \textbf{Sonda 50\,\%}"
-          r" & \textbf{Sonda 30\,\%} & \textbf{Sonda 50\,\%} \\", r"\midrule"]
+          r"\cline{2-3} \cline{4-5}",
+          r"\textbf{Camada} & \textbf{Sonda 30\%} & \textbf{Sonda 50\%}"
+          r" & \textbf{Sonda 30\%} & \textbf{Sonda 50\%} \\", r"\hline"]
 pcol = [postos(c) for c in colunas]
 for camada in range(12):
     linhas.append(f"{camada} & " + " & ".join(f"{br(c[camada], 3)} ({p[camada]})"
                                               for c, p in zip(colunas, pcol)) + r" \\")
-linhas += [r"\midrule", r"\textbf{Razão máx./mín.} & "
+linhas += [r"\hline", r"\textbf{Razão máx./mín.} & "
            + " & ".join(f"{br(max(c) / min(c), 1)}$\\times$" for c in colunas) + r" \\",
-           r"\bottomrule", r"\end{tabular}"]
+           r"\hline", r"\end{tabular}"]
 escrever("perfil", linhas)
 
 # ---------------------------------------------------------------- alocação a 50 %
-linhas = [r"\begin{tabular}{l cccccccccccc}", r"\toprule",
-          r"\textbf{Camada} & " + " & ".join(str(c) for c in range(12)) + r" \\", r"\midrule"]
+linhas = [r"\begin{tabular}{l cccccccccccc}", r"\hline",
+          r"\textbf{Camada} & " + " & ".join(str(c) for c in range(12)) + r" \\", r"\hline"]
 for estrategia, nome in (("mag", "Magnitude (\\%)"), ("est", "Estruturada (\\%)")):
     taxas = [float(x) for x in CONFIGS[(estrategia, "b1")][50]["taxas_por_camada"].split(";")]
     linhas.append(f"{nome} & " + " & ".join(str(round(t * 100)) for t in taxas) + r" \\")
-linhas += [r"\bottomrule", r"\end{tabular}"]
+linhas += [r"\hline", r"\end{tabular}"]
 escrever("alocacao_50", linhas)
 
 # ---------------------------------------------------------------- fine-tuning
@@ -208,17 +210,17 @@ def celulas_ft(estrategia, taxa):
     return [br(float(r["perplexity_pre"])), br(ppl(r)), br(ppl(r) / PPL0_FT)]
 
 
-linhas = [r"\begin{tabular}{l rrr rrr}", r"\toprule",
+linhas = [r"\begin{tabular}{l rrr rrr}", r"\hline",
           r"& \multicolumn{3}{c}{\textbf{Sem análise de sensibilidade}}"
           r" & \multicolumn{3}{c}{\textbf{Com análise de sensibilidade}} \\",
-          r"\cmidrule(lr){2-4} \cmidrule(lr){5-7}",
+          r"\cline{2-4} \cline{5-7}",
           r"\textbf{Configuração}" + r" & \textbf{\textit{One-shot}} & \textbf{Pós-FT} & \textbf{Razão}" * 2
-          + r" \\", r"\midrule",
-          rf"Denso (controle) & \multicolumn{{6}}{{c}}{{{br(float(denso_ft['perplexity_pre']))}"
-          rf" \textit{{one-shot}}; {br(PPL0_FT)} pós-FT (referência da razão)}} \\", r"\midrule"]
+          + r" \\", r"\hline",
+          rf"Modelo base & \multicolumn{{6}}{{c}}{{{br(float(denso_ft['perplexity_pre']))}"
+          rf" \textit{{one-shot}}; {br(PPL0_FT)} pós-FT (referência da razão)}} \\", r"\hline"]
 for rot, sem, com, t in LINHAS_FT:
     linhas.append(f"{rot} {pct(t)} & " + " & ".join(celulas_ft(sem, t) + celulas_ft(com, t)) + r" \\")
-linhas += [r"\bottomrule", r"\end{tabular}"]
+linhas += [r"\hline", r"\end{tabular}"]
 escrever("finetune", linhas)
 
 # ---------------------------------------------------------------- trade-off
@@ -232,15 +234,15 @@ def ponto_eficiencia(s):
     return pct(melhor) if melhor else "---"
 
 
-NOME_ALOC = {"global": "Sem análise de sensibilidade --- global",
+NOME_ALOC = {"global": "Sem análise de sensibilidade --- não uniforme",
              "uniforme": "Sem análise de sensibilidade --- uniforme",
              "b1": r"Com análise de sensibilidade --- $\beta = 1{,}0$",
              "b05": r"Com análise de sensibilidade --- $\beta = 0{,}5$"}
 SUB = r"\multicolumn{{5}}{{l}}{{\quad\textit{{{}}}}} \\"
-linhas = [r"\begin{tabular}{l r r r c}", r"\toprule",
+linhas = [r"\begin{tabular}{l r r r c}", r"\hline",
           r"\textbf{Configuração} & \textbf{PPL} & $\boldsymbol{\Delta E}$ \textbf{(\%)}"
-          r" & $\boldsymbol{\eta}$ & $\boldsymbol{S^*_E}$ \\", r"\midrule",
-          r"\multicolumn{5}{l}{\textbf{Sem retreinamento} (médias de 10\,\% a 50\,\%)} \\",
+          r" & $\boldsymbol{\eta}$ & $\boldsymbol{S^*_E}$ \\", r"\hline",
+          r"\multicolumn{5}{l}{\textbf{Sem retreinamento} (médias de 10\% a 50\%)} \\",
           rf"Modelo base & {br(PPL0)} & 0,0 & 1,000 & --- \\"]
 for estrategia, nome in (("mag", "Poda por magnitude"), ("est", "Poda estruturada")):
     linhas.append(SUB.format(nome))
@@ -251,7 +253,7 @@ for estrategia, nome in (("mag", "Poda por magnitude"), ("est", "Poda estruturad
         eta = (PPL0 / geo) / (1 - de / 100)
         linhas.append(rf"\qquad {NOME_ALOC[a]} & {br(geo)} & {br(de, 1)} & {br(eta, 3)}"
                       rf" & {ponto_eficiencia(s)} \\")
-linhas += [r"\midrule", r"\multicolumn{5}{l}{\textbf{Após o \textit{fine-tuning} de recuperação}} \\",
+linhas += [r"\hline", r"\multicolumn{5}{l}{\textbf{Após o \textit{fine-tuning} de recuperação}} \\",
            rf"Modelo base retreinado & {br(PPL0_FT)} & 0,0 & 1,000 & --- \\"]
 CONFIGS_FT = [("Poda por magnitude", "magnitude", "uniforme", 30),
               ("Poda por magnitude", "magnitude", "uniforme", 50),
@@ -270,7 +272,7 @@ for nome, e, a, t in CONFIGS_FT:
     dentro = ppl(r) <= (1 + LIMIAR_SE) * PPL0_FT
     linhas.append(rf"\qquad {NOME_ALOC[a]}, {pct(t)} & {br(ppl(r))} & {br(de, 1)} & {br(eta, 3)}"
                   rf" & {pct(t) if dentro else '---'} \\")
-linhas += [r"\bottomrule", r"\end{tabular}"]
+linhas += [r"\hline", r"\end{tabular}"]
 escrever("tradeoff", linhas)
 
 print(f"Tabelas escritas em {SAIDA}")
