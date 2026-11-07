@@ -708,6 +708,8 @@ A aplicação desses critérios a um conjunto de estratégias candidatas, as est
 selecionadas e os detalhes de sua implementação são apresentados no
 Capítulo~\ref{chap:desenvolvimento} (Tabela~\ref{tab:candidatos_poda}).
 
+\comentariolinha{A aplicação desses critérios ao conjunto de estratégias candidatas, bem como a apresentação das estratégias selecionadas e dos detalhes de sua implementação, são descritas na Tabela~\ref{tab:candidatos_poda}.}
+
 % -------------------------------------------------------
 % AJUSTE: reescrita da Seção 4.3 — a estratégia otimizada passa a ser declarada
 % (sensibilidade por camada); taxas dinâmicas, momento de aplicação e Knowledge
@@ -736,6 +738,8 @@ Esta é a etapa central do trabalho. Toda poda a uma dada taxa precisa decidir q
 remover de cada camada do modelo. Esta etapa investiga se medir o que cada camada suporta
 perder, em vez de supô-lo, melhora essa decisão.
 
+\comentariolinha{Esta é a etapa central do trabalho. Para cada taxa de poda, é necessário determinar quanto remover de cada camada do modelo. Esta etapa investiga se essa decisão pode ser aprimorada ao medir a tolerância de cada camada à remoção de parâmetros, em vez de assumir uma distribuição uniforme ou previamente definida.}
+
 \subsection{O Problema: Quanto Podar em Cada Camada}
 
 A fração removida dentro de uma camada é a \textbf{taxa de poda por camada}. A taxa de poda
@@ -743,11 +747,16 @@ do modelo, definida na Etapa~2, é a média das taxas por camada; quando as cama
 tamanhos diferentes, a média é ponderada pelo tamanho de cada uma. O conjunto de taxas por
 camada adotado para atingir uma taxa de poda é a \textbf{alocação}.
 
+\comentariolinha{A fração de elementos removidos de uma camada corresponde à sua \textbf{taxa de poda por camada}. A taxa de poda do modelo, definida na Etapa~2, corresponde à média das taxas por camada, ponderada pelo número de elementos de cada camada quando seus tamanhos são diferentes. O conjunto de taxas de poda por camada utilizado para atingir determinada taxa de poda do modelo é denominado \textbf{esquema de poda}.}
+
 Uma mesma taxa de poda admite muitas alocações. Em um modelo de quatro camadas de mesmo
 tamanho, podar 30\% de cada camada e podar 20\%, 50\%, 10\% e 40\% das camadas 1 a 4 são
 duas alocações para a mesma taxa de poda de 30\%: ambas removem o mesmo número de elementos
 e diferem apenas nas camadas de onde eles saem. Como as camadas não necessariamente reagem
 da mesma forma à remoção, as alocações podem produzir modelos de qualidades diferentes.
+
+\comentariolinha{Uma mesma taxa de poda pode ser obtida por diferentes alocações. Em um modelo com quatro camadas de mesmo tamanho, aplicar uma taxa de poda de 30\% a cada camada e distribuir as taxas em 20\%, 50\%, 10\% e 40\% nas camadas 1 a 4 são duas alocações distintas para a mesma taxa de poda do modelo: ambas removem o mesmo número de elementos, mas diferem quanto às camadas das quais eles são removidos. Como as camadas podem apresentar diferentes níveis de tolerância à remoção, essas alocações podem produzir modelos com desempenhos distintos.}
+
 % AJUSTE: 26/10 — pedido do Enzo: "robustez"/"robusta" passam a "tolerância à
 % poda"/"tolerante" em todo o texto (capítulos 2, 4, 5 e 6). Motivos: (i) é o termo usado
 % na literatura para o inverso da sensibilidade ("tolerances to pruning"; a documentação
@@ -759,11 +768,15 @@ da mesma forma à remoção, as alocações podem produzir modelos de qualidades
 Chama-se \textbf{sensível} a camada cuja poda degrada muito o desempenho preditivo do
 modelo, e \textbf{tolerante} à poda, a que o degrada pouco.
 
+\comentariolinha{Denomina-se \textbf{sensível} a camada cuja poda provoca grande degradação do desempenho preditivo do modelo e \textbf{tolerante} à poda aquela cuja remoção de elementos provoca pouca degradação.}
+
 As duas alocações da Etapa~2 (Seção~\ref{sec:metodologia_poda_sem}) têm uma limitação
 comum: nenhuma mede o quanto cada camada é sensível. A uniforme ignora a questão e trata as
 camadas como intercambiáveis. A não uniforme a infere dos pesos, o que é uma aproximação, e não
 uma medida. A Seção~\ref{subsec:sensibilidade} (Figura~\ref{fig:alocacao_sensibilidade})
 ilustra a diferença entre a alocação uniforme e uma alocação que segue a sensibilidade.
+
+\comentariolinha{As duas alocações apresentadas na Seção~\ref{sec:metodologia_poda_sem} compartilham uma limitação: nenhuma mede diretamente a sensibilidade de cada camada à poda. O esquema de poda uniforme desconsidera essas diferenças e trata as camadas como intercambiáveis. O esquema de poda não uniforme, por sua vez, infere a sensibilidade a partir dos pesos, fornecendo uma aproximação, mas não uma medida direta. A Figura~\ref{fig:alocacao_sensibilidade} ilustra a diferença entre o esquema de poda uniforme e aquela orientada pela sensibilidade das camadas.}
 
 \subsection{Hipótese, Desenho e Critérios de Escolha da Técnica}
 
@@ -773,6 +786,8 @@ Para testá-la, fixa-se a taxa de poda e varia-se apenas a alocação, e os mode
 são comparados segundo as métricas e o critério da Seção~\ref{sec:metodologia_metricas}.
 Como a taxa de poda é a mesma, a técnica não busca reduzir o custo, e sim a perda de
 desempenho preditivo que acompanha essa redução.
+
+\comentariolinha{A hipótese central deste trabalho é que a poda mais intensa das camadas tolerantes e menos intensa das camadas sensíveis resulte em menor perda de desempenho preditivo, para uma mesma taxa de poda, em comparação com as alocações uniforme e não uniforme. Para testá-la, mantém-se fixa a taxa de poda e varia-se apenas o esquema de poda. Os modelos resultantes são comparados segundo as métricas e o critério definidos na Seção~\ref{sec:metodologia_metricas}. Como a taxa de poda permanece constante, o objetivo da técnica não é ampliar a compressão, mas minimizar a perda de desempenho preditivo associada à remoção de parâmetros.}
 
 % A técnica de otimização foi escolhida, entre as alternativas consideradas, segundo três
 % critérios:
@@ -795,6 +810,8 @@ desempenho preditivo que acompanha essa redução.
 Mantidos o modelo, o critério de
 importância, a taxa de poda e a ausência de treinamento, qualquer diferença de desempenho
 entre os dois pode ser atribuída à forma como a poda se distribui entre as camadas.
+
+\comentariolinha{Mantidos constantes o modelo, o critério de importância, a taxa de poda e a ausência de treinamento, as diferenças de desempenho entre os modelos podem ser atribuídas à distribuição da poda entre as camadas.}
 
 % \subsection{Alternativas de Estratégias de Otimização Consideradas e Descartadas}
 
@@ -834,17 +851,21 @@ A técnica de otimização adotada neste trabalho é a \textbf{análise de sensi
 sensibilidade de cada camada e podar mais as tolerantes e menos as sensíveis. A medição
 resulta no \textbf{perfil de sensibilidade}: uma degradação por camada.
 
+\comentariolinha{A técnica de otimização adotada neste trabalho é a \textbf{análise de sensibilidade por camada}, que consiste em medir a sensibilidade de cada camada à poda para orientar a distribuição das remoções, priorizando as camadas mais tolerantes e preservando as mais sensíveis. Essa análise produz o \textbf{perfil de sensibilidade}, que expressa a degradação do desempenho preditivo associada à poda de cada camada.}
+
 A técnica tem duas fases (Figura~\ref{fig:fluxo_sensibilidade}). A fase 1 mede o perfil e
 roda uma única vez por estratégia de poda. A fase 2 converte o perfil em uma alocação e é
 refeita para cada taxa de poda avaliada, sem nova medição.
+
+\comentariolinha{A técnica compreende duas fases (Figura~\ref{fig:fluxo_sensibilidade}). A primeira mede o perfil de sensibilidade e é executada uma única vez para cada estratégia de poda. A segunda utiliza esse perfil para determinar a esquema de poda e é repetida para cada taxa de poda avaliada, sem necessidade de realizar novas medições.}
 
 % Figura do fluxo; a caixa tracejada superior é executada uma vez, a inferior, uma vez
 % por taxa de poda.
 \begin{figure}[htb]
 \centering
-\caption{Fluxo da análise de sensibilidade por camada. A fase 1 é executada uma vez por
+\caption{Fluxo \adicionarmarcelo{da técnica de} análise de sensibilidade por camada. \st{A fase 1 é executada uma vez por
 estratégia de poda; a fase 2 e a poda são repetidas para cada taxa de poda, a partir do
-mesmo perfil.}
+mesmo perfil.}}
 \label{fig:fluxo_sensibilidade}
 \begin{tikzpicture}[font=\scriptsize,
   caixa/.style={rectangle,rounded corners=2pt,draw,thick,fill=gray!8,
@@ -879,7 +900,13 @@ mesmo perfil.}
 \fonte{Elaboração própria.}
 \end{figure}
 
+\comentariolinha{A fase 1 é executada uma vez por
+estratégia de poda; a fase 2 e a poda são repetidas para cada taxa de poda, a partir do
+mesmo perfil.}
+
 O procedimento, para uma estratégia de poda e uma taxa de poda dadas, tem cinco passos.
+
+\comentariolinha{Para uma determinada estratégia e taxa de poda, o procedimento compreende cinco etapas.}
 
 \begin{enumerate}
     \item \textbf{Medir o perfil (fase 1).} Para cada camada, parte-se do modelo base e
@@ -890,26 +917,35 @@ O procedimento, para uma estratégia de poda e uma taxa de poda dadas, tem cinco
           a mesma para todas as camadas, para que as degradações sejam comparáveis. Ela serve
           apenas à medição e não gera modelo final. O perfil é medido uma só vez por
           estratégia e reaproveitado em todas as taxas de poda.
+   	\item \comentariolinha{\textbf{Medir o perfil (fase 1).} Para cada camada, parte-se do modelo base e remove-se, exclusivamente daquela camada, uma fração dos elementos denominada \textbf{taxa-sonda}. Em seguida, mede-se a \textit{perplexity} (Seção~\ref{sec:metodologia_metricas}) e compara-se o resultado com o do modelo base. A \textbf{degradação} da camada corresponde ao aumento observado nessa métrica. Antes de avaliar a camada seguinte, o modelo é restaurado ao seu estado original. A taxa-sonda é mantida constante para todas as camadas, garantindo a comparabilidade das degradações. Essa taxa é utilizada exclusivamente para a medição e não gera modelos finais. O perfil de sensibilidade é medido uma única vez por estratégia e reutilizado em todas as taxas de poda.}
+   	\comentline{Como é determina a taxa sonda inicial?}
     \item \textbf{Converter degradação em tolerância.} A \textbf{tolerância à poda} de uma
           camada, ou simplesmente tolerância, é o inverso de sua degradação: quanto menos a
           camada degrada o modelo, mais tolerante ela é. As tolerâncias fixam apenas a proporção entre as taxas por camada, e não o
           seu valor.
+  	\item \comentariolinha{\textbf{Converter degradação em tolerância.} A \textbf{tolerância à poda}, ou simplesmente tolerância, de uma camada é definida como o inverso de sua degradação: quanto menor a degradação provocada pela poda, maior sua tolerância. Esses valores determinam apenas as proporções entre as taxas de poda por camada, e não seus valores absolutos.}
     \item \textbf{Escalar à taxa de poda.} Todas as tolerâncias são multiplicadas por um
           mesmo fator, escolhido para que a média das taxas resultantes seja a taxa de poda
           pretendida. As taxas resultantes formam a \textbf{alocação com análise
           de sensibilidade}. Um teto impede que uma camada seja removida por inteiro: quando
           uma camada o atinge, o excedente passa às demais. A regra admite ainda um
           parâmetro que controla a intensidade com que as diferenças do perfil são seguidas.
+  	\item \comentariolinha{\textbf{Escalar à taxa de poda.} Todas as tolerâncias são multiplicadas por um mesmo fator, determinado de modo que a média ponderada das taxas resultantes corresponda à taxa de poda pretendida. Essas taxas definem o \textbf{esquema de poda com análise de sensibilidade}. Um teto limita a taxa de poda de cada camada, impedindo sua remoção integral. Quando uma camada atinge esse limite, o excedente é redistribuído entre as demais. A regra também admite um parâmetro que controla a intensidade com que as diferenças observadas no perfil de sensibilidade são refletidas na esquema de poda.}
+  	\comentline{Como é determinado o fator de multiplicação?}
     \item \textbf{Podar.} Em cada camada, o critério de importância da estratégia remove os
           elementos de menor pontuação, até atingir a taxa daquela camada. A sensibilidade
           decide \textit{quanto} podar em cada camada; a estratégia decide \textit{quais}
           elementos saem.
+    \item \comentariolinha{\textbf{Poda.} Em cada camada, o critério de poda da estratégia seleciona os elementos de menor pontuação para remoção, até atingir a taxa de poda definida para aquela camada. Assim, a análise de sensibilidade determina \textit{quanto} podar em cada camada, enquanto a estratégia de poda determina \textit{quais} elementos remover.}
     \item \textbf{Avaliar e comparar.} O modelo podado é avaliado pelas métricas da
           Seção~\ref{sec:metodologia_metricas} e comparado aos modelos das alocações
           uniforme e não uniforme, na mesma taxa de poda.
+  	\item \comentariolinha{\textbf{Avaliar e comparar.} O modelo podado é avaliado segundo as métricas da Seção~\ref{sec:metodologia_metricas} e comparado aos modelos obtidos pelas alocações uniforme e não uniforme, mantendo-se a mesma taxa de poda.}
 \end{enumerate}
 
 Os passos 2 a 5 repetem-se para cada taxa de poda avaliada; só o passo 1 não se repete.
+
+\comentariolinha{Os passos 2 a 5 são repetidos para cada taxa de poda avaliada, enquanto o passo 1 é executado uma única vez por estratégia de poda.}
 
 \subsubsection*{Exemplo}
 
@@ -917,16 +953,21 @@ Os passos 2 a 5 repetem-se para cada taxa de poda avaliada; só o passo 1 não s
 % (1, 2, 4 e 5 passam a 2, 5, 1 e 4), para que a tabela não sugira que a taxa de poda
 % cresce com a posição da camada. Os valores, a média e o fator 0,10 não mudam; o
 % Desenvolvimento (tab:exemplo_beta e o exemplo do teto) acompanha a nova ordem.
-A Tabela~\ref{tab:exemplo_alocacao} percorre os passos 1 a 3 em um modelo hipotético de
-quatro camadas de mesmo tamanho, podado à taxa de poda de 30\%.
+\st{A Tabela~\ ref{tab:exemplo\_alocacao} percorre os passos 1 a 3 em um modelo hipotético de
+quatro camadas de mesmo tamanho, podado à taxa de poda de 30\%.}
+
+
+\adicionarmarcelo{A Tabela~\ref{tab:exemplo_alocacao} ilustra um exemplo numérico dos passos 1 a 3 da análise de sensibilidade em um modelo hipotético de
+quatro camadas de mesmo tamanho, à taxa de poda de 30\%. Valores ilustrativos, não medidos; a tolerância é o inverso da degradação, e cada taxa da alocação com análise de sensibilidade é a tolerância multiplicada por 0,10. A medida de degradação adotada é definida
+na Seção~\ref{subsec:fase1}.}
 
 \begin{table}[htb]
 \centering
-\caption{Exemplo dos passos 1 a 3 da análise de sensibilidade em um modelo hipotético de
+\caption{\adicionarmarcelo{Exemplo numérico dos passos 1 a 3 da análise de sensibilidade em um modelo hipotético}\st{Exemplo dos passos 1 a 3 da análise de sensibilidade em um modelo hipotético de
 quatro camadas de mesmo tamanho, à taxa de poda de 30\%. Valores ilustrativos, não
 medidos; a tolerância é o inverso da degradação, e cada taxa da alocação com análise de
 sensibilidade é a tolerância multiplicada por 0,10. A medida de degradação adotada é definida
-na Seção~\ref{subsec:fase1}.}
+na Seção}~\ref{subsec:fase1}.}
 \label{tab:exemplo_alocacao}
 \small
 \setlength{\tabcolsep}{5pt}
@@ -937,12 +978,14 @@ na Seção~\ref{subsec:fase1}.}
 Degradação (passo 1) & 0,50 & 0,20 & 1,00 & 0,25 & --- \\
 Tolerância (passo 2) & 2 & 5 & 1 & 4 & 3 \\
 \hline
-\multicolumn{6}{l}{\textit{Taxa de poda por camada, por alocação (passo 3)}} \\
+\multicolumn{6}{l}{\textit{Taxa de poda por camada, por \st{alocação} \adicionarmarcelo{esquema de poda} (passo 3)}} \\
 Uniforme & 30\% & 30\% & 30\% & 30\% & 30\% \\
 Com análise de sensibilidade & 20\% & 50\% & 10\% & 40\% & 30\% \\
 \hline
 \end{tabular}
 \end{table}
+
+
 
 No passo 1, cada camada é podada sozinha à taxa-sonda, e a \textit{perplexity} do modelo
 resultante é comparada à do modelo intacto. Supõe-se que a camada 3 produza a maior
@@ -952,6 +995,11 @@ camada 2, que degradou o modelo cinco vezes menos que a camada 3, é cinco vezes
 tolerante. As tolerâncias 2, 5, 1 e 4 indicam que a camada 2 deve perder cinco vezes mais
 elementos que a camada 3.
 
+\comentariolinha{A etapa 1 consiste em podar cada camada de forma isolada, aplicando uma taxa-sonda e avaliando o impacto na \textit{perplexity} em relação ao modelo base. Conforme ilustrado na primeira linha da tabela, supondo que a camada 3 sofra a maior degradação e a camada 2, a menor, conclui-se que a camada 3 possui alta sensibilidade à poda, ao passo que a camada 2 apresenta maior tolerância à poda. \newline
+Na etapa 2, a tolerância de cada camada é definida pelo inverso de sua respectiva degradação. Dessa forma, se a degradação da camada 2 é cinco vezes menor que a da camada 3, atribui-se a ela uma tolerância cinco vezes maior. Portanto, a distribuição das tolerâncias (2, 5, 1 e 4) estabelece que a taxa de poda efetiva da camada 2 deverá ser cinco vezes mais agressiva do que a da camada 3.}
+
+\comentline{Como foi definida a taxa-sonda inicial?}
+
 No passo 3, todas as tolerâncias são multiplicadas pelo mesmo fator. Como a média das
 tolerâncias é 3, o fator que leva a média das taxas a 30\% é 0,10, e as taxas por camada
 resultam em 20\%, 50\%, 10\% e 40\% --- a mesma alocação usada como exemplo no início da
@@ -960,18 +1008,36 @@ as taxas, 10\%, 25\%, 5\% e 20\%. No passo 4, cada camada perde essa fração do
 menor pontuação segundo o critério da estratégia. O perfil de sensibilidade decide, portanto,
 como a poda se distribui entre as camadas; a taxa de poda decide quanto se remove no total.
 
+\comentariolinha{A etapa 3 normaliza as tolerâncias para atingir a taxa global de poda pretendida. Como a média das tolerâncias calculadas é 3, aplica-se o fator 0,10 para obter uma taxa de poda de 30\%. Com isso, as taxas individuais das camadas são 20\%, 50\%, 10\% e 40\%, mantendo a mesma proporção do exemplo inicial. Para uma taxa global de poda de 15\%, o fator seria 0,05, resultando em taxas de 10\%, 25\%, 5\% e 20\%.}
+
+\comentariolinha{Na etapa 4, ocorre a remoção dos parâmetros. Em cada camada, são removidos os elementos de menor pontuação, segundo o critério de poda adotado, até atingir a respectiva taxa de poda. Assim, o perfil de sensibilidade determina a \textit{distribuição} da poda entre as camadas, enquanto a taxa global estabelece o \textit{volume total} de parâmetros removidos.}
+
 As duas alocações da Tabela~\ref{tab:exemplo_alocacao} têm a mesma média e, por isso,
 removem o mesmo número de elementos; diferem apenas nas camadas de onde eles saem. A
 alocação não uniforme da Etapa~2 também atribui taxas diferentes às camadas, mas elas
 resultam da pontuação dos pesos, e não de uma medida de degradação.
 
+%\comentariolinha{Os dois esquemas de poda apresentados na Tabela~\ref{tab:exemplo_alocacao} têm a mesma média e, portanto, removem o mesmo número de elementos, diferindo apenas quanto às camadas das quais eles são removidos. O esquema de poda não uniforme da Etapa~2 também atribui taxas distintas às camadas, mas essas taxas são determinadas pelas pontuações dos pesos, e não por uma medida direta de degradação.}
+
+Embora as duas alocações da Tabela~\ref{tab:exemplo_alocacao} apresentem a mesma média e, consequentemente, descartem a mesma quantidade global de parâmetros, elas diferem na distribuição espacial dessa esparsidade. De forma análoga, a alocação não uniforme da Etapa~2 estabelece taxas heterogêneas para as camadas; contudo, essa distribuição é baseada na magnitude (ou pontuação) intrínseca dos pesos, em vez de refletir uma medida de degradação de desempenho do modelo.
+
+%\comentariolinha{Embora os dois esquemas de poda apresentados na Tabela~\ref{tab:exemplo_alocacao} apresentem a mesma média e, consequentemente, removam a mesma quantidade de parâmetros, eles diferem quanto à distribuição das remoções entre as camadas. De forma análoga, o esquema de poda não uniforme da Etapa~2 estabelece taxas distintas para cada camada; entretanto, essas taxas são determinadas pelas pontuações dos pesos, e não por medidas de degradação do desempenho do modelo.}
+
+
 Como cada estratégia de poda remove unidades de natureza distinta --- pesos individuais ou
 estruturas inteiras ---, o perfil é levantado separadamente para cada uma delas.
+
+\comentline{A parágrafo abaixo, mesclar os três parágrafos acima.}
+
+\comentariolinha{Embora os dois esquemas de poda apresentados na Tabela~\ref{tab:exemplo_alocacao} apresentem a mesma média e, portanto, removam a mesma quantidade global de parâmetros, eles diferem quanto à distribuição das remoções entre as camadas. De forma semelhante, o esquema de poda não uniforme da Etapa~2 estabelece taxas distintas para cada camada. Entretanto, essas taxas são determinadas pelas pontuações individuais dos pesos, e não por uma medida direta da degradação do desempenho do modelo. Como o perfil de sensibilidade se baseia na degradação empírica e cada estratégia de poda remove unidades de naturezas distintas, sejam pesos individuais ou estruturas inteiras, sua medição deve ser realizada separadamente para cada estratégia.}
+
 
 O Capítulo~\ref{chap:desenvolvimento} (Seção~\ref{sec:estrategia_otimizada}) apresenta o
 que aqui ficou genérico, a forma exata da medida de degradação, o valor da taxa-sonda, o
 valor do teto, o parâmetro de intensidade e o cálculo do fator, e a aplicação ao modelo
 escolhido.
+
+\comentariolinha{A aplicação dessa estratégia é detalhada na Seção~\ref{sec:estrategia_otimizada}.}
 
 % -------------------------------------------------------
 % AJUSTE: seção nova — o fine-tuning de recuperação era, até aqui, apenas um
@@ -992,6 +1058,8 @@ de podá-lo, para que os parâmetros remanescentes compensem a ausência dos rem
 incorpora esse retreinamento ao experimento, com o objetivo de medir quanto da degradação
 causada pela poda pode ser recuperada.
 
+\comentariolinha{As Etapas 2 e 3 adotam uma abordagem \textit{one-shot}, na qual a poda é seguida imediatamente pela avaliação do modelo, sem retreinamento. Essa escolha metodológica permite mensurar o impacto direto da remoção de parâmetros sobre o desempenho preditivo, sem a interferência de eventuais efeitos de recuperação. Essa abordagem, entretanto, difere do procedimento convencional das estratégias clássicas de poda, que empregam o retreinamento para permitir que os pesos remanescentes se adaptem e compensem as perdas decorrentes da remoção de parâmetros \cite{Han2015,Li2017} (Seção~\ref{sec:pruning}). Por sua vez, a etapa 4 incorpora o retreinamento ao escopo experimental, com o objetivo de avaliar a capacidade de recuperação do modelo diante da degradação provocada pela poda.}
+
 O \textit{fine-tuning} de recuperação consiste em continuar o treinamento do modelo já
 podado. Os parâmetros remanescentes são ajustados sobre a partição de treino da base de dados
 de avaliação, com o mesmo objetivo do pré-treinamento --- a predição do próximo
@@ -999,6 +1067,8 @@ de avaliação, com o mesmo objetivo do pré-treinamento --- a predição do pr�
 configurações retreinadas. Ao final, o modelo é avaliado novamente na partição de teste,
 pelas mesmas métricas da Seção~\ref{sec:metodologia_metricas}. A recuperação é medida pela
 comparação entre a \textit{perplexity} do modelo podado antes e depois do retreinamento.
+
+\comentariolinha{O \textit{fine-tuning} de recuperação consiste em dar continuidade ao treinamento do modelo após a poda. Os parâmetros remanescentes são ajustados utilizando a partição de treino da base de dados de avaliação, com o mesmo objetivo do pré-treinamento --- a predição do próximo \textit{token} --- e um número fixo de passos de otimização, igual para todas as configurações submetidas ao retreinamento. Ao final, o modelo é novamente avaliado na partição de teste, utilizando as mesmas métricas da Seção~\ref{sec:metodologia_metricas}. A recuperação é quantificada pela comparação da \textit{perplexity} do modelo podado antes e depois do retreinamento.}
 
 % Dois cuidados metodológicos condicionam a validade dessa comparação.
 
