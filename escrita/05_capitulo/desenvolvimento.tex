@@ -29,12 +29,16 @@ de aspectos comuns a todas as etapas: o \textit{framework} e as bibliotecas empr
 organização do \textit{pipeline} experimental, o ambiente de execução, a síntese das
 decisões de implementação e as limitações reconhecidas.
 
+\comentariolinha{Este capítulo descreve a implementação do experimento e as decisões técnicas decorrentes da aplicação da metodologia estabelecida no Capítulo~\ref{chap:metodologia}. Após apresentar as questões de pesquisa que orientam a investigação, o capítulo organiza-se segundo as quatro etapas metodológicas: escolha do modelo base e da base de dados (Seção~\ref{sec:etapa1}), aplicação da poda sem otimização (Seção~\ref{sec:metodos_poda}), aplicação da poda com otimização (Seção~\ref{sec:estrategia_otimizada}) e aplicação do \textit{fine-tuning} de recuperação (Seção~\ref{sec:finetuning}). As seções finais abordam aspectos comuns a todas as fases, incluindo o \textit{framework} e as bibliotecas utilizadas, a arquitetura do \textit{pipeline}, o ambiente computacional, a síntese das decisões de implementação e as limitações do estudo.}
+
 %\section{Visão Geral}\label{sec:visao_geral}
+
+
 
 A pergunta que orienta o trabalho é empírica e comparativa. Não se pretende demonstrar que
 a poda comprime modelos, resultado já consolidado pela literatura
 \cite{Han2015, Li2017, Blalock2020}, mas responder a duas questões mais específicas,
-sob condições controladas e reprodutíveis:
+sob condições controladas e reprodutíveis: \comentmargin{A pergunta do trabalho precisa estar na metodologia. Nesse caso adaptar a introdução desse capítulo.}
 
 % AJUSTE: 30/10 — com a alocação "global" renomeada "não uniforme" (pedido do orientador),
 % a pergunta (B), que chamava a alocação com análise de sensibilidade de "alocação não
@@ -59,7 +63,8 @@ descrito adiante.
 
 \section{Modelo Base}\label{sec:etapa1}
 
-Na primeira etapa, o GPT-2 \textit{small} \cite{Radford2019} foi selecionado como modelo
+\comentmargin{Está estranho começar já falando qual modelo foi escolhido. Eu descreveria primeiro todo o processo de escolha do modelo e terminaria indicando o modelo escolhido.}
+Na  primeira etapa, o GPT-2 \textit{small} \cite{Radford2019} foi selecionado como modelo
 base. Utilizou-se a versão pré-treinada disponibilizada na plataforma Hugging
 Face, executada sem nenhuma modificação e avaliada no conjunto de teste da base de dados
 WikiText-2 \cite{Merity2017}. Registraram-se a \textit{perplexity}, a contagem de
@@ -71,7 +76,7 @@ da linguagem Python; e o consumo de energia, com a biblioteca CodeCarbon
 (Tabela~\ref{tab:gpt2_config}), valor contra o qual são comparadas todas as configurações
 podadas das etapas seguintes. As subseções a seguir apresentam a seleção do modelo
 (Seção~\ref{sec:modelo}), a seleção da base de dados (Seção~\ref{sec:dataset}) e as
-métricas registradas (Seção~\ref{sec:metricas}).
+métricas registradas (Seção~\ref{sec:metricas}). 
 
 \subsection{Seleção do Modelo}\label{sec:modelo}
 
@@ -92,7 +97,7 @@ e carregados por meio da biblioteca PyTorch \cite{Paszke2019}.
 % numerada de 0 a 11 como no código; daqui em diante, "camada" para essa unidade.
 A Tabela~\ref{tab:gpt2_config} resume a configuração da variante utilizada. Ao longo deste
 trabalho, cada um dos 12 blocos \textit{Transformer} do modelo é denominado
-\textbf{camada}, e as camadas são numeradas de 0 a 11, na ordem em que processam a
+\textbf{camada} \comentmargin{Parece estranho apresentar uma definição de um termo que já foi muito usado anteriormente. (camada)}, e as camadas são numeradas de 0 a 11, na ordem em que processam a
 entrada, conforme a indexação adotada na implementação. É nessa unidade que se definem a
 análise de sensibilidade por camada e as taxas de poda por camada.
 
@@ -124,7 +129,7 @@ Perplexity no WikiText-2 (teste) & 25,17 \\
 
 A Seção~\ref{subsec:metodologia_selecao_modelo} estabeleceu seis critérios objetivos (C1 a C6) para a
 seleção do modelo base. A Tabela~\ref{tab:candidatos_modelo} aplica esses
-critérios a nove candidatos: as quatro variantes do GPT-2 \cite{Radford2019}, o
+critérios a nove candidatos: as quatro variantes do GPT-2 \cite{Radford2019} \comentmargin{Citação, verificar a primeira menção ao GPT-2 e usar citação apenas nela. O esperado que a primeira citação esteja no referencial teórico. Fazer isso para os demais modelo e outros casos semelhantes.}, o
 DistilGPT2 \cite{Sanh2019}, o OPT-125M \cite{Zhang2022}, o Pythia-160M
 \cite{Biderman2023}, o BERT-base \cite{Devlin2019} e o Llama 2 7B \cite{Touvron2023}. Os
 candidatos compreendem as quatro variantes da família GPT-2; três modelos abertos de porte
@@ -169,6 +174,7 @@ milhões.\end{minipage}\par\smallskip
 \citeonline{Rajbhandari2020}, \citeonline{Frantar2023}, \citeonline{Sun2024},
 \citeonline{Gao2020} e da plataforma Hugging Face (acesso em 28 set. 2026).}
 \end{table}
+\comentline{Deixar na tabela apenas um título, a explicação deve ficar no corpo do texto, fazer isso em todas as tabelas.}
 
 As quatro variantes do GPT-2 atendem a C5 porque \citeonline{Radford2019} publicam, na
 Tabela 3 do artigo original, a \textit{perplexity} de cada uma no WikiText-2: 29,41
@@ -243,14 +249,16 @@ Cabe observar que, embora seja a menor variante da família GPT-2, o modelo é c
 cinco vezes maior que a ResNet-50, arquitetura tradicionalmente usada em estudos de poda
 em visão computacional. Essa diferença de escala é justamente o que torna o trabalho
 pertinente: as conclusões da literatura de poda foram estabelecidas majoritariamente em
-redes convolucionais, e não é evidente que se transfiram para modelos com esse perfil de
+redes convolucionais, e não é evidente que se transfiram para modelos \adicionarmarcelo{com arquitetura transformes} com esse perfil de
 parâmetros.
+
+\comentline{Achei essa descrição de escolha um pouco prolixa, tente ser mais objetivo, principalmente, considerando que você já explicou todas as etapas de escolha no Capítulo de Metodologia. }
 
 \subsection{Seleção da Base de Dados}\label{sec:dataset}
 
 %\subsubsection{O WikiText-2}\label{subsec:wikitext2}
 
-O WikiText-2 é uma base de dados de língua inglesa extraída de artigos verificados da
+O WikiText-2 \comentmargin{Está estranho começar já falando qual base de dados foi escolhida. Eu descreveria primeiro todo o processo de escolha e terminaria indicando a base escolhida.} é uma base de dados de língua inglesa extraída de artigos verificados da
 Wikipédia, proposta por \citeonline{Merity2017}, com \textit{perplexity} do GPT-2 nessa base
 de dados reportada por \citeonline{Radford2019}. Diferentemente de bases de dados construídas a partir de
 frases isoladas, o WikiText preserva a estrutura
@@ -300,6 +308,7 @@ critério.\end{minipage}\par\smallskip
 \citeonline{Radford2019}, \citeonline{Gao2020} e da plataforma Hugging Face (acesso em 28
 set. 2026).}
 \end{table}
+\comentline{Deixar na tabela apenas um título, a explicação deve ficar no corpo do texto, fazer isso em todas as tabelas.}
 
 Dos cinco candidatos, três não atendem a todos os critérios. O Penn Treebank cai em D2: na
 versão usual, as palavras estão em caixa baixa, a pontuação foi removida e o vocabulário
@@ -339,6 +348,8 @@ de um argumento de linha de comando. Essa flexibilidade foi mantida deliberadame
 que trabalhos futuros possam verificar a generalidade dos resultados sem reescrever o
 código.
 
+\comentline{Achei essa descrição de escolha um pouco prolixa, tente ser mais objetivo, principalmente, considerando que você já explicou todas as etapas de escolha no Capítulo de Metodologia. }
+
 \subsubsection{Pré-processamento e Tokenização}\label{subsec:preprocessamento}
 
 O pré-processamento foi intencionalmente mínimo, para que a perplexity medida refletisse a
@@ -365,7 +376,7 @@ Essa separação estrita importa: como as varreduras \textit{one-shot} não real
 treinamento algum, elas não tiveram contato com o conjunto de treinamento, e a perplexity de
 teste é uma medida limpa do dano causado pela poda.
 
-\subsection{Métricas de Avaliação}\label{sec:metricas}
+\subsection{Métricas de Avaliação}\label{sec:metricas} \comentmargin{Implementação e Parâmetros das Métricas de Avaliação}
 
 Toda configuração --- o modelo base, as podadas pelos métodos da literatura e as podadas
 pela estratégia otimizada --- foi avaliada pelo mesmo conjunto de métricas, cobrindo as três
@@ -396,6 +407,8 @@ Energia consumida & Energia gasta durante a avaliação & kWh & \texttt{CodeCarb
 \end{tabular}\\
 \textit{Fonte: Elaboração própria.}
 \end{table}
+
+\comentline{As métricas dessa tabela não condizem com as seções do texto, está certo?}
 
 \subsubsection{Perplexity}\label{subsec:metrica_perplexity}
 
@@ -500,6 +513,8 @@ as varreduras. O modelo base, avaliado sem nenhuma poda, ilustra a consequência
 varredura para outra, sua energia caiu cerca de 6\%, de 1,572 para 1,481~Wh, enquanto suas
 emissões estimadas caíram cerca de 71\%, de 0,711 para 0,205~g, embora o modelo fosse o mesmo.
 
+\comentline{Achei essa descrição das métrica um pouco prolixa, tente ser mais objetivo, principalmente, considerando que você já explicou todas as elas no Capítulo de Metodologia. }
+
 \section{Poda sem Otimização}\label{sec:metodos_poda}
 
 % AJUSTE: 30/10 — reunião com o orientador: a abertura antiga repetia a Metodologia
@@ -602,6 +617,8 @@ A seguir, cada uma das estratégias selecionadas é detalhada em uma subseção 
 delas, são tratados os aspectos comuns às duas: a distribuição da poda entre as camadas e
 as taxas de poda avaliadas.
 
+\comentline{Está um pouco melhor, mas se possível, tente ser mais objetivo, principalmente, considerando que você já explicou todas as etapas de escolha no Capítulo de Metodologia. }
+
 % AJUSTE: 30/10 — reunião com o orientador: (i) o título perde "Método 1" e a categoria,
 % e fica o nome do método; a categoria (não estruturada) passa à primeira frase. (ii) A
 % subseção "Parâmetros Podáveis" (subsec:parametros_podaveis), que ficava entre a seleção
@@ -613,6 +630,8 @@ as taxas de poda avaliadas.
 % poda", o termo do restante do texto. 84.934.656 pesos = 12 x 7.077.888, 68,3% de
 % 124.439.808; lm_head 39,52 GFLOPs (decomposição de 21/10).
 \subsection{Poda por Magnitude}\label{subsec:metodo_magnitude}
+
+\comentline{Seria interessante ter alguma imagem, os métodos são muito importante, seria legal ser bem explorados.}
 
 O primeiro método, de poda não estruturada, segue \citeonline{Han2015}. O critério de
 importância é o valor absoluto do peso: assume-se que pesos próximos de zero contribuem
@@ -812,6 +831,8 @@ de atenção, que são apenas 12 por camada, produz arredondamentos visíveis. U
 % ser apresentada primeiro, como na Metodologia. No código, o escopo continua "global".
 \subsection{Distribuição de Poda entre as Camadas}\label{subsec:escopos}
 
+\comentline{Essa parte de distribuição de poda já foi bem explorado em metodologia, tentar resumir ao máximo aqui.}
+
 Ambos os métodos foram avaliados sob dois escopos, que correspondem às alocações uniforme e
 não uniforme definidas na Seção~\ref{sec:metodologia_poda_sem} e representam formas
 distintas de distribuir a poda entre as camadas:
@@ -901,6 +922,8 @@ medida na Etapa~1 (Seção~\ref{sec:etapa1}).
 % Metodologia (Seção sec:metodologia_poda_com, Figura fig:fluxo_sensibilidade). Aqui ficam
 % a aplicação ao GPT-2: valores, forma exata da medida e regra de alocação.
 \section{Poda com Otimização}\label{sec:estrategia_otimizada}
+
+\comentline{Tentar reduzir aqui, pois muitas informações já foram dadas na Metodologia.}
 
 Na terceira etapa, aplicou-se a técnica descrita na Seção~\ref{sec:metodologia_poda_com}
 --- a análise de sensibilidade por camada, cujo procedimento está na
@@ -1507,6 +1530,8 @@ ausência de repetições com sementes distintas é discutida entre as limitaç�
 (Seção~\ref{sec:limitacoes}).
 
 \section{\textit{Framework} de Implementação}\label{sec:framework}
+
+\comentline{Daqui em diante, difere da metodologia e não precisa remover nada.}
 
 % AJUSTE: 26/10 — revisão das Seções 5.6 a 5.9, a pedido do Enzo, com as convenções do
 % ESTILO e das revisões anteriores. Nesta seção: PyTorch passa a "biblioteca" (ESTILO: a
