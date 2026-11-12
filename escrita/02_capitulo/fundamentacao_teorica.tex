@@ -215,12 +215,14 @@ com uma pausa para revisão ao fim de cada um. E, assim como raramente basta uma
 leitura para fixar o conteúdo, a rede precisa percorrer o conjunto de treinamento diversas
 vezes até que os ajustes se estabilizem.
 
-\modificado{Como exemplo, considere um modelo de linguagem que recebe a frase ``O gato subiu no''. Antes de qualquer cálculo, o texto precisa virar número: ele é fragmentado em unidades menores, chamadas \textit{tokens}, e cada \textit{token} é convertido em um vetor de valores numéricos. São esses vetores que alimentam a camada de entrada --- cada posição do vetor corresponde a um nó \cite{Jurafsky2025}.}
+\modificado{Como exemplo, considere um modelo de linguagem que recebe a frase ``O gato subiu no''. Antes de qualquer cálculo, o texto precisa virar número: ele é fragmentado em unidades menores, chamadas \textit{tokens}, e cada \textit{token} é convertido em um vetor de valores numéricos. São esses vetores que alimentam a camada de entrada --- cada posição do vetor corresponde a um nó \cite{Jurafsky2025}.} A Figura~\ref{fig:texto_nos} ilustra esse percurso, da frase aos nós da camada de entrada.
 % , exatamente como, em uma rede que classifica imagens de 28$\times$28 pixels, cada um dos 784 nós de entrada receberia a intensidade de um pixel. Em ambos os casos vale a mesma regra: um nó de entrada para cada característica do dado.}
 
 \begin{figure}[htb]
 \centering
-\caption{\adicionadomarcelo{Da frase aos nós da camada de entrada: o texto é fragmentado em \textit{tokens} e cada \textit{token} é convertido em um vetor numérico.}}
+% AJUSTE: 09/11 — regra das legendas do orientador (07/11): só o título; a explicação já
+% estava no parágrafo anterior, que passa a citar a figura.
+\caption{\adicionadomarcelo{Da frase aos nós da camada de entrada.}}
 \label{fig:texto_nos}
 \begin{tikzpicture}[font=\scriptsize]
   % ---- a frase ----
@@ -302,9 +304,14 @@ técnicas de compressão procuram eliminar.
     \item \textbf{Poda Neural (Neural Pruning):} \modificado{processo de remoção de pesos --- ou de estruturas maiores, como filtros --- que contribuem pouco para a saída do modelo. É a técnica central deste trabalho e será detalhada na Seção a seguir.}
 \end{itemize}
 
+% AJUSTE: 09/11 — regra das legendas do orientador (07/11): a explicação da legenda da
+% Figura fig:poda_ilustracao vem para esta frase, que passa a citar a figura.
+A Figura~\ref{fig:poda_ilustracao} ilustra o processo de poda: a rede original, densa, tem
+conexões ou neurônios removidos e torna-se esparsa.
+
 \begin{figure}[htb]
 \centering
-\caption{\adicionadomarcelo{Ilustração do processo de poda: a rede original (densa) tem conexões e/ou neurônios removidos, tornando-se esparsa.}}
+\caption{\adicionadomarcelo{Ilustração do processo de poda.}}
 \label{fig:poda_ilustracao}
 \begin{tikzpicture}[font=\scriptsize,
     neuronio/.style={circle,draw,thick,minimum size=5.5mm,inner sep=0,fill=gray!25},
@@ -367,7 +374,7 @@ técnicas de compressão procuram eliminar.
 
 \begin{figure}[htb]
 \centering
-\caption{\adicionadomarcelo{As duas categorias de poda aplicadas à mesma matriz de pesos. Na poda não estruturada os pesos removidos são apenas zerados e a matriz conserva suas dimensões; na poda estruturada, colunas inteiras são eliminadas e a matriz encolhe de fato.}}
+\caption{\adicionadomarcelo{As duas categorias de poda aplicadas à mesma matriz de pesos.}}
 \label{fig:nao_estruturada_vs_estruturada}
 \begin{tikzpicture}[font=\scriptsize]
   % ---------- matriz original ----------
@@ -408,6 +415,13 @@ técnicas de compressão procuram eliminar.
 % \fonte{Elaborada pelo autor.}
 \end{figure}
 
+% AJUSTE: 09/11 — regra das legendas do orientador (07/11): a segunda frase da legenda da
+% Figura fig:nao_estruturada_vs_estruturada vem para o texto, que passa a citar a figura.
+Na Figura~\ref{fig:nao_estruturada_vs_estruturada}, as duas categorias são aplicadas à mesma
+matriz de pesos. Na poda não estruturada, os pesos removidos são apenas zerados, e a matriz
+conserva suas dimensões; na poda estruturada, colunas inteiras são eliminadas, e a matriz
+encolhe de fato.
+
 A distinção entre as duas categorias é o que separa um ganho real de um ganho apenas
 contábil, e uma analogia com um livro a torna evidente. A poda não estruturada equivale a
 apagar palavras espalhadas por todas as páginas: o texto fica mais enxuto, mas o livro
@@ -424,11 +438,13 @@ experimentalmente.
 \modificado{Assim, a poda estruturada é a que apresenta benefícios mais imediatos em termos de FLOPs e consumo de energia em \textit{hardware} convencional \cite{Li2017}, razão pela qual ela recebe destaque neste trabalho.}
 
 \subsection{Poda por Magnitude}
-\modificado{A técnica mais simples e amplamente estudada é a poda por magnitude. Nela, considera-se que pesos cujos valores absolutos são próximos de zero contribuem pouco para a saída do modelo e, portanto, podem ser removidos. Define-se um limiar (ou uma taxa de esparsidade desejada) e todos os pesos abaixo desse limiar são zerados, criando redes esparsas \cite{Han2015}.}
+\modificado{A técnica mais simples e amplamente estudada é a poda por magnitude. Nela, considera-se que pesos cujos valores absolutos são próximos de zero contribuem pouco para a saída do modelo e, portanto, podem ser removidos. Define-se um limiar (ou uma taxa de esparsidade desejada) e todos os pesos abaixo desse limiar são zerados, criando redes esparsas \cite{Han2015}.} A Figura~\ref{fig:poda_magnitude} resume o \textit{pipeline} clássico do método: treinamento do modelo denso, remoção dos pesos de menor magnitude e retreinamento (\textit{fine-tuning}) dos pesos remanescentes.
+% AJUSTE: 09/11 — regra das legendas do orientador (07/11): a explicação da legenda da
+% Figura fig:poda_magnitude vem para a frase acima, que passa a citar a figura.
 
 \begin{figure}[htb]
 \centering
-\caption{\adicionadomarcelo{Pipeline clássico de poda por magnitude: treinamento do modelo denso, remoção dos pesos de menor magnitude e retreinamento (\textit{fine-tuning}) dos pesos remanescentes.}}
+\caption{\adicionadomarcelo{\textit{Pipeline} clássico de poda por magnitude.}}
 \label{fig:poda_magnitude}
 \begin{tikzpicture}[font=\small,
     etapa/.style={rectangle,rounded corners=3pt,draw,thick,fill=gray!12,
@@ -480,16 +496,22 @@ central: a magnitude é uma propriedade dos pesos, disponível sem custo algum, 
 correlacionada com a importância; a sensibilidade é uma propriedade medida do
 comportamento do modelo, cara de obter, porém direta.
 
+% AJUSTE: 09/11 — regra das legendas do orientador (07/11): a explicação da legenda da
+% Figura fig:alocacao_sensibilidade vem para este parágrafo, que passa a citar a figura;
+% "alocação" passa a "esquema de poda" (termo do orientador, 07/11).
+A Figura~\ref{fig:alocacao_sensibilidade} ilustra, de forma esquemática, duas formas de
+atingir a mesma taxa de poda, de 30\%, nas camadas de uma rede. À esquerda, o esquema de
+poda uniforme ignora qualquer medida de importância; à direita, o esquema de poda com análise
+de sensibilidade poupa as camadas mais sensíveis e compensa nas mais tolerantes à poda.
+Ambos removem a mesma fração total de parâmetros: a linha tracejada indica a taxa de poda do
+modelo, que é a média das taxas por camada nos dois casos.
+
 % AJUSTE: 26/10 — "robustas"/"robustez" passam a "tolerantes à poda"/"tolerância" (motivo
 % no comentário da definição, na Metodologia, Seção "O Problema: Quanto Podar em Cada
 % Camada").
 \begin{figure}[htb]
 \centering
-\caption{Duas formas de atingir a mesma taxa de poda, de 30\,\%, nas camadas de uma rede. À
-esquerda, a alocação uniforme, que ignora qualquer medida de importância; à direita, a
-alocação com análise de sensibilidade, que poupa as camadas mais sensíveis e compensa nas mais
-tolerantes à poda. Ambas removem a mesma fração total de parâmetros: a linha tracejada indica a taxa
-de poda do modelo, que é a média das taxas por camada nos dois casos. Figura esquemática.}
+\caption{Duas formas de atingir a mesma taxa de poda nas camadas de uma rede.}
 \label{fig:alocacao_sensibilidade}
 \begin{tikzpicture}[font=\scriptsize]
   \def\bw{0.34}   % largura da barra
@@ -505,7 +527,7 @@ de poda do modelo, que é a média das taxas por camada nos dois casos. Figura e
     \draw[-{Stealth}] (-0.25,0) -- (-0.25,{1.05*\h}) node[above,font=\tiny,align=center] {taxa por\\camada};
     \draw[dashed,gray] (-0.25,{0.30*\h}) -- (3.15,{0.30*\h})
          node[right,font=\tiny,black] {30\,\%};
-    \node[below,align=center] at (1.5,-0.35) {\textbf{alocação uniforme}\\ mesma taxa em toda camada};
+    \node[below,align=center] at (1.5,-0.35) {\textbf{esquema de poda uniforme}\\ mesma taxa em toda camada};
   \end{scope}
 
   % ---------- alocação guiada ----------
@@ -545,7 +567,7 @@ perda pequena de desempenho, enquanto algumas poucas são indispensáveis --- e 
 delas são indispensáveis não é previsível a partir de propriedades dos pesos. Se a
 importância fosse aproximadamente uniforme, a distribuição da poda entre as camadas seria irrelevante e a
 poda uniforme seria ótima por construção; é precisamente porque não é uniforme que existe
-espaço para alocar melhor.
+espaço para distribuir melhor a poda entre as camadas.
 
 Duas ressalvas conceituais acompanham o método e delimitam o que ele pode oferecer.
 
@@ -566,7 +588,7 @@ experimentalmente no Capítulo~\ref{chap:resultados}.
 \subsection{Pipeline Geral da Poda}
 \modificado{De forma geral, a poda pode ser dividida nos seguintes passos \cite{Blalock2020}:}
 \begin{itemize}
-    \item \textbf{Passo 1 -- Definição de critério e taxa de poda:} partindo de um modelo já treinado, define-se o critério de importância dos parâmetros (magnitude absoluta, norma $L_1$ de filtros, sensibilidade, entre outros) e a taxa de esparsidade desejada.
+    \item \textbf{Passo 1 -- Definição de critério e taxa de poda:} partindo de um modelo já treinado, define-se o critério de poda dos parâmetros (magnitude absoluta, norma $L_1$ de filtros, sensibilidade, entre outros) e a taxa de esparsidade desejada.
     \item \textbf{Passo 2 -- Identificação dos parâmetros a podar:} com base no critério escolhido, o algoritmo classifica os parâmetros por importância e seleciona os menos relevantes.
     \item \textbf{Passo 3 -- Execução da poda:} os parâmetros selecionados são zerados (no caso da poda não estruturada) ou fisicamente removidos (no caso da poda estruturada), gerando um modelo esparso ou uma nova arquitetura reduzida.
     \item \textbf{Passo 4 -- Ajuste fino (\textit{fine-tuning}):} como a remoção tende a deteriorar a acurácia, o modelo podado é retreinado com uma taxa de aprendizado reduzida, para que os parâmetros remanescentes compensem a ausência dos que foram removidos.

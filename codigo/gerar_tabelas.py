@@ -10,7 +10,7 @@ das tabelas é digitado à mão, e rodar o script de novo reproduz todas elas.
 Convenções (ver Seção 4.1.3 da monografia):
 - energia sempre relativa ao modelo denso da mesma série, medido na mesma
   sessão (``esparsidade_alvo == 0``), nunca em valor absoluto;
-- resumo por configuração: média geométrica da perplexity e média aritmética
+- resumo por varredura: média geométrica da perplexity e média aritmética
   de ΔE nas taxas de 10% a 50% (``FAIXA_RESUMO``); η é calculado a partir dessas
   duas médias;
 - ponto de eficiência S*_E: maior taxa com perplexity até 5% acima da do
@@ -137,7 +137,7 @@ ROTULO = {"global": "Não uniforme", "uniforme": "Uniforme",
 linhas = [r"\setlength{\tabcolsep}{5pt}",
           r"\begin{tabular}{p{2.8cm} l " + "r" * 9 + "}", r"\hline",
           r"& & \multicolumn{9}{c}{\textbf{Taxa de poda}} \\", r"\cline{3-11}",
-          r"\textbf{Análise} & \textbf{Alocação} & " + " & ".join(pct(t) for t in TAXAS[1:]) + r" \\"]
+          r"\textbf{Análise} & \makecell{\textbf{Esquema}\\ \textbf{de poda}} & " + " & ".join(pct(t) for t in TAXAS[1:]) + r" \\"]
 for estrategia, nome in (("mag", "Poda por magnitude"), ("est", "Poda estruturada")):
     linhas += [r"\hline", rf"\multicolumn{{11}}{{l}}{{\textit{{{nome}}}}} \\"]
     for i, a in enumerate(ALOCACOES):
@@ -240,7 +240,9 @@ NOME_ALOC = {"global": "Sem análise de sensibilidade --- não uniforme",
              "b05": r"Com análise de sensibilidade --- $\beta = 0{,}5$"}
 SUB = r"\multicolumn{{5}}{{l}}{{\quad\textit{{{}}}}} \\"
 linhas = [r"\begin{tabular}{l r r r c}", r"\hline",
-          r"\textbf{Configuração} & \textbf{PPL} & $\boldsymbol{\Delta E}$ \textbf{(\%)}"
+          # "Configuração" é estratégia + esquema + taxa (Metodologia, 09/11/2026); as linhas
+          # sem retreinamento são médias de varreduras, daí o cabeçalho com os dois termos.
+          r"\textbf{Varredura ou configuração} & \textbf{PPL} & $\boldsymbol{\Delta E}$ \textbf{(\%)}"
           r" & $\boldsymbol{\eta}$ & $\boldsymbol{S^*_E}$ \\", r"\hline",
           r"\multicolumn{5}{l}{\textbf{Sem retreinamento} (médias de 10\% a 50\%)} \\",
           rf"Modelo base & {br(PPL0)} & 0,0 & 1,000 & --- \\"]

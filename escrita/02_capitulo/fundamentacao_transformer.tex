@@ -168,8 +168,8 @@ Esse par de operações se repete em cada bloco, e os blocos são empilhados, fa
 que as representações das palavras se tornem progressivamente mais ricas e abstratas a
 cada andar.
 
-O primeiro bloco é a
-camada de atenção multi-cabeça, já apresentada na seção anterior, responsável por
+O primeiro componente de cada bloco é a
+atenção multi-cabeça, já apresentada na seção anterior, responsável por
 integrar informação contextual de toda a sequência. O segundo é uma rede
 \textit{feedforward} totalmente conectada --- um MLP (\textit{multilayer perceptron})
 aplicado de forma idêntica e independente a cada posição. Esse MLP é composto por duas
@@ -241,6 +241,12 @@ de uma camada de \textit{embedding}: o modelo aprende, durante o treinamento, um
 representação vetorial para cada token do vocabulário, de modo que tokens semanticamente
 próximos tendam a ter representações próximas no espaço vetorial.
 
+% AJUSTE: 09/11 — revisão do orientador (07/11, no Desenvolvimento): "Parece estranho
+% apresentar uma definição de um termo que já foi muito usado anteriormente (camada)." A
+% definição de camada (bloco Transformer, numerada de 0 a 11) sai do Desenvolvimento e vem
+% para cá, onde os 12 blocos do GPT-2 aparecem pela primeira vez. Na subseção do bloco,
+% "O primeiro bloco é a camada de atenção" passa a "O primeiro componente de cada bloco é a
+% atenção", para que "camada" não designe a subcamada.
 O GPT-2 (\textit{Generative Pre-trained Transformer 2}), proposto por
 \citeonline{Radford2019} pela OpenAI em 2019, é um modelo autorregressivo baseado
 exclusivamente no componente decodificador do \textit{Transformer} original. Ele foi
@@ -248,7 +254,10 @@ pré-treinado em uma base de dados de aproximadamente 40 GB de texto coletado da
 abrangendo uma grande diversidade de domínios e estilos. A variante GPT-2 \textit{small},
 utilizada neste trabalho, possui 12 blocos \textit{Transformer} empilhados, 12 cabeças de
 atenção por bloco, dimensão de modelo igual a 768 e aproximadamente 124 milhões de
-parâmetros treináveis. Apesar de ser a menor variante da família GPT-2, esse número de
+parâmetros treináveis. Ao longo deste trabalho, cada um desses blocos é denominado
+\textbf{camada}, e as camadas são numeradas de 0 a 11, na ordem em que processam a entrada,
+conforme a indexação adotada na implementação; é nessa unidade que se definem a análise de
+sensibilidade por camada e as taxas de poda por camada. Apesar de ser a menor variante da família GPT-2, esse número de
 parâmetros é cerca de cinco vezes maior do que o de uma ResNet-50 (25 milhões de
 parâmetros), arquitetura de referência nos estudos clássicos de poda --- e as variantes
 maiores da própria família GPT-2 chegam a 1,5 bilhão de parâmetros, o que ilustra a escala

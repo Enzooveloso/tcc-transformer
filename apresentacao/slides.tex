@@ -1,0 +1,159 @@
+% !TeX program = pdflatex
+% =============================================================================
+% Apresentação do TCC — arquivo raiz
+%
+% Instruções e seleção de conteúdo: apresentacao/INSTRUCOES.md (ler antes de editar).
+% A apresentação é montada de trás para frente: os blocos do fim foram escritos
+% primeiro. Limite: 25 slides no total (20 a 30 minutos).
+%
+% Números: todos saem de codigo/resultados/*.csv, pelos mesmos valores das tabelas
+% de escrita/06_capitulo/tabelas/. Não digitar número que não esteja lá.
+%
+% Compilar:  cd apresentacao && pdflatex slides.tex && pdflatex slides.tex
+% =============================================================================
+\RequirePackage{fix-cm}
+\documentclass[aspectratio=169,11pt,t]{beamer}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage[sfdefault,lining]{FiraSans}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{pgfplots}
+\usepgfplotslibrary{groupplots}
+\pgfplotsset{compat=1.18}
+
+% ----------------------------------------------------------------------------
+% Cores
+% Um único destaque (azul) e tons de cinza para o que serve de comparação.
+% Nos gráficos: azul = o resultado em destaque no slide (poda estruturada no
+% slide de energia; esquema de poda com análise de sensibilidade nos demais);
+% cinza = o termo de comparação. As séries em cinza diferem também pelo marcador.
+% ----------------------------------------------------------------------------
+\definecolor{tinta}{HTML}{0B0B0B}       % texto principal
+\definecolor{tintaSec}{HTML}{52514E}    % texto secundário
+\definecolor{tintaMuda}{HTML}{898781}   % notas, eixos
+\definecolor{grade}{HTML}{E1E0D9}       % linhas de grade
+\definecolor{eixo}{HTML}{C3C2B7}        % linha de base dos gráficos
+\definecolor{destaque}{HTML}{2A78D6}    % azul: série em destaque
+\definecolor{contextoA}{HTML}{52514E}   % cinza escuro: comparação 1
+\definecolor{contextoB}{HTML}{898781}   % cinza médio: comparação 2
+
+% ----------------------------------------------------------------------------
+% Aparência dos slides
+% ----------------------------------------------------------------------------
+\usetheme{default}
+\beamertemplatenavigationsymbolsempty
+\setbeamersize{text margin left=9mm, text margin right=9mm}
+
+\setbeamercolor{normal text}{fg=tinta, bg=white}
+\setbeamercolor{structure}{fg=destaque}
+\setbeamercolor{frametitle}{fg=tinta}
+\setbeamercolor{framesubtitle}{fg=destaque}
+\setbeamerfont{frametitle}{size=\fontsize{14}{17}\selectfont, series=\bfseries}
+\setbeamerfont{framesubtitle}{size=\fontsize{8.5}{10}\selectfont, series=\bfseries}
+
+% Título do slide: uma linha pequena de localização (\framesubtitle) acima da
+% afirmação que o slide sustenta (\frametitle).
+\makeatletter
+\setbeamertemplate{frametitle}{%
+  \nointerlineskip\vskip4.5mm%
+  \begin{beamercolorbox}[wd=\paperwidth, leftskip=9mm]{frametitle}%
+    \begin{minipage}[t]{\dimexpr\paperwidth-18mm\relax}\raggedright
+    \ifx\insertframesubtitle\@empty\else%
+      {\usebeamerfont{framesubtitle}\usebeamercolor[fg]{framesubtitle}%
+       \insertframesubtitle\par}\vskip1mm%
+    \fi%
+    {\usebeamerfont{frametitle}\usebeamercolor[fg]{frametitle}%
+     \insertframetitle\par}%
+    \end{minipage}%
+  \end{beamercolorbox}%
+  \vskip-3.5mm%
+}
+\makeatother
+
+% Rodapé: só o número do slide.
+\setbeamertemplate{footline}{%
+  \hfill{\fontsize{8}{10}\selectfont\color{tintaMuda}\insertframenumber}%
+  \hspace*{9mm}\vskip4mm}
+
+\setbeamertemplate{itemize item}{\raisebox{0.3ex}{\color{destaque}\rule{0.9ex}{0.9ex}}}
+\setbeamerfont{itemize/enumerate body}{size=\small}
+\setlength{\leftmargini}{1.2em}
+
+% ----------------------------------------------------------------------------
+% Macros de conteúdo
+% ----------------------------------------------------------------------------
+% \numero{valor}{o que ele mede}: número em destaque com a explicação abaixo.
+% \numerotexto: o mesmo, quando o destaque é uma expressão e não um número.
+\newcommand{\numerobase}[3]{%
+  \par\noindent
+  {\color{destaque}\vrule width 1mm}\hspace{2.5mm}%
+  \begin{minipage}[c]{\dimexpr\linewidth-3.5mm\relax}
+    \raggedright
+    {#1\bfseries\boldmath #2\par}\vspace{1mm}
+    {\fontsize{8.5}{10.5}\selectfont\color{tintaSec}#3\par}
+  \end{minipage}\par}
+\newcommand{\numero}[2]{\numerobase{\fontsize{19}{21}\selectfont}{#1}{#2}}
+\newcommand{\numerotexto}[2]{\numerobase{\fontsize{13}{15}\selectfont}{#1}{#2}}
+
+% \nota{texto}: condições de leitura do gráfico, em letra pequena.
+\newcommand{\nota}[1]{{\par\fontsize{7}{8.6}\selectfont\color{tintaMuda}\raggedright #1\par}}
+
+% \mensagem{texto}: frase de fechamento do slide, ancorada no rodapé por um fio.
+\newcommand{\mensagem}[1]{{\par\noindent{\color{grade}\rule{\linewidth}{0.5pt}}\par\vspace{0.8mm}%
+  \fontsize{9.5}{12}\selectfont\raggedright #1\par}}
+
+\newcommand{\ppl}{\textit{perplexity}}
+\newcommand{\ft}{\textit{fine-tuning}}
+\newcommand{\vezes}{\texttimes}
+\newcommand{\menos}{\textminus}
+% \bet{1,0}: "beta = 1,0" com os algarismos na fonte do texto, não na do modo matemático.
+\newcommand{\bet}[1]{$\beta$\,=\,#1}
+
+% ----------------------------------------------------------------------------
+% Estilo dos gráficos (pgfplots)
+% ----------------------------------------------------------------------------
+\pgfplotsset{
+  /pgf/number format/use comma,
+  /pgf/number format/1000 sep={.},
+  grafico/.style={
+    scale only axis,
+    axis x line*=bottom,
+    axis y line*=left,
+    x axis line style={eixo, line width=0.6pt},
+    y axis line style={draw=none},
+    tick align=outside,
+    x tick style={eixo, line width=0.6pt},
+    y tick style={draw=none},
+    major tick length=2pt,
+    ticklabel style={font=\fontsize{7}{8}\selectfont, text=tintaSec},
+    label style={font=\fontsize{7}{8}\selectfont, text=tintaSec},
+    ymajorgrids,
+    major grid style={grade, line width=0.4pt},
+    clip=false,
+    legend cell align=left,
+    legend style={draw=none, fill=none, font=\fontsize{7}{8}\selectfont,
+                  text=tintaSec, row sep=1pt, inner sep=0pt},
+  },
+  serieDestaque/.style={destaque, line width=1.3pt, mark=*, mark size=2pt,
+    mark options={solid, fill=destaque, draw=white, line width=0.7pt}},
+  serieContextoA/.style={contextoA, line width=1pt, mark=square*, mark size=1.8pt,
+    mark options={solid, fill=contextoA, draw=white, line width=0.7pt}},
+  serieContextoB/.style={contextoB, line width=1pt, mark=triangle*, mark size=2.4pt,
+    mark options={solid, fill=contextoB, draw=white, line width=0.7pt}},
+}
+% rótulo de valor dentro dos gráficos
+\tikzset{rotulo/.style={font=\fontsize{7}{8}\selectfont, text=tinta, inner sep=1.5pt},
+         rotuloSec/.style={font=\fontsize{7}{8}\selectfont, text=tintaSec, inner sep=1.5pt}}
+
+% =============================================================================
+\begin{document}
+
+% (a fazer, nesta ordem de construção: Metodologia, Fundamentação, Introdução)
+
+\input{blocos/resultados}
+\input{blocos/conclusoes}
+
+\end{document}

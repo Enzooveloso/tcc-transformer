@@ -1,0 +1,42 @@
+% !TeX root = ../slides.tex
+% =============================================================================
+% Conclusões — um slide. Responde às perguntas (A) e (B) da Metodologia com os
+% números dos slides de resultados. Cada número leva a taxa de poda em que vale.
+% =============================================================================
+\newcommand{\pergunta}[2]{%
+  {\fontsize{8.5}{10.5}\selectfont\color{destaque}\textbf{Pergunta #1}\par}\vspace{0.8mm}
+  {\fontsize{9}{11.5}\selectfont\color{tintaSec}\raggedright #2\par}\vspace{2.2mm}}
+\newcommand{\resposta}[1]{{\fontsize{10.5}{13}\selectfont\bfseries\raggedright #1\par}\vspace{2.2mm}}
+
+\begin{frame}
+\framesubtitle{Conclusões}
+\frametitle{A poda estruturada reduz a energia, e a análise de sensibilidade reduz
+a perda de qualidade}
+\vspace{1mm}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.48\textwidth}
+\pergunta{A}{A redução de parâmetros se converte em redução real de tempo e
+energia?}
+\resposta{Só quando a poda remove estruturas.}
+\begin{itemize}
+  \setlength{\itemsep}{2mm}
+  \item Poda estruturada a 90\%: 61\% menos parâmetros, \textbf{59\% menos energia} e
+        56\% menos tempo.
+  \item Poda por magnitude: 61\% menos parâmetros não nulos, sem redução detectável
+        de energia.
+\end{itemize}
+\end{column}
+\begin{column}{0.48\textwidth}
+\pergunta{B}{A análise de sensibilidade por camada melhora o compromisso entre
+compressão e qualidade?}
+\resposta{Sim, nas taxas de poda de 10\% a 50\%.}
+\begin{itemize}
+  \setlength{\itemsep}{2mm}
+  \item Poda estruturada: \ppl{} \textbf{2,5 vezes menor} na média, até 4 vezes
+        a 20\%, com a mesma energia.
+  \item Poda por magnitude: menor \ppl{} em 7 de 9 taxas.
+  \item Após uma época de \ft, a 30\%: \ppl{} 1,87 vez menor.
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}

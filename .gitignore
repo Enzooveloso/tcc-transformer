@@ -18,6 +18,9 @@ CLAUDE.md
 *.idx
 *.ilg
 *.ind
+*.nav
+*.snm
+*.vrb
 
 # PDF compilado (descomentar se não quiser versionar)
 # *.pdf
@@ -46,4 +49,5 @@ Thumbs.db
 # Ferramentas e artefatos locais
 escrita/ROADMAP.md
 escrita/ESTILO.md
+apresentacao/INSTRUCOES.md
 graphify-out/

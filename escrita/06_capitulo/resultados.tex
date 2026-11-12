@@ -32,65 +32,96 @@
 % maior diferença entre todas as taxas, e não a de 50%; "em boa parte, reversível" passa a
 % "parcialmente reversível"; "indispensável" passa a "relevante", pois só dois valores de beta
 % foram avaliados; o retreinamento na síntese fica limitado a uma época, a única avaliada.
-Este capítulo apresenta os resultados experimentais obtidos com o GPT-2
-\textit{small} sobre o WikiText-2, organizados por tipo de métrica, de modo que cada
-tabela compare uma única grandeza. Após o protocolo
-(Seção~\ref{sec:res_protocolo}), a Seção~\ref{sec:res_custo} apresenta o custo
-computacional e o consumo de energia das estratégias de poda, que respondem à primeira
-pergunta do trabalho. A Seção~\ref{sec:perfil_sensibilidade} apresenta o perfil de
-sensibilidade por camada, que alimenta a alocação com análise de sensibilidade, e a
-Seção~\ref{sec:res_qualidade} compara a qualidade preditiva das alocações com e sem essa
-análise, o que responde à segunda pergunta. A Seção~\ref{sec:res_finetune} submete as
-configurações mais relevantes ao \textit{fine-tuning} de recuperação, a
-Seção~\ref{sec:res_tradeoff} combina qualidade e energia nos indicadores da
-Seção~\ref{sec:metodologia_metricas}, e a Seção~\ref{sec:res_sintese} sintetiza os
-achados.
+% AJUSTE: 11/11 — conferência do texto contra o código e os resultados, a pedido do Enzo.
+% Números recalculados dos CSVs; as oito tabelas conferem. Correções: (i) concordância com
+% "esquema de poda", masculino, onde a troca de "alocação" (09/11) deixou o feminino ("Nas
+% esquemas", "a melhor esquema", "uma terceiro esquema", "as demais", "que ela evita", "a
+% esquema de poda ótimo", "estratégia de esquema de poda"); (ii) "configuração", que a
+% Metodologia define desde 09/11 como estratégia, esquema e taxa, dá lugar a "varredura" ou a
+% "esquema de poda" onde o texto se refere às médias de 10% a 50% ou a várias taxas. Isso
+% muda uma afirmação: "nenhuma configuração podada superou o modelo base em eta" só vale para
+% as médias das varreduras e para as configurações retreinadas, que são as linhas da Tabela
+% tab:tradeoff; taxa a taxa, a poda por magnitude a 10% tem eta de 1,008 (não uniforme) e
+% 1,009 (uniforme), por conta de um Delta E abaixo do limiar de detecção; (iii) "bisseção"
+% passa a "tentativas sucessivas", termo dos Capítulos 4 e 5; (iv) a taxa-sonda deixa de ser
+% dita "arbitrária": a Metodologia a fixa por dois limites (passo 1) desde 09/11; (v) a faixa
+% de energia do modelo base vai a 1,616 Wh, máximo entre as 14 varreduras (1,572 Wh era o
+% máximo das oito principais); (vi) cabeças contra neurônios: a 10%, no esquema não
+% uniforme, as cabeças degradaram mais (236,99 contra 139,17), exceção agora declarada;
+% (vii) decisão do Enzo: o limite de 5% deixa de ser dito "fixado antes da análise" (motivo no
+% AJUSTE de 11/11 da definição de S*_E, na Metodologia). O comentário de 04/11 da Seção
+% sec:res_custo, que o contrapunha ao limiar de 10%, registra a leitura daquela data.
+% AJUSTE: 11/11 — pedido do Enzo: o capítulo, que o orientador ainda não revisou, passa a
+% seguir os critérios que ele aplicou à Metodologia e ao Desenvolvimento (rodadas de 29/10 a
+% 07/11). (i) Sem repetição: o que os Capítulos 4 e 5 já explicam é referido pela seção, e
+% saem as reexplicações (procedimento de avaliação e parâmetros do retreinamento; por que a
+% poda por magnitude não reduz custo; o que são o teto, a regra do esquema de poda e a
+% verificação com beta = 0; a adaptação de domínio). Ficam aqui os valores medidos e a sua
+% leitura. (ii) Cada seção abre dizendo o que apresenta. (iii) Frase: uma ideia por frase,
+% ponto no lugar de ponto e vírgula, dois-pontos e travessão, conectivo explícito, linguagem
+% literal; sai o negrito de ênfase (fica só em "limiar de detecção", termo definido aqui).
+% (iv) Termos: "desempenho preditivo", nome da dimensão na Metodologia, no lugar de
+% "qualidade" (títulos das Seções 6.4 e 6.6 incluídos); "passo" no lugar de "stride";
+% "medição do perfil" no lugar de "perfilamento", "levantamento" e "sonda"; "regime one-shot"
+% como nome do regime. Títulos alterados: "Da Sensibilidade ao Esquema de Poda" -> "Esquema de
+% Poda Resultante"; "Limitações do Perfilamento" -> "Limitações do Perfil de Sensibilidade";
+% "O Controle beta = 0" -> "Verificação com beta = 0". Nenhum número, tabela, figura ou
+% conclusão mudou, e os rótulos (\label) são os mesmos. Duas afirmações ficaram mais precisas:
+% a estabilidade do perfil entre as taxas-sonda deixa de ser dita "substancialmente estável"
+% nas duas estratégias (rho de 0,944 e de 0,713) e passa a ser comparada entre elas; e
+% "manteve as últimas camadas entre as mais tolerantes" (poda por magnitude) passa ao que a
+% Tabela tab:perfil_sensibilidade mostra: camadas 0 e 4 as mais sensíveis, camada 11 em
+% oitavo. O texto anterior a esta revisão não está em nenhum commit.
+Este capítulo apresenta os resultados dos experimentos descritos no
+Capítulo~\ref{chap:desenvolvimento}, organizados por tipo de métrica, de modo que cada tabela
+compare uma única grandeza. A Seção~\ref{sec:res_protocolo} apresenta os valores medidos para o
+modelo base e as condições de leitura das tabelas. A Seção~\ref{sec:res_custo} apresenta o
+custo computacional e o consumo de energia dos modelos podados, que respondem à pergunta (A). A
+Seção~\ref{sec:perfil_sensibilidade} apresenta o perfil de sensibilidade por camada, e a
+Seção~\ref{sec:res_qualidade} compara o desempenho preditivo dos esquemas de poda com e sem
+análise de sensibilidade, o que responde à pergunta (B). A Seção~\ref{sec:res_finetune}
+apresenta os resultados do \textit{fine-tuning} de recuperação, e a
+Seção~\ref{sec:res_tradeoff} combina desempenho preditivo e energia nos indicadores definidos
+na Seção~\ref{sec:metodologia_metricas}. Por fim, a Seção~\ref{sec:res_sintese} sintetiza os
+resultados.
 
 \section{Protocolo e Modelo Base}\label{sec:res_protocolo}
 
-Esta seção apresenta o protocolo comum às varreduras, os valores medidos para o modelo base
-e as ressalvas que condicionam a leitura das tabelas seguintes.
+Esta seção apresenta os valores medidos para o modelo base e as condições que orientam a
+leitura das tabelas das seções seguintes.
 
-Todos os experimentos partiram do GPT-2 \textit{small} pré-treinado
-(124.439.808 parâmetros), avaliado no conjunto de teste do WikiText-2 por
-janela deslizante com \textit{stride} de 512 \textit{tokens}. A \textit{perplexity} do
-modelo base foi de \textbf{25,17}. O valor é inferior aos 29,41 publicados por
-\citeonline{Radford2019}, e a diferença é compatível com o efeito do protocolo de
-avaliação: com janelas deslizantes sobrepostas, cada \textit{token} é predito
-com pelo menos 512 \textit{tokens} de contexto, o que reduz a
-\textit{perplexity} em relação à avaliação em janelas disjuntas. A
-documentação da biblioteca \texttt{transformers} registra esse efeito no
-GPT-2 \textit{large}: 19,44 com janelas disjuntas de 1.024 \textit{tokens},
-valor próximo dos 19,93 publicados, e 16,44 com \textit{stride} de 512
-\cite{HuggingFacePerplexity}, redução de cerca de 15\%. Redução da mesma ordem,
-cerca de 14\%, separa os 29,41 publicados para o \textit{small} dos 25,17
-medidos aqui, com o mesmo protocolo daquela documentação. As medições de custo do modelo base foram de 474,70~MB
-de memória de parâmetros e 126,6~GFLOPs por janela de 512 \textit{tokens}.
+O modelo base, avaliado pelo procedimento da Seção~\ref{subsec:metrica_perplexity}, apresentou
+\textit{perplexity} de 25,17 no conjunto de teste do WikiText-2. As demais métricas do modelo
+base constam da Tabela~\ref{tab:gpt2_config}. O valor obtido é inferior aos 29,41 publicados
+por \citeonline{Radford2019}. Essa diferença é compatível com o efeito do procedimento de
+avaliação. Com janelas deslizantes sobrepostas, cada \textit{token} é predito com pelo menos
+512 \textit{tokens} de contexto, o que reduz a \textit{perplexity} em relação à avaliação em
+janelas disjuntas. A documentação da biblioteca \texttt{transformers} registra esse efeito no
+GPT-2 \textit{large}: 19,44 com janelas disjuntas de 1.024 \textit{tokens}, valor próximo dos
+19,93 publicados, e 16,44 com passo de 512 \cite{HuggingFacePerplexity}, uma redução de cerca
+de 15\%. Uma redução da mesma ordem, de cerca de 14\%, separa os 29,41 publicados para o GPT-2
+\textit{small} dos 25,17 medidos neste trabalho, obtidos pelo mesmo procedimento daquela
+documentação.
 
-Duas ressalvas metodológicas condicionam a leitura das tabelas que se seguem.
+Duas condições orientam a leitura das tabelas apresentadas a seguir.
 
-A primeira é que \textbf{todos os resultados das varreduras são
-\textit{one-shot}}, com exceção da Seção~\ref{sec:res_finetune}, dedicada
-justamente ao retreinamento: o modelo pré-treinado foi podado e medido imediatamente, sem
-qualquer \textit{fine-tuning} de recuperação. Essa escolha isola o efeito da
-poda do efeito do retreinamento, mas difere do procedimento original das duas estratégias,
-em que a poda é seguida de retreinamento \cite{Han2015,Li2017}. As \textit{perplexities}
-aqui reportadas não são, portanto, comparáveis às de trabalhos que retreinam o modelo após
-a poda, e as curvas não devem ser lidas como
+A primeira é o regime de avaliação. Com exceção da Seção~\ref{sec:res_finetune}, todos os
+resultados foram obtidos em regime \textit{one-shot}, isto é, sem retreinamento após a poda
+(Seção~\ref{sec:metodologia_finetuning}). Por essa razão, as \textit{perplexities} reportadas
+não são comparáveis às de trabalhos que retreinam o modelo após a poda. Elas também não devem
+ser lidas como proposta de uso dos modelos podados, mas como medida do dano que cada
+estratégia, com cada esquema de poda, causa por si só. A Seção~\ref{sec:res_finetune} mostra
+que esse dano é parcialmente reversível.
 % AJUSTE: 04/11 — a pedido do Enzo (ESTILO, 1.2): "substancialmente piores que as da
 % literatura" não tinha fonte; nenhuma obra citada traz perplexity comparável.
-proposta de configuração de uso, e sim como medida do dano que cada estratégia
-de alocação causa por si só. A Seção~\ref{sec:res_finetune} mostra que esse
-dano é parcialmente reversível.
 
-A segunda é que as varreduras foram executadas em sessões distintas do
-ambiente Kaggle, e as medições de \textbf{custo dependem da sessão}. O mesmo
-modelo base registrou 40,5~ms por janela em uma sessão, 54,0~ms em outra e
-46,3~ms em uma terceira; o consumo de energia do modelo base variou de
-forma análoga, entre 1,176 e 1,572~Wh por avaliação completa do conjunto de teste. Por
-essa razão, a energia é sempre expressa pela redução relativa $\Delta E$
-(Equação~\ref{eq:delta_e}), calculada em relação ao modelo base medido na mesma sessão,
-e nunca em valores absolutos; o tempo segue a mesma regra.
+A segunda é a dependência entre as medições de custo e a sessão de execução. As varreduras
+foram executadas em sessões distintas do ambiente Kaggle, e o mesmo modelo base registrou
+tempos de inferência de 40,5~ms, 54,0~ms e 46,3~ms por janela em três delas. O consumo de
+energia do modelo base variou de forma análoga, entre 1,176 e 1,616~Wh por avaliação completa
+do conjunto de teste. Por essa razão, a energia é sempre expressa pela redução relativa $\Delta
+E$ (Equação~\ref{eq:delta_e}), calculada em relação ao modelo base medido na mesma sessão, e
+nunca em valores absolutos. O tempo de inferência segue a mesma regra.
 % AJUSTE: 04/11 — a pedido do Enzo, a frase sobre as emissões sai: elas não são métrica do
 % trabalho (razão em sec:metodologia_metricas e subsec:metrica_energia). Texto anterior:
 % As emissões de $\text{CO}_2$, que dependem adicionalmente do fator de carbono da rede
@@ -110,36 +141,42 @@ e nunca em valores absolutos; o tempo segue a mesma regra.
 % configurações estão inutilizáveis: a 60\%, a menor perplexity entre as oito avaliadas é de
 % 1524,55, cerca de 61 vezes a do modelo base. As taxas de 60\% a 90\% continuam reportadas
 % nas tabelas, mas não entram nas médias.
-Para comparar as configurações por um único valor, cada uma é resumida pela média de seus
-resultados nas taxas de 10\% a 50\% (Seção~\ref{sec:metodologia_metricas}). O limite de 50\%
-decorre do teto da alocação com análise de sensibilidade: nenhuma camada pode ter mais de
-95\% de seus elementos podados ($r_{\max} = 0{,}95$). Uma camada que alcança esse teto deixa
-de receber a taxa indicada pelo perfil de sensibilidade e, quanto mais camadas o alcançam,
-menos a alocação as diferencia. Até 50\%, nenhuma camada o alcançou em nenhuma das alocações
-com análise de sensibilidade. Com $\beta = 1{,}0$, a 60\%, uma camada já o alcançou na poda
-por magnitude e duas na estruturada; a 90\%, foram 10 e 11 das 12 camadas, respectivamente.
-Portanto, 50\% foi a maior taxa em que nenhuma camada ficou limitada pelo teto.
+O resumo por varredura (Seção~\ref{sec:metodologia_metricas}) considera as taxas de poda de
+10\% a 50\%. Esse limite decorre do critério definido naquela seção: 50\% foi a maior taxa em
+que nenhuma camada atingiu o teto $r_{\max} = 0{,}95$ em nenhum dos esquemas de poda com
+análise de sensibilidade. Com $\beta = 1{,}0$, a 60\%, uma camada já atingiu o teto na poda por
+magnitude e duas na poda estruturada. A 90\%, foram 10 e 11 das 12 camadas, respectivamente.
 
-O corte não descarta configurações de interesse prático: a 60\%, a menor \textit{perplexity}
-entre as oito configurações avaliadas (quatro alocações em cada uma das duas estratégias) foi
-de 1.524,55, cerca de 61 vezes a do modelo base. As taxas de 60\% a 90\% continuam reportadas
-nas tabelas, mas não entram nas médias.
+Esse limite não exclui configurações de interesse prático. A 60\%, a menor \textit{perplexity}
+entre as oito configurações avaliadas, quatro esquemas de poda em cada uma das duas
+estratégias, foi de 1.524,55, cerca de 61 vezes a do modelo base. As taxas de 60\% a 90\% são
+reportadas nas tabelas, mas não entram nas médias.
 
+% AJUSTE: 09/11 — citação só na primeira menção (orientador, 07/11): neste capítulo, Han2015 e
+% Li2017, quando só nomeiam o procedimento original dos métodos, dão lugar às seções do
+% Capítulo 3 que os resenham; "alocação" passa a "esquema de poda" em todo o capítulo.
 \section{Custo Computacional e Consumo de Energia}\label{sec:res_custo}
 
-Esta seção responde à primeira pergunta do trabalho: em que medida a redução de
-parâmetros se converte em redução real de custo. A Tabela~\ref{tab:custo} apresenta as
-grandezas calculadas --- parâmetros, tamanho e FLOPs ---, e a Tabela~\ref{tab:energia}, a
-grandeza medida: a redução relativa de energia.
+Esta seção responde à pergunta (A), formulada no Capítulo~\ref{chap:metodologia}: em que medida
+a redução de parâmetros se converte em redução de tempo de inferência e de consumo de energia.
+A Tabela~\ref{tab:custo} apresenta as grandezas calculadas a partir da arquitetura: parâmetros,
+tamanho e FLOPs. A Tabela~\ref{tab:energia} apresenta a grandeza medida durante a execução, a
+redução relativa de energia.
+
+Na Tabela~\ref{tab:custo}, os parâmetros da poda por magnitude correspondem aos não nulos, e os
+valores referem-se ao esquema de poda uniforme. O esquema de poda não uniforme produz os mesmos
+valores, pois nenhum dos dois altera a arquitetura. Na poda estruturada, os valores referem-se
+ao esquema de poda não uniforme, e os demais esquemas removem frações de parâmetros que diferem
+dele em até 2,1 pontos percentuais. Na Tabela~\ref{tab:energia}, $\Delta E$
+(Equação~\ref{eq:delta_e}) é calculado em relação ao modelo base medido na mesma sessão. Nas
+duas tabelas, $\beta$ corresponde ao parâmetro de intensidade (Seção~\ref{subsec:fase2}).
+% AJUSTE: 09/11 — regra das legendas do orientador (07/11, "Deixar na tabela apenas um
+% título, a explicação deve ficar no corpo do texto, fazer isso em todas as tabelas"): a
+% legenda fica só com o título, e a explicação vem para o parágrafo que apresenta a tabela.
 
 \begin{table}[htb]
 \centering
-\caption{Custo calculado dos modelos podados, por taxa de poda. Na poda por magnitude,
-os parâmetros são os não nulos, e os valores referem-se à alocação uniforme; a não uniforme
-produz os mesmos valores, pois nenhuma das duas altera a arquitetura. Na poda
-estruturada, a taxa de poda é a fração de estruturas removidas, e os valores referem-se à
-alocação não uniforme; as demais alocações removem frações de parâmetros que diferem desta em
-até 2,1 pontos percentuais.}
+\caption{Custo calculado dos modelos podados, por taxa de poda.}
 \label{tab:custo}
 \small
 \input{06_capitulo/tabelas/custo}\\
@@ -148,25 +185,20 @@ até 2,1 pontos percentuais.}
 
 \begin{table}[htb]
 \centering
-\caption{Redução relativa de energia $\Delta E$ (\%, Equação~\ref{eq:delta_e}) em relação
-ao modelo base medido na mesma sessão. Na poda por magnitude, os valores estão abaixo do
-limiar de detecção do protocolo, de cerca de 10\%. $\beta$ é o parâmetro de intensidade da
-Equação~\ref{eq:alocacao_dev}, que controla o quanto a alocação segue o perfil de
-sensibilidade: com $\beta = 1{,}0$ o perfil é seguido integralmente, e com
-$\beta = 0{,}5$ as diferenças entre camadas são atenuadas.}
+\caption{Redução relativa de energia, por taxa de poda (\%).}
 \label{tab:energia}
 \small
 \input{06_capitulo/tabelas/energia}\\
 \textit{Fonte: Elaboração própria.}
 \end{table}
 
-Na poda por magnitude, o resultado foi negativo: \textbf{o custo calculado não caiu}. Entre
-0\% e 90\%, o número de parâmetros não nulos caiu de 124,4~M para 48,0~M, uma redução de
-61\%, enquanto o tamanho em memória e os FLOPs permaneceram constantes: 474,70~MB e
-126,58~G em todas as 10 taxas. A explicação é direta: a poda não estruturada substitui pesos por zeros, mas não
-remove nada da arquitetura. Os tensores mantêm as mesmas dimensões, e a GPU multiplica os
-zeros como multiplicava os valores originais. O ganho de 61\% aparece na contagem de
-parâmetros, mas não na memória ocupada nem nas operações executadas.
+Na poda por magnitude, o custo calculado não foi reduzido. Entre as taxas de 0\% e 90\%, o
+número de parâmetros não nulos passou de 124,4~M para 48,0~M, uma redução de 61\%. O tamanho em
+memória e os FLOPs, entretanto, permaneceram em 474,70~MB e 126,58~G nas 10 taxas. Esse
+resultado decorre de os pesos serem anulados, e não removidos
+(Seção~\ref{subsec:metodo_magnitude}): as matrizes conservam suas dimensões, e as operações
+executadas são as mesmas. Assim, a redução de 61\% aparece na contagem de parâmetros, mas não
+na memória ocupada nem nas operações executadas.
 
 % AJUSTE: 04/11 — a pedido do Enzo, parágrafo reescrito de forma mais didática. Correções
 % conferidas em magnitude.csv: "monótona" não vale na alocação uniforme (3,0% a 20% e 2,4% a
@@ -187,68 +219,112 @@ parâmetros, mas não na memória ocupada nem nas operações executadas.
 % está abaixo do limiar de detecção deste protocolo. Na Tesla T4 utilizada, sem suporte de
 % \textit{hardware} ou de \textit{kernels} para esparsidade, a poda não estruturada não
 % entrega ganho de eficiência algum.
-Diferentemente dessas grandezas, calculadas a partir da arquitetura, a energia e o tempo de
-inferência são medidos durante a execução e, por isso, podem variar mesmo sem mudança na
-arquitetura. Foi o que ocorreu aqui: ao longo da varredura, $\Delta E$ cresceu lentamente até
-cerca de 9\% a 90\%, e o tempo de inferência caiu 5,4\% entre os extremos (de 53,96 para
-51,04~ms, na alocação uniforme). Essas quedas foram menores que a variação do próprio modelo
-base entre sessões, de 40,5 a 54,0~ms e de 1,176 a 1,572~Wh (Seção~\ref{sec:res_protocolo}), e
-sua causa não pode ser determinada por este protocolo: como as taxas foram sempre executadas
-em ordem crescente, o efeito da taxa não se separa do efeito da ordem de execução.
+% AJUSTE: 11/11 (2) — pedido do Enzo: o trecho fica mais didático, para responder à pergunta
+% que a Tabela tab:energia provoca: se o tamanho e os FLOPs não mudam na poda por magnitude,
+% de onde vem a redução de energia? O parágrafo único vira três: (i) as duas tabelas trazem
+% grandezas de naturezas diferentes (calculada e medida); (ii) o que foi medido, com um dado
+% novo de magnitude.csv: a redução não se acumula entre varreduras (não uniforme a 90%:
+% 1,4290 Wh; uniforme a 0%, executada em seguida: 1,5718 Wh); (iii) as duas explicações
+% possíveis, antes resumidas em uma oração. A primeira ganha referência (Gregersen2024, arXiv
+% 2409.18324, conferido em 11/11: a potência da multiplicação de matrizes em GPU cai com a
+% esparsidade dos operandos, com tempo de execução constante; GPUs A100, H100, RTX 6000 e
+% V100, não a T4). O parágrafo do limiar passa a dizer como ler os valores da tabela. Texto
+% anterior: "A energia e o tempo de inferência são medidos durante a execução e, por isso,
+% podem variar mesmo sem alteração na arquitetura. Na poda por magnitude, Delta E cresceu
+% lentamente ao longo da varredura, até cerca de 9% na taxa de 90%. O tempo de inferência, por
+% sua vez, diminuiu 5,4% entre os extremos, de 53,96 para 51,04 ms no esquema de poda
+% uniforme. Essas reduções foram menores que a variação do próprio modelo base entre sessões
+% (Seção sec:res_protocolo). Além disso, sua causa não pode ser determinada por este
+% protocolo: como as taxas foram sempre executadas em ordem crescente, o efeito da taxa não se
+% separa do efeito da ordem de execução."
+A Tabela~\ref{tab:energia} registra, entretanto, reduções de energia de 1,7\% a 9,0\% na poda
+por magnitude. Esse resultado não contradiz o anterior, pois as duas tabelas apresentam
+grandezas de naturezas diferentes. O tamanho e os FLOPs são calculados a partir das dimensões
+das matrizes e, portanto, não dependem dos valores dos pesos: um peso anulado é contado como
+qualquer outro. A energia e o tempo de inferência, por sua vez, são medidos durante a execução
+e podem variar mesmo quando a arquitetura é a mesma.
 
-Essas quedas oferecem uma referência para o restante da análise: como ocorreram sem que nenhuma
-estrutura fosse removida, reduções de até cerca de 10\% em tempo ou energia não são tomadas
-como evidência de ganho da poda. Esse valor, definido a partir desses resultados, é adotado
-como limiar de detecção deste protocolo. Por esse critério, na Tesla T4 utilizada, sem suporte de \textit{hardware} ou de
-\textit{kernels} para esparsidade, a poda não estruturada não apresentou ganho de eficiência
-detectável.
+Nas varreduras da poda por magnitude, $\Delta E$ cresceu lentamente com a taxa de poda, até
+cerca de 9\% na taxa de 90\%. O tempo de inferência também diminuiu: 5,4\% entre os extremos,
+de 53,96 para 51,04~ms no esquema de poda uniforme. Essas reduções foram menores que a
+variação do próprio modelo base entre sessões (Seção~\ref{sec:res_protocolo}). Além disso,
+elas não se acumularam de uma varredura para a seguinte: a varredura não uniforme terminou
+com 1,429~Wh, a 90\%, e a varredura uniforme, executada em seguida, registrou 1,572~Wh a 0\%.
 
-Na poda estruturada, ao contrário, \textbf{o custo caiu, e caiu proporcionalmente aos
-parâmetros}: a 90\% de estruturas removidas, com a alocação não uniforme, o tamanho em
-memória caiu 61\%, os FLOPs 62\%, a energia 59\% e o tempo de inferência 56\%,
-acompanhando a redução de 61\% no número de parâmetros. A redução de energia já superou o
-limiar de detecção a 30\% (13,5\% na alocação não uniforme) e, a 90\%, foi quase seis vezes
-maior que ele. As duas estratégias formam, juntas, a resposta à primeira pergunta: na Tesla
-T4 utilizada, a redução de parâmetros só se converteu em redução detectável de consumo quando
-a poda removeu estruturas inteiras da arquitetura, e não quando apenas zerou pesos.
+A causa dessas reduções não pode ser determinada por este protocolo, pois há duas explicações
+possíveis, que ele não separa. A primeira é um efeito dos próprios pesos nulos.
+\citeonline{Gregersen2024} mediram, em outras GPUs, que a potência consumida na multiplicação
+de matrizes depende dos valores dos operandos e diminui com a proporção de zeros, embora o
+número de operações e o tempo de execução permaneçam os mesmos. Esse efeito, entretanto, não
+explicaria a redução do tempo de inferência. A segunda é um efeito da ordem de execução. Em
+cada varredura, as taxas foram executadas em ordem crescente, de modo que qualquer variação
+ao longo da execução se confunde com o efeito da taxa. Verificar qual das duas ocorreu
+exigiria executar as taxas em outra ordem, o que não foi feito.
+
+Qualquer que seja a causa, essas reduções fornecem uma referência para o restante da análise.
+Como ocorreram sem que
+nenhuma estrutura fosse removida, reduções de até cerca de 10\% em tempo ou energia não são
+consideradas evidência de ganho da poda. Esse valor, definido a partir desses resultados, é
+adotado como \textbf{limiar de detecção} do protocolo. Segundo esse critério, os valores da
+poda por magnitude na Tabela~\ref{tab:energia} são reportados, mas não são interpretados como
+redução de consumo decorrente da poda: na GPU Tesla T4 utilizada, sem suporte de
+\textit{hardware} ou de \textit{kernels} para esparsidade, a poda não estruturada não
+apresentou ganho de eficiência detectável.
+
+Na poda estruturada, o custo foi reduzido de forma proporcional ao número de parâmetros. Com
+90\% das estruturas removidas, no esquema de poda não uniforme, o tamanho em memória diminuiu
+61\%, os FLOPs, 62\%, a energia, 59\%, e o tempo de inferência, 56\%. Essas reduções
+acompanharam a redução de 61\% no número de parâmetros. Nesse esquema de poda, a redução de
+energia superou o limiar de detecção a 30\% (13,5\%) e, a 90\%, foi quase seis vezes
+maior que ele. Os resultados das duas estratégias respondem, em conjunto, à pergunta (A): na
+GPU Tesla T4 utilizada, a redução de parâmetros só se converteu em redução detectável de
+consumo quando a poda removeu estruturas inteiras da arquitetura, e não quando apenas anulou
+pesos.
 % AJUSTE: 04/11 — a pedido do Enzo (ESTILO, 3): a conclusão ganha o escopo da T4 e do limiar.
 % Texto anterior: "a redução de parâmetros só se converte em redução de consumo quando a poda
 % remove estruturas inteiras da arquitetura, e não quando apenas as zera."
 
-As alocações com análise de sensibilidade preservaram esse comportamento, o que era
-esperado, uma vez que alteram a distribuição da poda, e não sua natureza. Na poda por
-magnitude, $\Delta E$ permaneceu abaixo do limiar de detecção em todas as alocações. Na
-poda estruturada, as quatro alocações tiveram $\Delta E$ próximo na mesma taxa: a 50\%,
-28,6\% (não uniforme), 34,3\% (uniforme), 32,6\% ($\beta = 1{,}0$) e 33,1\%
-($\beta = 0{,}5$). As diferenças, de até 6,3 pontos percentuais (a 20\%), foram da ordem da variação
-do próprio modelo base dentro de um mesmo arquivo de resultados, que mediu 1,176~Wh na
-varredura não uniforme e 1,261~Wh na uniforme, 7\% de diferença. A alocação não uniforme
-registrou o menor $\Delta E$ em todas as taxas, mas essa diferença não se separa da variação de medição, e
-não é possível atribuir a nenhuma alocação vantagem de energia.
+Os esquemas de poda com análise de sensibilidade apresentaram o mesmo comportamento, o que era
+esperado, pois alteram a distribuição da poda entre as camadas, e não o tipo de elemento
+removido. Na poda por magnitude, $\Delta E$ permaneceu abaixo do limiar de detecção em todos os
+esquemas de poda. Na poda estruturada, os quatro esquemas de poda apresentaram valores próximos
+de $\Delta E$ em cada taxa. A 50\%, por exemplo, os valores foram de 28,6\% (não uniforme),
+34,3\% (uniforme), 32,6\% ($\beta = 1{,}0$) e 33,1\% ($\beta = 0{,}5$). A maior diferença entre
+os esquemas, de 6,3 pontos percentuais, ocorreu a 20\%. Essa diferença é da ordem da variação
+do próprio modelo base dentro de um mesmo arquivo de resultados: 1,176~Wh na varredura não
+uniforme e 1,261~Wh na uniforme, uma diferença de 7\%. O esquema de poda não uniforme registrou
+o menor $\Delta E$ em todas as taxas. Entretanto, como essa diferença não se separa da variação
+de medição, não é possível atribuir vantagem de energia a nenhum esquema de poda.
 
 \section{Perfil de Sensibilidade por Camada}\label{sec:perfil_sensibilidade}
 
-Antes da comparação de qualidade entre as alocações, esta seção apresenta o perfil de
-sensibilidade que alimenta a alocação com análise de sensibilidade, levantado conforme a
-Seção~\ref{subsec:fase1}: para cada uma das 12 camadas do GPT-2 \textit{small} e para cada
-estratégia, \textbf{apenas} aquela camada foi podada à taxa-sonda, sem \textit{fine-tuning},
-e a degradação $\Delta_{\ell}$ (Equação~\ref{eq:delta_perfil}) mede o aumento
-logarítmico da \textit{perplexity} em relação ao modelo base. O levantamento foi feito a duas
-taxas-sonda, 50\% e 30\%; as alocações usaram apenas o perfil de 50\%, e o de 30\% serviu de
-verificação (Seção~\ref{subsec:robustez_sonda}).
+% AJUSTE: 11/11 (3) — observação do Enzo: a Seção 6.3 repetia três vezes que o perfil de 50%
+% define os esquemas de poda e o de 30% serve de verificação, o que o Desenvolvimento já diz
+% (subsec:fase1). Fica uma retomada só, em uma oração, na apresentação da Tabela
+% tab:perfil_sensibilidade, que é onde o leitor precisa dela. A abertura da seção e a da
+% subsec:robustez_sonda deixam de reexplicar o desenho e a razão da segunda taxa-sonda
+% (Metodologia, passo 1), e a primeira limitação, que repetia o item "Faixa restrita de
+% taxas-sonda" de sec:limitacoes, passa a remeter a ele.
+Esta seção apresenta o perfil de sensibilidade, medido nas duas taxas-sonda definidas na
+Seção~\ref{subsec:fase1}, e o esquema de poda que dele resulta.
 
 \subsection{Perfil Obtido}\label{subsec:perfil_obtido}
 
-A Tabela~\ref{tab:perfil_sensibilidade} apresenta os dois levantamentos, e a
-Figura~\ref{fig:perfil_sensibilidade} representa graficamente o de 50\%.
+% AJUSTE: 09/11 — regra das legendas do orientador (07/11, "Deixar na tabela apenas um
+% título, a explicação deve ficar no corpo do texto, fazer isso em todas as tabelas"): a
+% legenda fica só com o título, e a explicação vem para o parágrafo que apresenta a tabela.
+A Tabela~\ref{tab:perfil_sensibilidade} apresenta os perfis das duas taxas-sonda, e a
+Figura~\ref{fig:perfil_sensibilidade} representa graficamente o de 50\%, do qual derivam os
+esquemas de poda. Na tabela, cada valor corresponde à degradação $\Delta_{\ell}$
+(Equação~\ref{eq:delta_perfil}) da camada indicada. Entre parênteses, consta o posto da camada
+na ordenação de sensibilidade, em que 1 indica a mais sensível. Na figura, as escalas verticais
+diferem entre os dois gráficos. Além disso, na poda estruturada, a barra da camada 0 excede o
+eixo e está truncada.
 
 \begin{table}[htb]
 \centering
-\caption{Perfil de sensibilidade por camada do GPT-2 \textit{small} no WikiText-2:
-degradação $\Delta_{\ell}$ (Equação~\ref{eq:delta_perfil}) causada pela poda exclusiva da
-camada indicada, sem \textit{fine-tuning}, a duas taxas-sonda. Entre parênteses, o posto
-da camada na ordenação de sensibilidade (1 = mais sensível). As alocações usaram apenas o
-perfil de 50\%.}
+\caption{Perfil de sensibilidade por camada do GPT-2 \textit{small} no WikiText-2, nas duas
+taxas-sonda.}
 \label{tab:perfil_sensibilidade}
 \small
 \input{06_capitulo/tabelas/perfil}\\
@@ -257,10 +333,7 @@ perfil de 50\%.}
 
 \begin{figure}[htb]
 \centering
-\caption{Degradação $\Delta_{\ell}$ causada pela poda isolada de cada camada,
-à taxa-sonda de 50\%. Note-se que as escalas verticais diferem entre os dois
-gráficos; na poda estruturada, a barra da camada 0 excede o eixo e está
-truncada.}
+\caption{Degradação causada pela poda isolada de cada camada, à taxa-sonda de 50\%.}
 \label{fig:perfil_sensibilidade}
 \begin{tikzpicture}[scale=0.85]
 
@@ -309,23 +382,21 @@ truncada.}
 % AJUSTE: 26/10 — "robusta(s)"/"robustez" passam a "tolerante(s)"/"tolerância" em todo o
 % capítulo (motivo no comentário da definição, na Metodologia). Ficam "Robustez do Perfil
 % à Taxa-Sonda" e "robusto às três", em que a palavra tem o sentido de estabilidade.
-O primeiro resultado confirmou a premissa da técnica: a sensibilidade não foi uniforme entre
-as camadas. Sob poda por magnitude, a camada mais sensível degradou o modelo 11,3 vezes mais
-que a mais tolerante; sob poda estruturada, 42,9 vezes mais, à taxa-sonda de 50\%. Tratar as
-12 camadas como intercambiáveis, como faz a alocação uniforme,
-ignora uma diferença de uma ordem de grandeza no custo de podar cada uma delas.
+O primeiro resultado é que a sensibilidade não foi uniforme entre as camadas, o que confirma a
+premissa da técnica. À taxa-sonda de 50\%, na poda por magnitude, a camada mais sensível
+degradou o modelo 11,3 vezes mais que a mais tolerante. Na poda estruturada, essa razão foi de
+42,9. Portanto, o esquema de poda uniforme, que aplica a mesma taxa às 12 camadas, desconsidera
+uma diferença de uma ordem de grandeza na degradação causada pela poda de cada uma delas.
 
 \subsection{Camadas Mais Sensíveis}\label{subsec:camada_zero}
 
-O segundo resultado foi a importância da primeira camada. Nas duas
-estratégias ela foi a mais sensível, mas o efeito foi qualitativamente distinto no
-caso estruturado: remover metade das cabeças de atenção e dos neurônios do MLP
-\textbf{apenas da camada 0} elevou a \textit{perplexity} de 25,17 para 1.386,43, ou seja,
-55 vezes o valor do modelo base. Para dimensionar esse número, a poda
-estruturada uniforme a 50\%, que poda \textit{todas} as 12 camadas,
-atingiu \textit{perplexity} de 4.573,00. Em escala logarítmica, a camada 0 sozinha respondeu
-por $4{,}01/5{,}20 \approx 77\%$ de toda a degradação produzida pela poda
-uniforme do modelo inteiro.
+O segundo resultado refere-se à camada 0, a mais sensível nas duas estratégias. Na poda
+estruturada, o efeito foi mais acentuado: a remoção de metade das cabeças de atenção e dos
+neurônios do MLP apenas da camada 0 elevou a \textit{perplexity} de 25,17 para 1.386,43, ou
+seja, 55 vezes o valor do modelo base. Como comparação, a poda estruturada com esquema de poda
+uniforme a 50\%, que poda as 12 camadas, resultou em \textit{perplexity} de 4.573,00. Em escala
+logarítmica, a camada 0 respondeu, isoladamente, por $4{,}01/5{,}20 \approx 77\%$ da degradação
+produzida pela poda uniforme de todo o modelo.
 
 % AJUSTE: 24/10 — "bloco 0" e "primeiro bloco" → "camada", termo definido na descrição
 % do GPT-2 (Desenvolvimento) para os 12 blocos; o parágrafo alternava os dois.
@@ -335,57 +406,90 @@ uniforme do modelo inteiro.
 % informação descartada ali não tem como ser recuperada pelas camadas subsequentes, que operam
 % sobre um sinal já degradado. Trata-se, portanto, de um erro que se propaga por toda a pilha,
 % ao contrário de um erro cometido nas camadas intermediárias."
-Uma hipótese compatível com esse resultado decorre da posição da camada 0: é nela que as
-representações deixam de ser a soma direta de \textit{embeddings} de \textit{token} e de
-posição e passam a ser contextualizadas pela primeira vez, de modo que um dano nessa camada
-alcança as 11 camadas seguintes. Como o perfil mede a degradação, e não seu mecanismo, essa
-explicação não foi testada neste trabalho.
+% AJUSTE: 12/11 — a pedido do Enzo: a hipótese ganha referência, já que não foi testada aqui.
+% Lad2025 (NeurIPS 2025; trechos conferidos no arXiv:2406.19384v3) removem ou trocam camadas
+% inteiras, inclusive no GPT-2 small (Tabela 2 do artigo). Seç. 3.1: "Intervening on the first
+% layer is catastrophic for model performance for every model, regardless of size or model
+% family" e "the middle layers are remarkably robust to both deletion and minor order changes".
+% Seç. 4.1: "the first layer is not a normal layer, but rather an extension of the embedding
+% [...] by ablating the first layer, the rest of the network is blind to the instant context
+% and is thrown off distribution". A intervenção deles é a remoção da camada inteira, medida
+% por divergência KL no The Pile, e não a poda de metade da camada: por isso "coerente com", e
+% a frase final (hipótese não testada neste trabalho) permanece.
+% AJUSTE: 12/11 (2) — pedido do Enzo: a primeira camada é sempre a camada 0. A "primeira
+% camada" dos autores é ligada à camada 0 na primeira menção e, depois, chamada de camada 0.
+Uma hipótese compatível com esse resultado decorre da posição da camada 0. Nessa camada, as
+representações deixam de ser a soma direta dos \textit{embeddings} de \textit{token} e de
+posição e passam a ser contextualizadas pela primeira vez. Dessa forma, um dano nessa camada
+alcança as 11 camadas seguintes. Essa hipótese é coerente com os resultados de
+\citeonline{Lad2025}, que removeram camadas inteiras, ou trocaram a ordem de camadas
+adjacentes, em modelos de cinco famílias, entre eles o GPT-2 \textit{small}. Em todos os
+modelos avaliados, a intervenção na primeira camada, que corresponde à camada 0 na numeração
+adotada neste trabalho, esteve entre as que mais degradaram o desempenho, enquanto a remoção de
+camadas intermediárias foi tolerada. Os autores interpretam a camada 0 como uma extensão da
+camada de \textit{embedding} e atribuem às camadas iniciais a integração do contexto local às
+representações dos \textit{tokens}. Segundo essa interpretação, sem a camada 0, as camadas
+seguintes passam a operar sobre representações fora da distribuição para a qual foram
+treinadas. Como o perfil mede a degradação, e não o seu
+mecanismo, essa hipótese não foi testada neste trabalho.
 
-Na poda estruturada, observou-se ainda um segundo ponto crítico na outra
-extremidade: a camada 11, imediatamente anterior à cabeça de linguagem,
-apresentou $\Delta_{11} = 0{,}663$, quase cinco vezes a mediana das camadas
-intermediárias. O perfil estruturado teve, assim, formato aproximado de ``U'':
-as camadas das extremidades foram críticas, e as intermediárias degradaram
-comparativamente pouco o modelo. Esse padrão não se repetiu na poda por magnitude, cujo
-perfil decaiu após um pico inicial e manteve as últimas camadas entre as mais tolerantes.
+Na poda estruturada, a segunda camada mais sensível foi a camada 11, imediatamente anterior à
+cabeça de linguagem, com $\Delta_{11} = 0{,}663$, quase cinco vezes a mediana das camadas
+intermediárias. O perfil da poda estruturada apresentou, assim, formato aproximado de ``U'': as
+camadas das extremidades foram as mais sensíveis, e as intermediárias degradaram
+comparativamente pouco o modelo. Esse padrão não se repetiu na poda por magnitude, em que as
+camadas mais sensíveis foram a 0 e a 4, e a camada 11 ocupou o oitavo posto.
 
 \subsection{Comparação dos Perfis entre as Estratégias}\label{subsec:perfis_divergem}
 
-O terceiro resultado teve consequência metodológica direta: os dois perfis
-\textbf{não} foram iguais. A correlação de postos de Spearman entre eles foi de
-$\rho = 0{,}50$: houve concordância, mas parcial. As duas estratégias
-coincidiram em eleger a camada 0 como a mais crítica e em considerar as camadas
-1 e 7 entre as mais tolerantes, e divergiram em praticamente todo o resto: a
-camada 11 foi a segunda mais sensível sob poda estruturada e apenas a oitava sob
-poda por magnitude; a camada 3 foi a segunda mais tolerante sob magnitude e a
-quarta mais sensível sob poda estruturada.
+% AJUSTE: 12/11 — observação do Enzo: a correlação de postos de Spearman aparecia aqui pela
+% primeira vez, sem definição. A definição passou à Seção subsec:fase1 (eq:spearman), e este
+% primeiro uso ganha a retomada em uma oração (ESTILO, seção 5). Texto anterior: "A correlação
+% de postos de Spearman entre eles foi de $rho = 0{,}50$, o que indica concordância parcial."
+O terceiro resultado é que os perfis das duas estratégias não coincidiram. A correlação de
+postos de Spearman (Equação~\ref{eq:spearman}), que vale 1 quando duas ordenações são
+idênticas e se aproxima de zero quando não há associação entre elas, foi de $\rho = 0{,}50$
+entre os dois perfis, o que indica concordância parcial. As
+duas estratégias coincidiram em apontar a camada 0 como a mais sensível e as camadas 1 e 7
+entre as mais tolerantes. Nas demais camadas, entretanto, as ordenações divergiram. A camada 11
+foi a segunda mais sensível na poda estruturada e apenas a oitava na poda por magnitude. A
+camada 3, por sua vez, foi a segunda mais tolerante na poda por magnitude e a quarta mais
+sensível na poda estruturada.
 
-A implicação prática é que o GPT-2 não tem um perfil de sensibilidade único. A sensibilidade
-é uma propriedade do par (camada, estratégia de poda), não da camada isoladamente, e o perfil
-precisa ser levantado separadamente para cada estratégia, como foi feito aqui, sob pena de se
-distribuir a poda com base em um perfil obtido por outra estratégia.
+Portanto, o GPT-2 \textit{small} não possui um perfil de sensibilidade único. A sensibilidade
+corresponde a uma propriedade do par formado pela camada e pela estratégia de poda, e não da
+camada isoladamente. Esse resultado confirma a necessidade, prevista na
+Seção~\ref{sec:metodologia_poda_com}, de medir o perfil separadamente para cada estratégia.
 
-\subsection{Da Sensibilidade à Alocação}\label{subsec:alocacao}
+\subsection{Esquema de Poda Resultante}\label{subsec:alocacao}
 
-Para orientar a poda, o perfil precisa ser convertido em taxas de poda por camada. Essa conversão é a Equação~\ref{eq:alocacao_dev},
-apresentada na Seção~\ref{subsec:fase2}: a taxa de cada camada é proporcional
-à sua tolerância --- o inverso da degradação medida --- elevada a
-$\beta$, o parâmetro de intensidade, escalada por um fator único obtido por bisseção de modo que a
-taxa de poda pretendida seja respeitada, e limitada pelo teto $r_{\max} = 0{,}95$.
-Interessa aqui apenas o que ela produziu na prática.
+O perfil de sensibilidade foi convertido em taxas de poda por camada pela
+Equação~\ref{eq:alocacao_dev} (Seção~\ref{subsec:fase2}). Esta subseção apresenta as taxas
+resultantes dessa conversão.
 
-A Tabela~\ref{tab:alocacao_50} mostra as taxas que a
-Equação~\ref{eq:alocacao_dev} produziu para uma taxa de poda de 50\% com
-$\beta = 1$. O contraste com a alocação uniforme foi acentuado: sob poda
-estruturada, a camada 0 recebeu 2\% de poda e a camada 1 recebeu 84\%,
-enquanto a alocação uniforme aplicaria 50\% a ambas.
+% AJUSTE: 12/11 — observação do Enzo: a frase final parecia comparar a poda estruturada
+% (estratégia) com o esquema de poda uniforme (esquema). O parágrafo não dizia que a tabela
+% traz o esquema de poda com análise de sensibilidade, uma linha por estratégia. A comparação
+% passa a ser entre os dois esquemas, e as estratégias entram como os dois casos em que ela é
+% feita, com os valores das camadas 0 e 1 nas duas linhas da tabela. "Acentuada" sai, e ficam
+% os números. Texto anterior: "A Tabela [...] apresenta as taxas de poda por camada obtidas
+% para a taxa de poda de 50pct, com $beta = 1{,}0$. [...] A diferença em relação ao esquema de
+% poda uniforme foi acentuada: na poda estruturada, a camada 0 recebeu taxa de 2pct, e a
+% camada 1, de 84pct, enquanto o esquema de poda uniforme aplicaria 50pct a ambas."
+A Tabela~\ref{tab:alocacao_50} apresenta, para cada estratégia de poda, as taxas de poda por
+camada do esquema de poda com análise de sensibilidade, à taxa de poda de 50\% e com $\beta =
+1{,}0$. Os valores correspondem às taxas efetivamente aplicadas, registradas nos resultados dos
+experimentos. Nas duas estratégias, o esquema de poda uniforme aplica 50\% a cada uma das 12
+camadas. No esquema de poda com análise de sensibilidade, por sua vez, as taxas variaram entre
+as camadas. Na poda estruturada, a camada 0 recebeu taxa de 2\%, e a camada 1, de 84\%. Na poda
+por magnitude, essas mesmas camadas receberam 8\% e 94\%.
+% AJUSTE (tab:alocacao_50): 09/11 — regra das legendas do orientador (07/11, "Deixar na tabela apenas um
+% título, a explicação deve ficar no corpo do texto, fazer isso em todas as tabelas"): a
+% legenda fica só com o título, e a explicação vem para o parágrafo que apresenta a tabela.
 
 \begin{table}[htb]
 \centering
-\caption{Taxas de poda por camada efetivamente aplicadas pela
-Equação~\ref{eq:alocacao_dev} para taxa de poda de 50\% e $\beta = 1{,}0$
-(coluna \texttt{taxas\_por\_camada} dos registros experimentais). A alocação
-uniforme corresponderia a 50\% em todas as camadas.}
+\caption{Taxas de poda por camada aplicadas à taxa de poda de 50\%, com $\beta = 1{,}0$.}
 \label{tab:alocacao_50}
 \small
 \input{06_capitulo/tabelas/alocacao_50}\\
@@ -394,248 +498,289 @@ uniforme corresponderia a 50\% em todas as camadas.}
 
 \subsection{Robustez do Perfil à Taxa-Sonda}\label{subsec:robustez_sonda}
 
-O perfil que alimentou as alocações foi levantado a uma taxa-sonda de 50\%. Como a
-escolha dessa taxa é arbitrária, cabe verificar se a ordenação de
-sensibilidade que dela resulta é uma propriedade das camadas ou um artefato do
-regime de poda em que a sonda opera. Para isso, o perfilamento completo foi
-repetido a uma taxa-sonda de 30\%, nas duas estratégias, o que fornece uma
-réplica independente da fase 1; a Tabela~\ref{tab:perfil_sensibilidade} traz os dois
-levantamentos lado a lado.
+Esta subseção apresenta a verificação prevista no procedimento
+(Seção~\ref{sec:metodologia_poda_com}): se a ordenação das camadas depende da taxa-sonda
+adotada. Para isso, os dois perfis da Tabela~\ref{tab:perfil_sensibilidade} foram comparados.
 
-A correlação de postos de Spearman entre as duas sondas foi de $\rho = 0{,}944$ na
-poda por magnitude e de $\rho = 0{,}713$ na poda estruturada. A ordenação foi,
-portanto, substancialmente estável, e os achados que sustentam a alocação com análise de
-sensibilidade se mantiveram com a troca de taxa-sonda. Na magnitude, as três camadas mais
-sensíveis (0, 4 e 5) e as três mais tolerantes (1, 3 e 7) foram \textbf{as mesmas}
-nos dois levantamentos. Na estruturada, a camada 0 e a camada 11 ocuparam os dois
-primeiros postos em ambos, de modo que o formato em ``U'' discutido na
-Seção~\ref{subsec:camada_zero} não dependeu da taxa-sonda; a camada 0 respondeu
-por 65,5\% da soma dos $\Delta_{\ell}$ a 50\% e por 67,9\% a 30\%.
+% AJUSTE: 11/11 (4) — dúvida do Enzo ao ler a Tabela tab:perfil_sensibilidade: se o perfil de
+% 30% confirma o de 50%, por que os postos diferem? O texto dizia que "os resultados que
+% sustentam o esquema de poda com análise de sensibilidade se mantiveram com a troca de
+% taxa-sonda", o que a tabela não sustenta por inteiro na poda estruturada. A subseção passa a
+% dizer o que se manteve e o que mudou: (i) a comparação é de ordenação, não de valores; (ii)
+% magnitude: nenhuma camada muda mais de três postos (soma dos quadrados das diferenças de
+% posto = 16); (iii) estruturada: camadas 0 e 11 nos dois primeiros postos, camada 1 do 11º
+% para o 3º (64 dos 82 da soma dos quadrados), as demais até dois postos; a camada 1 é a única
+% cuja degradação diminui de 30% para 50% (0,159 para 0,094); (iv) consequência: com o perfil
+% de 50% a camada 1 recebe 84% à taxa de 50% (taxas_por_camada, sensibilidade.csv), e nenhuma
+% varredura usou o perfil de 30% (coluna taxa_sonda). Sai a frase "o esquema beneficiou-se da
+% alta sensibilidade das camadas 0 e 11, e não da ordenação das camadas intermediárias", que
+% não foi testada. Texto anterior: "A correlação de postos de Spearman entre os perfis das
+% duas taxas-sonda foi de $rho = 0{,}944$ na poda por magnitude e de $rho = 0{,}713$ na poda
+% estruturada. A ordenação foi, portanto, mais estável na poda por magnitude que na poda
+% estruturada. Nas duas estratégias, entretanto, os resultados que sustentam o esquema de poda
+% com análise de sensibilidade se mantiveram com a troca de taxa-sonda. Na poda por magnitude,
+% as três camadas mais sensíveis (0, 4 e 5) e as três mais tolerantes (1, 3 e 7) foram as
+% mesmas nos dois perfis. Na poda estruturada, as camadas 0 e 11 ocuparam os dois primeiros
+% postos em ambos, de modo que o formato em ``U'' (Seção~ref{subsec:camada_zero}) não dependeu
+% da taxa-sonda. Além disso, a camada 0 respondeu por 65,5pct da soma dos $Delta_{ell}$ a
+% 50pct e por 67,9pct a 30pct. Na poda estruturada, a divergência concentrou-se na camada 1,
+% que passou do 11º posto, à taxa-sonda de 50pct, para o 3º, à de 30pct. Uma explicação
+% compatível com esse resultado é que as camadas intermediárias apresentam sensibilidades
+% próximas entre si: os $Delta_{ell}$ das camadas 1 a 10 ficaram todos entre 0,05 e 0,22.
+% Dessa forma, pequenas diferenças de degradação entre as duas taxas-sonda são suficientes
+% para alterar os postos, sem modificar o formato do perfil. Esse comportamento é coerente com
+% o efeito do parâmetro de intensidade (Seção~ref{subsec:ablacao_beta}): o esquema de poda com
+% análise de sensibilidade beneficiou-se da alta sensibilidade das camadas 0 e 11, e não da
+% ordenação das camadas intermediárias."
+Os valores de $\Delta_{\ell}$ diferem entre as duas taxas-sonda, pois a quantidade de elementos
+removidos de cada camada é diferente. Por isso, a comparação refere-se à ordenação das camadas,
+e não aos valores. A correlação de postos de Spearman entre os dois perfis foi de $\rho =
+0{,}944$ na poda por magnitude e de $\rho = 0{,}713$ na poda estruturada. As ordenações,
+portanto, não foram idênticas, e a da poda estruturada foi a menos estável.
 
-A estabilidade foi menor na poda estruturada, e a divergência concentrou-se em uma
-camada: a camada 1 passou do 11º posto na sonda de 50\% para o 3º na de
-30\%. A leitura mais plausível é que as camadas intermediárias têm sensibilidades
-próximas entre si --- os $\Delta_{\ell}$ das camadas 1 a 10 ficaram todos entre
-0,05 e 0,22 ---, de modo que pequenas diferenças de degradação entre as duas taxas-sonda
-bastam para reordenar postos, sem alterar a estrutura do perfil.
+Na poda por magnitude, a ordenação praticamente se manteve. As três camadas mais sensíveis (0,
+4 e 5) e as três mais tolerantes (1, 3 e 7) foram as mesmas nos dois perfis, e nenhuma camada
+mudou mais de três postos.
+
+% AJUSTE: 11/11 (5) — dúvida do Enzo: a camada 1 vai do 3º ao 11º posto, "resultado muito
+% variado". O parágrafo passa a mostrar que a mudança de posto é grande, mas a de valor é
+% pequena, com as perplexities de sensibilidade_perfil.csv e sensibilidade_perfil_sonda03.csv
+% (camada 1: 29,52 e 27,66; camadas 1 a 10: de 26,53 a 31,31; camada 0: 772,11 e 1.386,43).
+% A faixa dos deltas (0,05 a 0,22), que dizia o mesmo em escala logarítmica, dá lugar a ela.
+Na poda estruturada, as camadas 0 e 11 ocuparam os dois primeiros postos nos dois perfis, de
+modo que o formato em ``U'' (Seção~\ref{subsec:camada_zero}) não dependeu da taxa-sonda. Além
+disso, a camada 0 respondeu por 65,5\% da soma dos $\Delta_{\ell}$ a 50\% e por 67,9\% a 30\%.
+A divergência concentrou-se na camada 1, que passou do 11º posto, à taxa-sonda de 50\%, para o
+3º, à de 30\%. Essa camada foi a única cuja degradação diminuiu com o aumento da taxa-sonda: de
+0,159, a 30\%, para 0,094, a 50\%. As demais camadas mudaram, no máximo, dois postos. Essa
+mudança de posto é grande, mas corresponde a uma diferença pequena de degradação. Podada
+isoladamente, a camada 1 resultou em \textit{perplexity} de 29,52 a 30\% e de 27,66 a 50\%, uma
+diferença inferior a dois pontos. As camadas 1 a 10 apresentam sensibilidades próximas entre
+si: nas duas taxas-sonda, a poda isolada de cada uma delas resultou em \textit{perplexity}
+entre 26,53 e 31,31, enquanto a da camada 0 resultou em 772,11 e 1.386,43. Dessa forma,
+pequenas diferenças de degradação são suficientes para alterar os postos das camadas
+intermediárias.
+
+A mudança da camada 1 tem consequência para o esquema de poda. Com o perfil de 50\%, essa
+camada está entre as que recebem as maiores taxas de poda: 84\% à taxa de poda de 50\%
+(Tabela~\ref{tab:alocacao_50}). Com o perfil de 30\%, estaria entre as que recebem as menores.
+Portanto, na poda estruturada, a verificação confirma a posição das duas camadas mais
+sensíveis, mas não a ordenação completa. O esquema de poda derivado do perfil de 30\% não foi
+avaliado, de modo que os resultados da Seção~\ref{sec:res_qualidade} referem-se ao perfil de
+50\%. Segundo a análise da Seção~\ref{subsec:ablacao_beta}, o fator determinante nessa
+estratégia é a preservação da camada 0, cuja posição foi a mesma nos dois perfis.
 % AJUSTE: 04/11 — a pedido do Enzo: "pequenas variações de medição" sai. A perplexity é
 % determinística (ver subsec:controle_beta_zero); não há ruído de medição nela.
-Isso é coerente com o comportamento do parâmetro de intensidade
-$\beta$ reportado na Seção~\ref{subsec:ablacao_beta}: o que a alocação aproveitou foi a alta
-sensibilidade das camadas 0 e 11, e não a ordenação fina das camadas intermediárias.
 
-\subsection{Limitações do Perfilamento}\label{subsec:limitacoes_perfil}
+\subsection{Limitações do Perfil de Sensibilidade}\label{subsec:limitacoes_perfil}
 
-Três limitações do procedimento devem ser explicitadas, pois condicionam a
-leitura dos resultados da alocação com análise de sensibilidade.
+Três limitações da medição do perfil condicionam a leitura dos resultados do esquema de poda
+com análise de sensibilidade.
 
-A primeira é que, embora a verificação da subseção anterior tenha mostrado que a
-ordenação foi estável entre 30\% e 50\%, ambas as taxas pertencem ao mesmo
-regime intermediário de poda. Nada garante que a ordenação se mantenha em
-regimes extremos --- poda muito branda, em que a degradação de todas as
-camadas se aproxima de zero e as diferenças entre elas ficam muito pequenas, ou muito
-agressiva, em que a degradação de várias camadas já é extrema.
+A primeira é a faixa restrita de taxas-sonda, registrada entre as limitações do trabalho
+(Seção~\ref{sec:limitacoes}): a verificação da subseção anterior não abrange taxas-sonda muito
+menores ou muito maiores que as duas adotadas.
 % AJUSTE: 04/11 — a pedido do Enzo: "se aproxima do ruído de medição" sai, pelo mesmo motivo
 % da subseção anterior: a perplexity é determinística.
-Estender a verificação a essas faixas tem custo
-proporcional: cada ponto de perfil exige uma avaliação completa de \textit{perplexity}.
 
-A segunda, e mais relevante, é que a sonda mede o efeito de cada camada
-\textbf{isoladamente}, ignorando as interações entre elas. Os dados do próprio
-experimento mostram que essa aproximação é imperfeita: a soma dos
-$\Delta_{\ell}$ individuais sob poda por magnitude foi 1,238, ao passo que a
-poda uniforme simultânea de todas as camadas a 50\% produziu degradação
-logarítmica de 2,934, mais que o dobro. A degradação foi fortemente
-superaditiva, isto é, os erros introduzidos em camadas distintas se compõem em
-vez de simplesmente se somarem. O perfil deve, por isso, ser lido como uma
-ordenação relativa de importância, e não como um modelo preditivo da
-degradação de uma configuração completa.
+A segunda, e mais relevante, é que o perfil mede o efeito de cada camada isoladamente e,
+portanto, não considera as interações entre elas. Na poda por magnitude, a soma dos
+$\Delta_{\ell}$ individuais foi de 1,238, enquanto a poda simultânea de todas as camadas a
+50\%, no esquema de poda uniforme, produziu degradação logarítmica de 2,934, mais que o dobro.
+A degradação foi, portanto, superaditiva: a degradação de camadas podadas em conjunto supera a
+soma de suas degradações individuais. Por essa razão, o perfil deve ser lido como uma ordenação
+das camadas por sensibilidade, e não como uma estimativa da degradação de um modelo com várias
+camadas podadas.
 
-A terceira é que todas as medições foram \textit{one-shot}, sem
-\textit{fine-tuning} de recuperação. Camadas que parecem frágeis nesse regime
-poderiam ser recuperáveis com retreinamento, o que eventualmente alteraria a
-alocação ótima. A opção pelo regime \textit{one-shot} é deliberada e coerente
-com o objetivo do trabalho --- isolar o efeito da poda do efeito do
-retreinamento ---, mas restringe a generalidade das conclusões.
+A terceira é que todas as medições do perfil foram realizadas em regime \textit{one-shot}.
+Camadas sensíveis nesse regime poderiam ser recuperadas pelo retreinamento, o que alteraria o
+esquema de poda mais adequado. A adoção do regime \textit{one-shot} é coerente com o objetivo
+de avaliar o efeito da poda separadamente daquele do retreinamento (critério P2,
+Seção~\ref{subsec:metodologia_selecao_estrategias}), mas restringe a generalidade das
+conclusões.
 
-Nenhuma dessas limitações invalida o achado principal desta seção, que é
-robusto às três: sob qualquer leitura, as camadas do GPT-2 diferiram entre si
-por mais de uma ordem de grandeza no custo de serem podadas, e essa diferença
-é informação que as alocações uniforme e não uniforme não utilizam. Se
-essa informação se converte em ganho efetivo no compromisso entre compressão e
-qualidade é o que a seção seguinte verifica.
+Nenhuma dessas limitações altera o principal resultado desta seção: as camadas do GPT-2
+\textit{small} diferiram entre si em mais de uma ordem de grandeza quanto à degradação causada
+por sua poda. Os esquemas de poda uniforme e não uniforme não utilizam essa informação. A seção
+seguinte verifica se ela se converte em menor perda de desempenho preditivo para uma mesma taxa
+de poda.
 
-\section{Qualidade Preditiva}\label{sec:res_qualidade}
+\section{Desempenho Preditivo}\label{sec:res_qualidade}
 
-Esta seção responde à segunda pergunta do trabalho: se a alocação com análise de
-sensibilidade melhora o compromisso entre compressão e qualidade em relação às alocações
-sem essa análise. As Tabelas~\ref{tab:comp_magnitude} e~\ref{tab:comp_estruturada}
-apresentam a \textit{perplexity} das quatro alocações em cada taxa de poda. A alocação com análise
-de sensibilidade foi avaliada com dois valores do parâmetro de intensidade $\beta$, 1,0 e 0,5, sobre o
-mesmo perfil. Um terceiro valor, $\beta = 0$, não é uma alocação candidata, e sim um
-controle: nele a regra atribui a mesma taxa a todas as camadas e deve reproduzir a
-alocação uniforme (Seção~\ref{subsec:controle_beta_zero}).
+Esta seção responde à pergunta (B): se o esquema de poda com análise de sensibilidade melhora o
+compromisso entre compressão e qualidade em relação aos esquemas de poda sem essa análise. As
+Tabelas~\ref{tab:comp_magnitude} e~\ref{tab:comp_estruturada} apresentam a \textit{perplexity}
+dos quatro esquemas de poda em cada taxa de poda. O esquema de poda com análise de
+sensibilidade foi avaliado com as duas intensidades, $\beta = 1{,}0$ e $\beta = 0{,}5$, sobre o
+mesmo perfil. As Seções~\ref{sec:res_magnitude} e~\ref{sec:res_estruturada} apresentam os
+resultados de cada estratégia. Em seguida, a Seção~\ref{subsec:controle_beta_zero} apresenta a
+verificação com $\beta = 0$, e a Seção~\ref{subsec:ablacao_beta}, o efeito do parâmetro de
+intensidade. Por fim, a Seção~\ref{subsec:reducao_ppl} analisa os casos em que a
+\textit{perplexity} diminuiu com o aumento da taxa de poda.
 
 \subsection{Poda por Magnitude}\label{subsec:aloc_magnitude}\label{sec:res_magnitude}
 
-A Tabela~\ref{tab:comp_magnitude} apresenta a \textit{perplexity} das quatro alocações na poda por
-magnitude.
+% AJUSTE: 09/11 — regra das legendas do orientador (07/11, "Deixar na tabela apenas um
+% título, a explicação deve ficar no corpo do texto, fazer isso em todas as tabelas"): a
+% legenda fica só com o título, e a explicação vem para o parágrafo que apresenta a tabela.
+A Tabela~\ref{tab:comp_magnitude} apresenta a \textit{perplexity} dos quatro esquemas de poda
+na poda por magnitude, sem retreinamento. O menor valor de cada taxa está em negrito. No
+esquema de poda não uniforme, a \textit{perplexity} diminuiu de 70\% a 90\%, comportamento
+analisado na Seção~\ref{subsec:reducao_ppl}.
 
 \begin{table}[htb]
 \centering
-\caption{\textit{Perplexity} da poda por magnitude, sem retreinamento, nas quatro alocações. Em
-negrito, o menor valor de cada taxa. $\beta$ é o parâmetro de intensidade
-(Seção~\ref{subsec:fase2}).}
+\caption{\textit{Perplexity} da poda por magnitude, sem retreinamento, nos quatro esquemas de
+poda.}
 \label{tab:comp_magnitude}
 \small
 \input{06_capitulo/tabelas/qualidade_magnitude}\\
 \textit{Fonte: Elaboração própria.}
 \end{table}
 
-Nas alocações sem análise de sensibilidade, a \textit{perplexity} passou a crescer mais depressa em
-torno de 30\%. Até 20\%, o acréscimo foi de 0,2 a 2,1 pontos; a 40\%, a \textit{perplexity} já chegou
-a 165,20 e 104,82, e, a 50\%, a 1.096,50 e 473,28, nas alocações não uniforme e uniforme,
-respectivamente. Pelo limite de 5\% (Seção~\ref{sec:metodologia_metricas}), que corresponde
-a uma \textit{perplexity} de até 26,43, a qualidade foi preservada apenas a 10\%: a 20\%, as duas
-alocações já o excederam, com 26,87 e 27,22.
+Nos esquemas de poda sem análise de sensibilidade, o crescimento da \textit{perplexity}
+acentuou-se em torno da taxa de 30\%. Até 20\%, o acréscimo foi de 0,2 a 2,1 pontos. A 40\%, a
+\textit{perplexity} atingiu 165,20 no esquema de poda não uniforme e 104,82 no uniforme. A
+50\%, atingiu 1.096,50 e 473,28, respectivamente. Pelo limite de 5\%
+(Seção~\ref{sec:metodologia_metricas}), que corresponde a uma \textit{perplexity} de até 26,43,
+o desempenho preditivo foi preservado apenas a 10\%. A 20\%, os dois esquemas de poda já
+excederam esse limite, com 26,87 e 27,22.
 % AJUSTE: 04/11 — a pedido do Enzo (ESTILO, 1.2): "praticamente gratuita" e "região utilizável
 % [...] até 20%" não tinham critério e contradiziam o limite de 5% (sec:res_tradeoff).
 
-A comparação entre as duas alocações sem análise de sensibilidade revelou um cruzamento
-duplo: a não uniforme apresentou valores ligeiramente menores até 20\%, a uniforme apresentou
-valores menores de 30\% a 70\%, e a não uniforme voltou a apresentar valores menores em 80\%
-e 90\%, taxas em que ambos os modelos tinham \textit{perplexity} acima de 4.600 e a comparação perde
-sentido. De 30\% a 50\%, portanto, a alocação uniforme foi superior à não uniforme. Esse
-resultado é contraintuitivo: a alocação não uniforme é a que distribui a poda com base em uma
-medida de importância, a magnitude do peso, e ainda assim obteve \textit{perplexity} maior que a
-alocação que ignora qualquer medida de importância. Trata-se do primeiro indício de que a
-magnitude do peso não é, por si só, uma medida suficiente da importância de um parâmetro.
+A comparação entre os dois esquemas de poda sem análise de sensibilidade dependeu da taxa de
+poda. O esquema de poda não uniforme apresentou valores ligeiramente menores até 20\%, e o
+uniforme, de 30\% a 70\%. Em 80\% e 90\%, o não uniforme voltou a apresentar valores menores.
+Nessas duas taxas, entretanto, ambos os modelos apresentaram \textit{perplexity} acima de
+4.600, de modo que a comparação não tem consequência prática. Portanto, de 30\% a 50\%, o
+esquema de poda uniforme foi superior ao não uniforme. Esse resultado é contraintuitivo, pois o
+esquema de poda não uniforme distribui a poda com base na magnitude dos pesos, enquanto o
+uniforme não utiliza nenhuma medida de importância. Trata-se do primeiro indício de que a
+magnitude do peso não é, isoladamente, uma medida suficiente da importância de um parâmetro.
 
-A alocação com análise de sensibilidade obteve \textit{perplexity} menor que as duas em sete das nove
-taxas, de 20\% a 80\%. Em 30\%, a \textit{perplexity} caiu de 36,42 (melhor alocação sem análise de
-sensibilidade) para 31,20, uma redução de 14\%. Em 40\%, caiu de 104,82 para 57,30,
-\textbf{quase à metade} na mesma taxa de poda. Em 50\%, a vantagem persistiu, ainda que
-pequena (447,57 contra 473,28). De 60\% a 80\%, a configuração com $\beta = 1{,}0$ produziu
-\textit{perplexities} de 1,3 a 3,7 vezes menores que a melhor alocação sem análise de sensibilidade,
-embora, nessas taxas, todos os modelos tivessem \textit{perplexity} acima de 1.500, o que dá à
-comparação interesse mais teórico que prático. Na média geométrica de 10\% a 50\%
-(Seção~\ref{sec:metodologia_metricas}), a melhor configuração com análise de sensibilidade
-($\beta = 0{,}5$, 55,80) ficou cerca de 15\% abaixo da melhor sem ela (uniforme, 66,00).
+O esquema de poda com análise de sensibilidade obteve \textit{perplexity} menor que a dos dois
+esquemas de poda sem essa análise em sete das nove taxas, de 20\% a 80\%. A 30\%, a
+\textit{perplexity} diminuiu de 36,42, valor do melhor esquema de poda sem análise de
+sensibilidade, para 31,20, uma redução de 14\%. A 40\%, diminuiu de 104,82 para 57,30, quase a
+metade, para a mesma taxa de poda. A 50\%, a vantagem se manteve, embora pequena: 447,57 contra
+473,28. De 60\% a 80\%, o esquema de poda com $\beta = 1{,}0$ produziu \textit{perplexities} de
+1,3 a 3,7 vezes menores que as do melhor esquema de poda sem análise de sensibilidade. Nessas
+taxas, entretanto, todos os modelos apresentaram \textit{perplexity} acima de 1.500, de modo
+que a comparação não tem consequência prática. Na média geométrica de 10\% a 50\%
+(Seção~\ref{sec:metodologia_metricas}), a melhor varredura com análise de sensibilidade ($\beta
+= 0{,}5$, 55,80) ficou cerca de 15\% abaixo da melhor varredura sem essa análise (uniforme,
+66,00).
 
-As exceções ocorreram nos extremos. Em 10\%, a alocação não uniforme (25,40) ficou 0,04 abaixo
-das duas configurações com análise de sensibilidade (25,44), diferença sem consequência
-prática. Em 90\%, a não uniforme apresentou o menor valor, mas, como a \textit{perplexity} de todas as
-configurações ultrapassou 4.600, a ordenação entre elas não tem consequência prática.
+As duas exceções ocorreram nas taxas extremas. A 10\%, o esquema de poda não uniforme (25,40)
+ficou 0,04 abaixo das duas configurações com análise de sensibilidade (25,44), diferença sem
+consequência prática. A 90\%, o esquema de poda não uniforme apresentou o menor valor.
+Entretanto, como a \textit{perplexity} de todas as configurações ultrapassou 4.600, a ordenação
+entre elas também não tem consequência prática.
 
 \subsection{Poda Estruturada}\label{subsec:aloc_estruturada}\label{sec:res_estruturada}
 
-A Tabela~\ref{tab:comp_estruturada} apresenta a \textit{perplexity} das quatro alocações na poda
-estruturada.
+% AJUSTE: 09/11 — regra das legendas do orientador (07/11, "Deixar na tabela apenas um
+% título, a explicação deve ficar no corpo do texto, fazer isso em todas as tabelas"): a
+% legenda fica só com o título, e a explicação vem para o parágrafo que apresenta a tabela.
+A Tabela~\ref{tab:comp_estruturada} apresenta a \textit{perplexity} dos quatro esquemas de poda
+na poda estruturada, sem retreinamento. O menor valor de cada taxa está em negrito. Nos quatro
+esquemas de poda, a \textit{perplexity} diminuiu entre algumas taxas de poda consecutivas,
+comportamento analisado na Seção~\ref{subsec:reducao_ppl}.
 
 \begin{table}[htb]
 \centering
-\caption{\textit{Perplexity} da poda estruturada, sem retreinamento, nas quatro alocações; a taxa
-de poda é a fração de estruturas removidas. Em negrito, o menor valor de cada taxa.
-$\beta$ é o parâmetro de intensidade (Seção~\ref{subsec:fase2}).}
+\caption{\textit{Perplexity} da poda estruturada, sem retreinamento, nos quatro esquemas de
+poda.}
 \label{tab:comp_estruturada}
 \small
 \input{06_capitulo/tabelas/qualidade_estruturada}\\
 \textit{Fonte: Elaboração própria.}
 \end{table}
 
-Na poda estruturada, a redução de custo teve preço alto em regime \textit{one-shot}. Já
-com 10\% de estruturas removidas, a \textit{perplexity} da alocação não uniforme passou de 25,17 para
-356,20, contra 25,40 na poda por magnitude à mesma taxa. \textbf{Nenhuma taxa de
-poda ficou dentro do limite de 5\%} na poda estruturada sem retreinamento, o que é coerente com o
-procedimento original de \citeonline{Li2017}, em que a poda é sempre seguida de
-\textit{fine-tuning}.
+Na poda estruturada, a redução de custo foi acompanhada de elevada perda de desempenho
+preditivo em regime \textit{one-shot}. Com 10\% das estruturas removidas, a \textit{perplexity}
+do esquema de poda não uniforme passou de 25,17 para 356,20, enquanto a da poda por magnitude,
+à mesma taxa, foi de 25,40. Nenhuma taxa de poda ficou dentro do limite de 5\% na poda
+estruturada sem retreinamento. Esse resultado é coerente com o método original da poda por
+norma $L_1$, em que a poda é seguida de retreinamento (Seção~\ref{sec:li2017}).
 
-O resultado da poda por magnitude inverteu-se: entre as alocações sem análise de
-sensibilidade, foi a \textbf{não uniforme} que apresentou os menores valores na poda
-estruturada, com exceção da taxa de 20\%, e a uniforme degradou-se fortemente em taxas altas
-(\textit{perplexity} de 53.313 a 80\% e de 827.316 a 90\%, contra 7.620 e 5.823 da não uniforme). Somado
-ao resultado da poda por magnitude, isso mostra que \textbf{nenhuma das duas alocações sem
-análise de sensibilidade foi superior nas duas estratégias}, constatação que motiva a análise
-de sensibilidade. Uma explicação possível, não testada neste trabalho, vem da
-Seção~\ref{subsec:perfis_divergem}: como a magnitude do peso e a norma da estrutura respondem
-a aspectos diferentes da importância de uma camada, a alocação não uniforme, que decide com
-base nessas grandezas, pode obter bons resultados em uma estratégia e não na outra.
+Entre os esquemas de poda sem análise de sensibilidade, o resultado foi inverso ao da poda por
+magnitude: o esquema de poda não uniforme apresentou os menores valores em todas as taxas, com
+exceção da de 20\%. O esquema de poda uniforme, por sua vez, degradou-se fortemente em taxas
+altas, com \textit{perplexity} de 53.313 a 80\% e de 827.316 a 90\%, contra 7.620 e 5.823 do
+não uniforme. Considerados em conjunto, os resultados das duas estratégias mostram que nenhum
+dos dois esquemas de poda sem análise de sensibilidade foi superior em ambas, o que motiva a
+análise de sensibilidade. Uma explicação possível, não testada neste trabalho, decorre da
+Seção~\ref{subsec:perfis_divergem}: como a magnitude do peso e a norma da estrutura refletem
+aspectos diferentes da importância de uma camada, o esquema de poda não uniforme, que se baseia
+nessas grandezas, pode obter bons resultados em uma estratégia e não na outra.
 
-A comparação entre os dois tipos de estrutura acrescentou uma assimetria. Remover cabeças
-de atenção degradou menos o modelo que remover neurônios do MLP: com 129 das 144
-cabeças removidas (90\%), a \textit{perplexity} ficou em 781, ao passo que a remoção equivalente
-de neurônios do MLP produziu valores acima de 3.900. A curva das cabeças foi, ainda, não
-monotônica na alocação não uniforme, com mínimo local em torno de 30\% (\textit{perplexity} 162,
-inferior aos 237 obtidos com apenas 10\% removidas), resultado compatível com o achado de
-\citeonline{Michel2019} sobre a
-redundância das cabeças de atenção. Em contrapartida, os MLPs concentram cerca de
-dois terços dos parâmetros podáveis (Seção~\ref{subsec:metodo_estruturado}), de modo que a poda restrita a cabeças tem alcance
-limitado como estratégia de compressão.
+A comparação entre os dois tipos de estrutura, realizada com os alvos isolados, indicou que a
+remoção de cabeças de atenção degradou menos o modelo que a remoção de neurônios do MLP. A
+única exceção foi a taxa de 10\% no esquema de poda não uniforme, com \textit{perplexity} de
+237 contra 139. Com 129 das 144 cabeças removidas (90\%), a \textit{perplexity} foi de 781,
+enquanto a remoção de neurônios do MLP à mesma taxa produziu valores acima de 3.900. Além
+disso, no esquema de poda não uniforme, a curva das cabeças não foi monotônica: apresentou
+mínimo local em torno de 30\%, com \textit{perplexity} de 162, inferior aos 237 obtidos com
+10\% das cabeças removidas. Esse resultado é compatível com a redundância das cabeças de
+atenção observada por \citeonline{Michel2019}. Por outro lado, os neurônios do MLP concentram
+cerca de dois terços dos parâmetros podáveis (Seção~\ref{subsec:metodo_estruturado}), de modo
+que a poda restrita às cabeças tem alcance limitado como estratégia de compressão.
 
-A alocação com análise de sensibilidade, com $\beta = 1{,}0$, obteve a menor \textit{perplexity} em
-todas as taxas de 10\% a 50\%. A vantagem foi máxima entre 20\% e 30\%: em 20\%, a
-\textit{perplexity} caiu de 1.484,89 (melhor alocação sem análise de sensibilidade) para 371,07, um
-fator de \textbf{quatro}; em 30\%, de 2.413,52 para 724,53, um fator de 3,3. Em 10\%,
-o fator foi de 2,9 (356,20 contra 124,29). A partir daí, a vantagem diminuiu: o fator foi de
-1,9 em 40\% (2.434,92 contra 1.301,15), e a diferença foi marginal em 50\% (2.402,58 contra
-2.327,59). Na média geométrica de 10\% a 50\%, a \textit{perplexity} caiu de 1.602,62 (não uniforme)
-para 632,46, um fator de 2,5. Considerando que nenhuma taxa da poda estruturada
-\textit{one-shot} ficou dentro do limite de 5\%, reduzir a \textit{perplexity} a um quarto na mesma
-taxa de poda foi a maior vantagem observada para a alocação com análise de sensibilidade.
+O esquema de poda com análise de sensibilidade, com $\beta = 1{,}0$, obteve a menor
+\textit{perplexity} em todas as taxas de 10\% a 50\%. A vantagem foi máxima entre 20\% e 30\%.
+A 20\%, a \textit{perplexity} diminuiu de 1.484,89, valor do melhor esquema de poda sem análise
+de sensibilidade, para 371,07, um fator de quatro. A 30\%, diminuiu de 2.413,52 para 724,53, um
+fator de 3,3. A 10\%, o fator foi de 2,9 (356,20 contra 124,29). A partir de 40\%, a vantagem
+diminuiu: o fator foi de 1,9 a 40\% (2.434,92 contra 1.301,15), e a diferença foi marginal a
+50\% (2.402,58 contra 2.327,59). Na média geométrica de 10\% a 50\%, a \textit{perplexity}
+diminuiu de 1.602,62, no esquema de poda não uniforme, para 632,46, um fator de 2,5. A redução
+da \textit{perplexity} a um quarto, para a mesma taxa de poda, foi a maior vantagem observada
+para o esquema de poda com análise de sensibilidade.
 
-Uma ressalva quantitativa é necessária. Como a remoção de estruturas é
-discreta, as taxas fracionárias por camada não são atingíveis exatamente, e a
-alocação com análise de sensibilidade acabou removendo uma fração de parâmetros
-ligeiramente menor que a não uniforme na mesma taxa de poda: em 10\%, esparsidade real de 9,20\%
-contra 9,90\%; em 30\%, 29,01\% contra 29,95\%. Parte da
-vantagem observada pode dever-se, portanto, a uma remoção marginalmente menor. A
-diferença foi de menos de um ponto percentual de esparsidade, ao passo que a
-diferença de \textit{perplexity} chegou a um fator de quatro, de modo que essa explicação
-não se sustenta como causa principal, mas o efeito existe e é aqui declarado.
+Esse resultado exige uma ressalva. Como a remoção de estruturas é discreta, as taxas de poda
+por camada não são atingidas exatamente (Seção~\ref{subsec:metodo_estruturado}), e o esquema de
+poda com análise de sensibilidade removeu uma fração de parâmetros ligeiramente menor que a do
+não uniforme na mesma taxa de poda. A 10\%, a esparsidade real foi de 9,20\% contra 9,90\%. A
+30\%, de 29,01\% contra 29,95\%. Portanto, parte da vantagem observada pode decorrer dessa
+remoção menor. Entretanto, a diferença de esparsidade foi inferior a um ponto percentual,
+enquanto a diferença de \textit{perplexity} chegou a um fator de quatro, de modo que essa
+remoção menor não constitui a causa principal da vantagem.
 
-De 60\% a 80\%, a ordenação se inverteu e a alocação não uniforme voltou a obter a menor
-\textit{perplexity}; em 90\%, a \textit{perplexity} de todas as configurações superou 4.800, e a ordenação perde
-significado. A causa provável da inversão aparece nas taxas alocadas: a partir de 60\%,
-um número crescente de camadas atingiu o teto $r_{\max} = 0{,}95$: duas camadas em
-60\%, quatro em 70\%, oito em 80\% e 11 em 90\%. Nessas camadas, a alocação deixa de
-diferenciar as taxas e aproxima-se de uma poda uniforme, ao mesmo tempo em que concentra mais
-poda nas poucas camadas ainda abaixo do teto. A alocação com análise de
-sensibilidade, portanto, \textbf{só é informativa enquanto a taxa de poda couber dentro
-do teto por camada}, o que justifica o corte das médias em 50\%
-(Seção~\ref{sec:res_protocolo}). Esse limite decorre da própria regra de alocação com
-teto, e não de um defeito de implementação.
+De 60\% a 80\%, o esquema de poda não uniforme voltou a obter a menor \textit{perplexity}. A
+90\%, a \textit{perplexity} de todas as configurações superou 4.800, e a ordenação entre elas
+não tem consequência prática. A causa provável dessa inversão está nas taxas de poda por
+camada. A partir de 60\%, um número crescente de camadas atingiu o teto $r_{\max} = 0{,}95$:
+duas camadas a 60\%, quatro a 70\%, oito a 80\% e 11 a 90\%. Nessas camadas, o esquema de poda
+deixa de diferenciar as taxas e, ao mesmo tempo, concentra mais poda nas camadas que permanecem
+abaixo do teto. Portanto, o esquema de poda com análise de sensibilidade só diferencia as
+camadas enquanto a taxa de poda puder ser atingida sem que elas alcancem o teto, o que
+justifica o limite de 50\% adotado nas médias (Seção~\ref{sec:res_protocolo}). Essa limitação
+decorre da própria regra, e não de um erro de implementação.
 
-\subsection{O Controle $\beta = 0$}\label{subsec:controle_beta_zero}
+\subsection{Verificação com $\beta = 0$}\label{subsec:controle_beta_zero}
 
-Antes de comparar os valores de $\beta$, cabe verificar se a regra de alocação está
-correta. Com $\beta = 0$ o fator $\Delta_{\ell}^{-\beta}$ da
-Equação~\ref{eq:alocacao_dev} vale 1 para toda camada, de modo que todas recebem
-a mesma taxa e a alocação deve coincidir com a varredura uniforme
-correspondente. Essa verificação tem baixo custo, pois reaproveita o perfil já
-levantado.
+Esta subseção apresenta a verificação da implementação prevista na Seção~\ref{subsec:fase2}:
+com $\beta = 0$, a regra da Equação~\ref{eq:alocacao_dev} atribui a mesma taxa a todas as
+camadas e deve reproduzir a varredura uniforme na poda estruturada, mas não na poda por
+magnitude.
 
-Na poda estruturada, a coincidência foi \textbf{exata}: nas 10 taxas de
-poda, a alocação com $\beta = 0$ reproduziu a \textit{perplexity} da varredura
-uniforme até a última casa decimal registrada --- 5.467,5635 em 30\%,
-4.573,0020 em 50\% e 827.316,1875 em 90\%, para citar três taxas. A
-identidade confirma que a conversão de perfil em taxas, a bisseção do fator de
-escala e a aplicação das taxas por camada estão implementadas corretamente: o
-que a alocação com análise de sensibilidade obteve a mais, nas seções anteriores, veio do
-perfil, e não de alguma diferença espúria de procedimento.
+Na poda estruturada, a reprodução foi exata. Nas 10 taxas de poda, o esquema de poda com $\beta
+= 0$ reproduziu a \textit{perplexity} da varredura uniforme em todos os dígitos registrados:
+5.467,5635 a 30\%, 4.573,0020 a 50\% e 827.316,1875 a 90\%, por exemplo. Esse resultado indica
+que a conversão do perfil em taxas, a determinação do fator e a aplicação das taxas por camada
+estão implementadas corretamente. Assim, a vantagem obtida pelo esquema de poda com análise de
+sensibilidade nas seções anteriores decorre do perfil, e não de diferenças de procedimento.
 
-Na poda por magnitude, a coincidência \textbf{não} ocorreu, e a razão é uma
-diferença deliberada de implementação que merece registro. A varredura uniforme
-decidiu um limiar de magnitude para cada matriz de peso isoladamente, ao passo
-que a alocação por camada decidiu um limiar único para cada camada, compartilhado
-pelas quatro projeções que a compõem. As duas produziram a mesma esparsidade agregada
---- exatamente 30\%, 50\% e assim por diante ---, mas distribuída de
-forma diferente entre as projeções de uma mesma camada, e as \textit{perplexities}
-divergiram: 473,28 contra 590,25 em 50\%, e 13.996,88 contra 8.610,96 em
-90\%. A alocação com $\beta = 0$ não foi, portanto, a poda
-uniforme da Seção~\ref{sec:res_magnitude}, e sim uma terceira alocação
---- ``não uniforme dentro da camada'' --- cuja comparação com as demais fica fora do
-escopo deste trabalho. Para a poda estruturada, que é a estratégia
-efetivamente capaz de reduzir consumo, o controle vale integralmente.
+Na poda por magnitude, como previsto, a reprodução não ocorreu, pois a regra utiliza um limiar
+por camada, e a varredura uniforme, um limiar por matriz (Seção~\ref{subsec:fase2}). Os dois
+procedimentos produziram a mesma esparsidade em cada camada, mas distribuída de forma diferente
+entre as quatro matrizes, e as \textit{perplexities} divergiram: 473,28 na varredura uniforme
+contra 590,25 com $\beta = 0$, a 50\%, e 13.996,88 contra 8.610,96, a 90\%. Dessa forma, na
+poda por magnitude, o esquema de poda com $\beta = 0$ não corresponde ao esquema de poda
+uniforme da Seção~\ref{sec:res_magnitude}, e sim a um terceiro esquema de poda, cuja comparação
+com os demais está fora do escopo deste trabalho. Na poda estruturada, única estratégia que
+reduziu o consumo de energia, a verificação vale integralmente.
 
 \subsection{Efeito do Parâmetro de Intensidade $\beta$}\label{subsec:ablacao_beta}
 
@@ -654,128 +799,221 @@ efetivamente capaz de reduzir consumo, o controle vale integralmente.
 % qualidade_*.tex; colunas taxas_por_camada, cabecas_removidas, neuronios_removidos e
 % parametros_nao_zerados de sensibilidade.csv; 3,8–9,4 e 0,6–2,2 = razão por camada entre
 % delta_log_ppl a 50% (sensibilidade_perfil.csv) e a 30% (sensibilidade_perfil_sonda03.csv).
-A comparação entre $\beta = 1{,}0$ e $\beta = 0{,}5$ produziu um resultado que não era
-antecipado: \textbf{o valor adequado de $\beta$ depende da estratégia}, e depende dela de
-forma oposta nas duas.
+Esta subseção compara as duas intensidades avaliadas, $\beta = 1{,}0$ e $\beta = 0{,}5$
+(Seção~\ref{subsec:fase2}). O principal resultado é que a intensidade mais adequada dependeu da
+estratégia de poda, e de forma oposta nas duas.
 
-Na poda estruturada, cujo perfil tem razão de 42,9 entre a degradação da camada mais
-sensível e a da mais tolerante (Tabela~\ref{tab:perfil_sensibilidade}), $\beta = 1$
-obteve \textit{perplexity} menor que $\beta = 0{,}5$ em todas as taxas de poda até 80\%, e o
-amortecimento foi prejudicial: em 70\% e 80\%, a configuração com
-$\beta = 0{,}5$ produziu \textit{perplexities} de 103.463 e 203.996, 8,4 e 3,8 vezes as da
-alocação uniforme, a de pior resultado entre as demais nessas taxas. Na poda por magnitude, cujo perfil tem
-razão de 11,3, ocorreu o inverso: $\beta = 0{,}5$ foi melhor de 20\% a
-50\%; de 60\% a 80\%, $\beta = 1$ passou à frente, e, em 90\%,
-$\beta = 0{,}5$ voltou a ser melhor (7.616,63 contra 10.398,10).
+Na poda estruturada, cujo perfil apresenta razão de 42,9 entre a degradação da camada mais
+sensível e a da mais tolerante (Tabela~\ref{tab:perfil_sensibilidade}), $\beta = 1$ obteve
+\textit{perplexity} menor que $\beta = 0{,}5$ em todas as taxas de poda até 80\%. Nessa
+estratégia, a atenuação do perfil foi prejudicial: a 70\% e a 80\%, o esquema de poda com
+$\beta = 0{,}5$ produziu \textit{perplexities} de 103.463 e 203.996, respectivamente 8,4 e 3,8
+vezes as do esquema de poda uniforme, o de pior resultado entre os demais nessas taxas. Na poda
+por magnitude, cujo perfil apresenta razão de 11,3, ocorreu o inverso: $\beta = 0{,}5$ foi
+melhor de 20\% a 50\%. De 60\% a 80\%, $\beta = 1$ obteve os menores valores, e, a 90\%, $\beta
+= 0{,}5$ voltou a ser melhor (7.616,63 contra 10.398,10).
 
-Na poda por magnitude, essa diferença decidiu a comparação com as alocações sem análise de
-sensibilidade. A 40\%, por exemplo, a \textit{perplexity} foi de 57,30 com $\beta = 0{,}5$, de
-104,82 com a alocação uniforme, a melhor sem análise de sensibilidade nessa taxa, e de
-193,83 com $\beta = 1$. Apenas com $\beta = 1$, a alocação com análise de sensibilidade
-teria sido superior às alocações sem ela em cinco das nove taxas de poda, e não em sete
-(Seção~\ref{subsec:aloc_magnitude}): a 40\% e a 50\%, teria resultado em \textit{perplexity}
+Na poda por magnitude, a intensidade determinou o resultado da comparação com os esquemas de
+poda sem análise de sensibilidade. A 40\%, por exemplo, a \textit{perplexity} foi de 57,30 com
+$\beta = 0{,}5$, de 104,82 com o esquema de poda uniforme, o melhor sem análise de
+sensibilidade nessa taxa, e de 193,83 com $\beta = 1$. Se apenas $\beta = 1$ tivesse sido
+avaliado, o esquema de poda com análise de sensibilidade teria sido superior aos esquemas de
+poda sem essa análise em cinco das nove taxas de poda, e não em sete
+(Seção~\ref{subsec:aloc_magnitude}). A 40\% e a 50\%, teria resultado em \textit{perplexity}
 maior, e não menor.
 
-Fixar a intensidade em 0,5 teria produzido o problema inverso na poda estruturada. Com
-$\beta = 1$, a alocação com análise de sensibilidade obteve a menor \textit{perplexity} em todas as
-taxas de poda de 10\% a 50\% (Seção~\ref{subsec:aloc_estruturada}); com
-$\beta = 0{,}5$, ela teria perdido para a alocação não uniforme a 40\% e a 50\%, com
-\textit{perplexity} de 9.489,87 e 7.922,81, contra 2.434,92 e 2.402,58. São as mesmas duas taxas de
-poda em que $\beta = 1$ falhou na poda por magnitude. Entre os valores avaliados,
-portanto, nenhuma intensidade fixa teria servido às duas estratégias.
+Na poda estruturada, a adoção exclusiva de $\beta = 0{,}5$ teria produzido o efeito inverso.
+Com $\beta = 1$, o esquema de poda com análise de sensibilidade obteve a menor
+\textit{perplexity} em todas as taxas de poda de 10\% a 50\%
+(Seção~\ref{subsec:aloc_estruturada}). Com $\beta = 0{,}5$, teria sido superado pelo esquema de
+poda não uniforme a 40\% e a 50\%, com \textit{perplexity} de 9.489,87 e 7.922,81, contra
+2.434,92 e 2.402,58. Essas são as mesmas duas taxas de poda em que $\beta = 1$ foi superado na
+poda por magnitude. Portanto, entre os valores avaliados, nenhuma intensidade única teria sido
+adequada às duas estratégias.
 
-A \textit{perplexity} variou com $\beta$, embora a quantidade removida praticamente não tenha
-variado. Na poda por magnitude a 40\%, os modelos obtidos com $\beta = 1$ e com
-$\beta = 0{,}5$ conservaram os mesmos 90,5 milhões de parâmetros não zerados; na poda
-estruturada, $\beta = 1$ removeu 54 cabeças e 14.739 neurônios, e $\beta = 0{,}5$, 51
-cabeças e 14.740 neurônios. O parâmetro de intensidade altera apenas a distribuição da
-poda entre as camadas, e a \textit{perplexity} depende dessa distribuição porque as camadas
-contribuem de forma desigual para a perda do modelo: a mesma quantidade de elementos
-degrada mais o modelo quando removida de uma camada sensível do que de uma tolerante. A
-diferença é ainda ampliada pela própria métrica. Como a \textit{perplexity} é a exponencial da
-perda média por \textit{token} \cite{HuggingFacePerplexity}, diferenças moderadas na perda
-tornam-se multiplicativas. A 40\%, a \textit{perplexity} de $\beta = 1$ na poda por magnitude,
-193,83, foi 3,4 vezes a de $\beta = 0{,}5$, 57,30, o que corresponde a uma diferença de
-1,22 na escala logarítmica da Equação~\ref{eq:delta_perfil}; na poda estruturada, a razão
-de 7,3 entre $\beta = 0{,}5$ e $\beta = 1$ corresponde a 1,99.
+A \textit{perplexity} variou com $\beta$, embora a quantidade de elementos removidos
+praticamente não tenha variado. Na poda por magnitude a 40\%, os modelos obtidos com $\beta =
+1$ e com $\beta = 0{,}5$ conservaram os mesmos 90,5 milhões de parâmetros não nulos. Na poda
+estruturada, à mesma taxa, $\beta = 1$ removeu 54 cabeças e 14.739 neurônios, e $\beta =
+0{,}5$, 51 cabeças e 14.740 neurônios. Como o parâmetro de intensidade altera apenas a
+distribuição da poda entre as camadas (Seção~\ref{subsec:fase2}), a variação da
+\textit{perplexity} decorre dessa distribuição: a mesma quantidade de elementos degrada mais o
+modelo quando removida de uma camada sensível do que de uma camada tolerante. Além disso, a
+própria métrica amplia a diferença. Como a \textit{perplexity} é a exponencial da perda média
+por \textit{token} \cite{HuggingFacePerplexity}, diferenças moderadas na perda tornam-se
+multiplicativas. A 40\%, na poda por magnitude, a \textit{perplexity} com $\beta = 1$, de
+193,83, foi 3,4 vezes a obtida com $\beta = 0{,}5$, de 57,30, o que corresponde a uma diferença
+de 1,22 na escala logarítmica da Equação~\ref{eq:delta_perfil}. Na poda estruturada, a razão de
+7,3 entre $\beta = 0{,}5$ e $\beta = 1$ corresponde a uma diferença de 1,99.
 
-Os dados por camada indicam por que cada intensidade falhou onde falhou. Na poda por
-magnitude a 40\%, $\beta = 1$ atribuiu 75,5\% de poda à camada 1, a mais tolerante,
-taxa 1,5 vez maior que a taxa-sonda de 50\% com que sua tolerância foi medida
-(Seção~\ref{subsec:fase1}); acima dessa taxa, o perfil nada informa sobre o comportamento
-da camada. Com $\beta = 0{,}5$, a mesma camada recebeu 57,1\%, mais perto da taxa
-medida. Na poda estruturada, o desvio ocorreu no sentido oposto: $\beta = 0{,}5$ elevou a
-taxa da camada 0, a mais sensível (Seção~\ref{subsec:camada_zero}), de 1,6\% para
-8,4\% a 40\% e de 3,0\% para 14,6\% a 70\%. Uma intensidade alta demais leva as
-camadas tolerantes a taxas de poda que o perfil não mediu; uma intensidade baixa demais
-devolve poda à camada que o perfil apontou como crítica.
+As taxas de poda por camada indicam por que cada intensidade apresentou pior resultado em uma
+das estratégias. Na poda por magnitude a 40\%, $\beta = 1$ atribuiu taxa de 75,5\% à camada 1,
+a mais tolerante. Essa taxa é 1,5 vez maior que a taxa-sonda de 50\% com que a tolerância da
+camada foi medida (Seção~\ref{subsec:fase1}), e, acima da taxa-sonda, o perfil não fornece
+informação sobre o comportamento da camada. Com $\beta = 0{,}5$, a mesma camada recebeu 57,1\%,
+valor mais próximo da taxa-sonda. Na poda estruturada, o desvio ocorreu no sentido oposto:
+$\beta = 0{,}5$ elevou a taxa da camada 0, a mais sensível (Seção~\ref{subsec:camada_zero}), de
+1,6\% para 8,4\% a 40\% e de 3,0\% para 14,6\% a 70\%. Portanto, uma intensidade alta demais
+leva as camadas tolerantes a taxas de poda que o perfil não mediu, e uma intensidade baixa
+demais aumenta a poda da camada que o perfil indicou como a mais sensível.
 
-Qual dos dois desvios custa mais depende de como a degradação de uma camada cresce com a
-sua taxa de poda, e os dois levantamentos do perfil, a 30\% e a 50\%
-(Seção~\ref{subsec:robustez_sonda}), indicam que esse crescimento difere entre as
-estratégias. Na poda por magnitude, a passagem da taxa-sonda de 30\% para 50\%, um
-aumento de 1,7 vez, multiplicou a degradação de cada camada por valores entre 3,8 e 9,4:
-a degradação cresce muito mais depressa que a taxa. Concentrar a poda nas camadas
-tolerantes, como faz $\beta = 1$, leva-as à faixa em que esse custo mais cresce; atenuar
-as diferenças, como faz $\beta = 0{,}5$, reparte a poda e reduz a degradação total. O
-equilíbrio, porém, tem limite: a 40\%, a alocação uniforme, em que todas as camadas
-recebem a mesma taxa, resultou em \textit{perplexity} de 104,82, entre os 57,30 de
-$\beta = 0{,}5$ e os 193,83 de $\beta = 1$. Na poda por magnitude, o melhor resultado
-ocorreu na intensidade intermediária.
+O efeito de cada desvio depende de como a degradação de uma camada cresce com a sua taxa de
+poda. Os perfis medidos a 30\% e a 50\% (Seção~\ref{subsec:robustez_sonda}) indicam que esse
+crescimento difere entre as estratégias. Na poda por magnitude, a passagem da taxa-sonda de
+30\% para 50\%, um aumento de 1,7 vez, multiplicou a degradação de cada camada por valores
+entre 3,8 e 9,4, ou seja, a degradação cresceu muito mais depressa que a taxa. Assim, a
+concentração da poda nas camadas tolerantes, produzida por $\beta = 1$, leva essas camadas à
+faixa em que a degradação mais cresce, enquanto a atenuação das diferenças, produzida por
+$\beta = 0{,}5$, distribui a poda e reduz a degradação total. Essa atenuação, entretanto, tem
+limite: a 40\%, o esquema de poda uniforme, em que todas as camadas recebem a mesma taxa,
+resultou em \textit{perplexity} de 104,82, valor situado entre os 57,30 de $\beta = 0{,}5$ e os
+193,83 de $\beta = 1$. Portanto, na poda por magnitude, o melhor resultado ocorreu na
+intensidade intermediária.
 
-Na poda estruturada, o mesmo aumento da taxa-sonda multiplicou a degradação das camadas
-por valores entre 0,6 e 2,2, e a camada 0 já degradava o modelo a 30\%: podada
-sozinha, elevou a \textit{perplexity} de 25,17 para 772,11. Nessa estratégia, o custo depende mais
-de qual camada é podada do que de quanto, e o decisivo é preservar a camada 0, o que um
-$\beta$ alto garante. A 40\%, a \textit{perplexity} diminuiu a cada aumento da intensidade:
-10.486,71 com $\beta = 0$, 9.489,87 com $\beta = 0{,}5$ e 1.301,15 com $\beta = 1$. As
-duas leituras se apoiam em camadas podadas isoladamente e em apenas duas taxas-sonda, e a
-degradação de camadas podadas em conjunto é superaditiva
-(Seção~\ref{subsec:limitacoes_perfil}). Elas constituem, portanto, uma explicação
-compatível com os resultados, e não uma demonstração.
+Na poda estruturada, o mesmo aumento da taxa-sonda multiplicou a degradação das camadas por
+valores entre 0,6 e 2,2. Além disso, a camada 0 já degradava fortemente o modelo a 30\%: podada
+isoladamente, elevou a \textit{perplexity} de 25,17 para 772,11. Nessa estratégia, a degradação
+depende mais de qual camada é podada do que da taxa aplicada, e a preservação da camada 0,
+assegurada por um $\beta$ alto, é o fator determinante. A 40\%, a \textit{perplexity} diminuiu
+a cada aumento da intensidade: 10.486,71 com $\beta = 0$, 9.489,87 com $\beta = 0{,}5$ e
+1.301,15 com $\beta = 1$. As duas explicações baseiam-se em camadas podadas isoladamente e em
+apenas duas taxas-sonda, e a degradação de camadas podadas em conjunto é superaditiva
+(Seção~\ref{subsec:limitacoes_perfil}). Portanto, elas são compatíveis com os resultados, mas
+não constituem uma demonstração.
 
-Por essas razões, o parâmetro de intensidade mostrou-se parte relevante da regra de
-alocação. O parâmetro de intensidade $\beta$ comporta-se como uma medida de confiança no perfil, e a
-confiança que convém depositar nele depende da estratégia: é maior na poda estruturada,
-cujo perfil tem razão de 42,9 e é dominado pela camada 0, e menor na poda por magnitude,
-cujo perfil tem razão de 11,3 e várias camadas de sensibilidade intermediária. Essa
-confiança só pode ser estimada experimentalmente. Sem o parâmetro, a regra assumiria
-confiança total em qualquer perfil; com ele, a mesma regra percorre todo o intervalo
-entre a alocação uniforme, com $\beta = 0$, e o perfil seguido integralmente, com
-$\beta = 1$, e a intensidade pode ser ajustada a cada estratégia. É esse intervalo,
-também, que permitiu a verificação com $\beta = 0$ da
-Seção~\ref{subsec:controle_beta_zero}. Como apenas dois valores foram avaliados, a
-intensidade ótima de cada estratégia não foi determinada, e sua busca fica como extensão
-deste trabalho.
+Esses resultados indicam que o parâmetro de intensidade é parte relevante da regra que define o
+esquema de poda. O parâmetro expressa o grau em que o perfil é seguido, e o grau adequado
+dependeu da estratégia: foi maior na poda estruturada, cujo perfil apresenta razão de 42,9 e é
+dominado pela camada 0, e menor na poda por magnitude, cujo perfil apresenta razão de 11,3 e
+várias camadas de sensibilidade intermediária. Esse grau só pôde ser determinado
+experimentalmente. Como apenas dois valores foram avaliados, a intensidade ótima de cada
+estratégia não foi determinada, e sua busca constitui uma extensão deste trabalho.
+
+% AJUSTE: 12/11 — dúvida do Enzo ao ler as Tabelas tab:comp_magnitude e tab:comp_estruturada:
+% a perplexity diminui com o aumento da taxa de poda em vários pontos (magnitude não uniforme,
+% 9.371,16 a 70% e 4.612,69 a 90%; estruturada com beta = 0,5, 203.995,84 a 80% e 4.830,24 a
+% 90%, abaixo dos 9.489,87 de 40%). O capítulo dizia apenas que as comparações nessas taxas
+% "não têm consequência prática". Subseção nova, com o que foi conferido nos CSV e no código:
+% (i) nove reduções entre taxas consecutivas (magnitude global 70-80-90; estruturada global
+% 40-50 e 80-90, uniforme 40-50, beta 1,0 70-80-90, beta 0,5 40-50 e 80-90); (ii) todas partem
+% de perplexity >= 2.434,92 (96,7 vezes a do modelo base); (iii) esparsidade_real crescente em
+% todas as varreduras, e remoção aninhada (cada taxa parte do modelo base e ordena os
+% elementos pelo mesmo critério: prune_magnitude, select_structures,
+% prune_structured_per_layer; as taxas por camada não diminuem com a taxa de poda); (iv)
+% beta = 0 em sensibilidade.csv igual à varredura uniforme de estruturada.csv nas nove taxas,
+% em todos os dígitos; (v) quatro valores acima de 50.257 (53.313,38; 103.463,60; 203.995,84;
+% 827.316,19); (vi) taxas_por_camada de sensibilidade.csv, em %, camadas 0 a 11: beta = 0,5 a
+% 80% (17,64; 95,00; 85,01; 82,52; 75,57; 85,96; 94,95; 95,00; 95,00; 95,00; 95,00; 43,35) e
+% a 90% (37,59; 95,00 nas camadas 1 a 10; 92,41); beta = 1,0 a 90% (35,00; 95,00 nas demais).
+% Cabeças que restam: int(taxa x 12) removidas por camada, somas iguais às do CSV (111 e 125).
+% Jurafsky2025, Cap. 3, Seç. 3.3: "the inverse probability of the test set, normalized by the
+% number of words (or tokens)", média geométrica. A explicação pelas camadas parcialmente
+% removidas é hipótese e está marcada como não testada: a confirmação pede medir a entropia
+% das predições a 70%, 80% e 90%, o que exige nova execução.
+\subsection{Redução da \textit{Perplexity} com o Aumento da Taxa de
+Poda}\label{subsec:reducao_ppl}
+
+Esta subseção analisa um comportamento das Tabelas~\ref{tab:comp_magnitude}
+e~\ref{tab:comp_estruturada} contrário ao esperado. Em nove ocasiões, a \textit{perplexity} de
+um esquema de poda diminuiu entre duas taxas de poda consecutivas. Na poda por magnitude, as
+reduções ocorreram exclusivamente no esquema de poda não uniforme, cuja \textit{perplexity}
+passou de 9.371,16, a 70\%, para 8.847,27, a 80\%, e para 4.612,69, a 90\%. Na poda
+estruturada, ocorreram nos quatro esquemas de poda. A maior delas foi a do esquema de poda com
+$\beta = 0{,}5$, cuja \textit{perplexity} passou de 203.995,84, a 80\%, para 4.830,24, a 90\%,
+valor inferior aos 9.489,87 obtidos a 40\%.
+
+Essas reduções não decorrem de erro na aplicação da poda nem de variação entre execuções. Em
+todas as varreduras, a esparsidade real cresceu com a taxa de poda. Além disso, cada taxa parte
+do modelo base (Seção~\ref{subsec:metodologia_taxas}) e seleciona os elementos pela mesma
+ordenação, de modo que os elementos removidos a uma taxa de poda incluem os removidos nas taxas
+menores do mesmo esquema de poda. Por sua vez, a avaliação é determinística. A verificação com
+$\beta = 0$ (Seção~\ref{subsec:controle_beta_zero}) reproduziu, em execução separada, todos os
+valores da varredura uniforme da poda estruturada, incluída a redução de 10.486,71, a 40\%,
+para 4.573,00, a 50\%.
+
+As reduções ocorreram exclusivamente em modelos cujo desempenho preditivo já estava
+comprometido. Todas partiram de \textit{perplexity} igual ou superior a 2.434,92, valor do
+esquema de poda não uniforme a 40\% na poda estruturada, que corresponde a cerca de 97 vezes a
+do modelo base. Abaixo desse valor, a \textit{perplexity} cresceu com a taxa de poda em todos
+os esquemas de poda das duas estratégias.
+
+Nessa faixa de valores, a \textit{perplexity} deixa de indicar quanto do modelo foi preservado.
+A métrica corresponde ao inverso da probabilidade atribuída ao conjunto de teste, normalizado
+pelo número de \textit{tokens}, ou seja, ao inverso da média geométrica das probabilidades
+atribuídas aos \textit{tokens} corretos \cite{Jurafsky2025}. Assim, um modelo que atribuísse a
+mesma probabilidade a cada um dos 50.257 \textit{tokens} do vocabulário
+(Seção~\ref{subsec:preprocessamento}), sem utilizar o contexto, teria \textit{perplexity} de
+50.257. Quatro configurações da Tabela~\ref{tab:comp_estruturada} excederam essa referência: o
+esquema de poda uniforme a 80\% e a 90\% e o esquema de poda com $\beta = 0{,}5$ a 70\% e a
+80\%. Um valor acima dela só é possível quando o modelo atribui aos \textit{tokens} corretos,
+em média, probabilidade inferior à da distribuição uniforme, ou seja, quando concentra a
+probabilidade em \textit{tokens} incorretos. Portanto, em modelos nessa condição, a
+\textit{perplexity} depende do grau de concentração das predições em \textit{tokens}
+incorretos, e não apenas da quantidade de elementos preservados.
+
+O esquema de poda com $\beta = 0{,}5$, na poda estruturada, ilustra esse comportamento. A 80\%,
+seis camadas receberam taxas de poda iguais ou superiores a 94,9\%, as camadas 2 a 5, taxas de
+75,6\% a 86,0\%, a camada 11, de 43,4\%, e a camada 0, de 17,6\%. A 90\%, o teto $r_{\max} =
+0{,}95$ determinou quase todo o esquema de poda. Dez camadas receberam 95\%, a camada 11,
+92,4\%, e a camada 0, 37,6\%. Em uma camada no teto, restam uma das 12 cabeças de atenção e 154
+dos 3.072 neurônios do MLP. Portanto, o modelo a 90\% não conservou, em nenhuma camada, mais
+estruturas que o modelo a 80\%, e sua \textit{perplexity} foi 42 vezes menor. Em relação à
+referência de 50.257, a média geométrica das probabilidades atribuídas aos \textit{tokens}
+corretos passou de cerca de um quarto da probabilidade uniforme, a 80\%, para cerca de dez
+vezes essa probabilidade, a 90\%. Com $\beta = 1{,}0$, o esquema de poda a 90\% foi
+praticamente o mesmo, com 11 camadas no teto e 35,0\% na camada 0, e a \textit{perplexity} foi
+de 5.353,85.
+
+A comparação com o esquema de poda uniforme indica o papel da camada 0. A 90\%, os dois
+esquemas de poda com análise de sensibilidade conservaram oito das 12 cabeças dessa camada e
+uma em cada uma das demais, enquanto o esquema de poda uniforme conservou duas cabeças em todas
+as camadas. A \textit{perplexity} deste último foi de 827.316,19. Esse resultado é coerente com
+a Seção~\ref{subsec:ablacao_beta}, segundo a qual a preservação da camada 0 é o fator
+determinante na poda estruturada.
+
+A diferença entre 80\% e 90\%, por sua vez, não se explica pela camada 0, que foi mais podada a
+90\%. Uma hipótese compatível com esses valores, não testada neste trabalho, refere-se às
+camadas parcialmente removidas. No \textit{Transformer}, a saída de cada camada é somada à
+representação que ela recebe \cite{Vaswani2017}. Dessa forma, uma camada quase inteiramente
+removida acrescenta pouco a essa soma, enquanto uma camada parcialmente removida continua a
+alterar a representação, a partir de entradas diferentes daquelas para as quais foi treinada. A
+80\%, as camadas 2 a 5 e a camada 11 estavam nessa condição. A 90\%, apenas a camada 0 estava.
+Essa hipótese é coerente com a tolerância à remoção de camadas intermediárias inteiras observada por
+\citeonline{Lad2025}. Sua verificação exigiria medir as distribuições de probabilidade
+produzidas por cada modelo, o que não foi realizado.
+
+Em consequência, uma \textit{perplexity} menor em uma taxa de poda maior não indica recuperação
+de desempenho preditivo. De 60\% a 90\%, todas as configurações apresentaram
+\textit{perplexity} superior a 1.500, e as diferenças entre elas não têm consequência prática,
+como indicado nas subseções anteriores. Essa leitura é coerente com o limite de 50\% adotado no
+resumo por varredura (Seção~\ref{sec:res_protocolo}).
 
 \section{\textit{Fine-tuning} de Recuperação}\label{sec:res_finetune}
 
 % AJUSTE: 03/10 — "fecha a lacuna", expressão que o orientador marcou como confusa na
 % Metodologia, reescrita aqui do mesmo modo que nos capítulos 4 e 5.
-Todas as varreduras apresentadas até aqui foram executadas em regime \textit{one-shot}.
-Esta seção reporta a Etapa 4 (Seção~\ref{sec:finetuning}), que incorpora o
-retreinamento ao experimento para medir quanto da degradação causada pela poda
-pode ser recuperada: as sete configurações definidas na
-Seção~\ref{subsec:ft_configuracoes} foram submetidas ao
-\textit{fine-tuning} de recuperação, com a \textit{perplexity} medida antes e depois do
-retreinamento (Tabela~\ref{tab:finetune}).
+Esta seção apresenta os resultados da Etapa~4, em que as sete configurações definidas na
+Seção~\ref{subsec:ft_configuracoes} foram submetidas ao \textit{fine-tuning} de recuperação,
+com os parâmetros da Tabela~\ref{tab:finetune_protocolo}. A \textit{perplexity} de cada
+configuração foi medida antes e depois do retreinamento (Tabela~\ref{tab:finetune}).
+Diferentemente das varreduras, esse experimento foi executado integralmente em uma única
+sessão, de modo que suas medições de tempo e energia são diretamente comparáveis entre si.
 % AJUSTE: 03/10 — "orçamento" fica reservado ao orçamento de poda (definido na
 % Metodologia); no sentido de treino, passa a "quantidade de retreinamento".
-A quantidade de retreinamento foi
-idêntica para todas: uma época sobre o conjunto de treino do WikiText-2, 297
-passos do otimizador, taxa de aprendizado de $5 \times 10^{-5}$ e semente
-fixa. Diferentemente das varreduras, este experimento foi executado integralmente
-em uma única sessão, de modo que suas medições de tempo e energia são
-diretamente comparáveis entre si.
+
+% AJUSTE: 09/11 — regra das legendas do orientador (07/11, "Deixar na tabela apenas um
+% título, a explicação deve ficar no corpo do texto, fazer isso em todas as tabelas"): a
+% legenda fica só com o título, e a explicação vem para o parágrafo que apresenta a tabela.
+Na Tabela~\ref{tab:finetune}, as configurações sem análise de sensibilidade utilizam o esquema
+de poda uniforme, na poda por magnitude, e o não uniforme, na poda estruturada. As
+configurações com análise de sensibilidade utilizam $\beta = 1{,}0$. A coluna Pós-FT apresenta
+a \textit{perplexity} após o \textit{fine-tuning}, e a coluna Razão expressa esse valor como
+múltiplo da \textit{perplexity} do modelo base retreinado, e não do modelo base original.
 
 \begin{table}[htb]
 \centering
 \caption{\textit{Perplexity} antes (\textit{one-shot}) e depois do \textit{fine-tuning} de
-recuperação (uma época, 297 passos). Sem análise de sensibilidade, a alocação é a uniforme
-na poda por magnitude e a não uniforme na estruturada; com análise de sensibilidade, usa-se
-$\beta = 1{,}0$. Pós-FT é o valor após o \textit{fine-tuning}. A razão expressa a \textit{perplexity}
-pós-retreinamento como múltiplo da do modelo base retreinado, e não do modelo base
-original.}
+recuperação.}
 \label{tab:finetune}
 \small
 \input{06_capitulo/tabelas/finetune}\\
@@ -786,234 +1024,216 @@ original.}
 % texto (ESTILO, 4), e "expoente" de beta passa a "parâmetro de intensidade".
 \subsection{Efeito do Retreinamento sobre o Modelo Base}\label{subsec:controle_denso}
 
-O primeiro resultado da Tabela~\ref{tab:finetune} não envolveu poda alguma: o
-modelo base, submetido à mesma quantidade de retreinamento, teve sua \textit{perplexity}
-reduzida de 25,17 para \textbf{18,68}. Foram 26\% de ganho obtidos sem
-remover um único parâmetro, compatíveis com a adaptação de domínio
-(Seção~\ref{subsec:ft_validade})
+O primeiro resultado refere-se ao modelo base, sem poda. Submetido ao mesmo retreinamento, o
+modelo base teve sua \textit{perplexity} reduzida de 25,17 para 18,68, uma redução de 26\%
+obtida sem a remoção de nenhum parâmetro. Esse resultado é compatível com a adaptação de
+domínio descrita na Seção~\ref{subsec:ft_validade}.
 % AJUSTE: 04/11 — a pedido do Enzo (ESTILO, 1.1): "atribuíveis exclusivamente" sai; a causa
 % única não foi testada.
---- o GPT-2 foi pré-treinado no WebText, não no WikiText-2, e o retreinamento
-o aproxima da distribuição da base de dados de avaliação.
 
-Esse resultado justifica a inclusão do modelo base retreinado. Sem ele, a configuração de magnitude a
-30\% pareceria ter \textit{superado} o modelo original: 20,54 contra 25,17,
-uma leitura que sugeriria que a poda melhora o modelo. A comparação correta é
-com 18,68: diante desse valor, a mesma configuração ficou 10\% acima do modelo base
-retreinado. As colunas de razão da Tabela~\ref{tab:finetune} adotam essa referência, que
-separa a recuperação do dano da poda da mera adaptação à base de dados.
+Esse resultado confirma a necessidade do modelo base retreinado como referência. Sem ele, a
+poda por magnitude a 30\% pareceria ter superado o modelo base original, com
+\textit{perplexity} de 20,54 contra 25,17, o que sugeriria que a poda melhora o modelo. Em
+relação ao modelo base retreinado (18,68), entretanto, a mesma configuração ficou 10\% acima.
+Por essa razão, as colunas de razão da Tabela~\ref{tab:finetune} adotam essa referência.
 
 \subsection{Recuperação por Configuração}\label{subsec:recuperacao}
 
 % AJUSTE: 04/11 — a pedido do Enzo: "inversamente proporcional" sai. Razão entre as
 % perplexities antes e depois, em ordem crescente de partida (finetune.csv): 1,8; 4,8; 14,1;
 % 15,6; 12,9; 23,0. Não é proporcional nem cresce sempre.
-O retreinamento recuperou parte do dano em todas as configurações, e essa recuperação tendeu
-a ser maior quanto pior era o ponto de partida: a \textit{perplexity} ficou 1,8 vez menor na magnitude
-a 30\% e 23,0 vezes menor na estruturada a 30\%, embora a relação não tenha sido estrita. A
-poda estruturada a 30\%, que o regime \textit{one-shot} deixara em \textit{perplexity} 2.413,52,
-retornou a 104,78. A poda por magnitude a 50\%, em 473,28, retornou a 30,27, isto é, 1,62 vez
-o valor do modelo base retreinado.
+O retreinamento recuperou parte da degradação em todas as configurações, e a recuperação tendeu
+a ser maior quanto maior era a \textit{perplexity} antes do retreinamento, embora essa relação
+não tenha sido estrita. A \textit{perplexity} ficou 1,8 vez menor na poda por magnitude a 30\%
+e 23,0 vezes menor na poda estruturada a 30\%. Nessa última configuração, com esquema de poda
+não uniforme, a \textit{perplexity} passou de 2.413,52 para 104,78. Na poda por magnitude a
+50\%, passou de 473,28 para 30,27, isto é, 1,62 vez o valor do modelo base retreinado.
 
-Esse comportamento qualifica de forma importante a leitura das seções
-anteriores. A \textit{perplexity} \textit{one-shot} mede o dano imediato da poda, mas
-superestima o dano permanente: parte da degradação foi revertida por uma época de
-retreinamento. A recuperação, porém, não foi completa: nenhuma configuração ficou dentro de
-5\% do modelo base retreinado, e a mais próxima, a magnitude a 30\%, ficou 10\% acima dele
-(Seção~\ref{sec:res_tradeoff}).
+Esse resultado condiciona a leitura das seções anteriores. A \textit{perplexity} em regime
+\textit{one-shot} mede a degradação imediata causada pela poda, mas superestima a degradação
+que permanece após o retreinamento, pois parte dela foi revertida por uma época de
+retreinamento. A recuperação, entretanto, não foi completa: nenhuma configuração ficou dentro
+de 5\% do modelo base retreinado, e a mais próxima, a poda por magnitude a 30\%, ficou 10\%
+acima dele (Seção~\ref{sec:res_tradeoff}).
 % AJUSTE: 04/11 — a pedido do Enzo (ESTILO, 1.2): saem "patamares utilizáveis" e "a região
 % praticável [...] estende-se consideravelmente", sem critério e em conflito com sec:res_tradeoff.
 
-Registre-se ainda que a hierarquia entre granularidades se manteve: a
-configuração de magnitude a 30\% atingiu a menor \textit{perplexity} pós-retreinamento
-de todas as configurações podadas (20,54), mas, pelas razões estabelecidas na
-Seção~\ref{sec:res_custo}, não apresentou redução de memória nem redução detectável de tempo
-e energia. A configuração estruturada a 30\%, com alocação não uniforme, registrou 40,82~ms
-por janela e
-1,285~Wh por avaliação completa contra 50,21~ms e 1,588~Wh do modelo base retreinado, uma
-redução de aproximadamente 19\% em ambos.
+A relação entre as duas granularidades também se manteve após o retreinamento. A poda por
+magnitude a 30\% atingiu a menor \textit{perplexity} entre as configurações podadas, 20,54.
+Entretanto, como estabelecido na Seção~\ref{sec:res_custo}, essa estratégia não apresentou
+redução de memória nem redução detectável de tempo e energia. A poda estruturada a 30\%, com
+esquema de poda não uniforme, registrou 40,82~ms por janela e 1,285~Wh por avaliação completa,
+contra 50,21~ms e 1,588~Wh do modelo base retreinado, uma redução de aproximadamente 19\% nas
+duas grandezas.
 
 \subsection{Efeito do \textit{Fine-tuning} sobre a Vantagem da Análise de
 Sensibilidade}\label{subsec:ft_corroi}
 
-O resultado seguinte diz respeito diretamente à contribuição central do trabalho. As linhas de poda estruturada da
-Tabela~\ref{tab:finetune} confrontam, nas mesmas duas taxas de poda, a alocação não uniforme e a
-alocação com análise de sensibilidade, antes e depois do retreinamento.
+Esta subseção compara, nas duas taxas de poda da poda estruturada submetidas ao retreinamento,
+o esquema de poda não uniforme e o esquema de poda com análise de sensibilidade, antes e depois
+do retreinamento (Tabela~\ref{tab:finetune}). O resultado refere-se diretamente à contribuição
+central do trabalho.
 
-Em 10\% de estruturas removidas, a vantagem \textbf{desapareceu}. Em regime
-\textit{one-shot}, a alocação com análise de sensibilidade registrou \textit{perplexity} 124,29
-contra 356,20 da alocação não uniforme, uma vantagem de 2,87 vezes. Após o retreinamento, a
-relação se inverteu: 25,96 contra 25,33, com ligeira vantagem para a alocação
-não uniforme. Em 30\%, a vantagem se manteve, mas reduzida quase à metade: o fator
-de 3,33 vezes do regime \textit{one-shot} (724,53 contra 2.413,52) tornou-se
-1,87 vez (56,08 contra 104,78).
+A 10\%, a vantagem do esquema de poda com análise de sensibilidade desapareceu. Em regime
+\textit{one-shot}, esse esquema registrou \textit{perplexity} de 124,29, contra 356,20 do
+esquema de poda não uniforme, uma vantagem de 2,87 vezes. Após o retreinamento, a relação se
+inverteu: 25,96 contra 25,33, com ligeira vantagem do esquema de poda não uniforme. A 30\%, a
+vantagem se manteve, mas foi reduzida quase à metade: o fator de 3,33 do regime
+\textit{one-shot} (724,53 contra 2.413,52) passou a 1,87 (56,08 contra 104,78).
 
-A interpretação é que a alocação com análise de sensibilidade otimiza uma quantidade
-específica --- o dano imediato causado pela poda --- e o retreinamento repara
-justamente o tipo de dano que ela evita. Se essa interpretação estiver correta, quanto maior a quantidade de
-retreinamento, menor a importância de haver podado bem. Sob essa leitura, o
-perfil de sensibilidade é mais valioso quanto mais escassa for a quantidade de
-retreinamento disponível. Após uma época de retreinamento, a vantagem foi maior a 30\% do
-que a 10\%, mas duas taxas de poda, avaliadas com uma única semente, não permitem
-estabelecer uma tendência.
+Uma interpretação compatível com esses resultados é que o esquema de poda com análise de
+sensibilidade reduz a degradação imediata causada pela poda, e o retreinamento recupera
+justamente esse tipo de degradação. Segundo essa interpretação, quanto maior a quantidade de
+retreinamento, menor a vantagem de uma melhor distribuição da poda entre as camadas, e o perfil
+de sensibilidade é mais útil quanto menor for a quantidade de retreinamento disponível. Após
+uma época de retreinamento, a vantagem foi maior a 30\% que a 10\%. Entretanto, duas taxas de
+poda, avaliadas com uma única semente, não permitem estabelecer uma tendência.
 % AJUSTE: 04/11 — a pedido do Enzo (ESTILO, 3): "a vantagem tende a crescer com a severidade
 % da poda" e "em taxas de poda elevadas/baixas" generalizavam duas taxas; sem retreinamento, a
 % vantagem cai depois de 20% (4,0; 3,3; 1,9; 1,03).
 
-O achado não invalida a contribuição, mas delimita seu escopo: a 30\%, a alocação com
-análise de sensibilidade manteve \textit{perplexity} aproximadamente duas vezes menor ao
-mesmo custo computacional --- 40,28~ms e 1,307~Wh contra 40,82~ms e 1,285~Wh da alocação não
-uniforme, valores equivalentes dentro da variação de medição. A 10\%, seguida de
-retreinamento, a alocação sem análise de sensibilidade foi suficiente.
+Esse resultado não invalida a contribuição, mas delimita o seu alcance. A 30\%, o esquema de
+poda com análise de sensibilidade manteve \textit{perplexity} aproximadamente duas vezes menor,
+com o mesmo custo computacional: 40,28~ms e 1,307~Wh, contra 40,82~ms e 1,285~Wh do esquema de
+poda não uniforme, valores equivalentes dentro da variação de medição. A 10\%, com
+retreinamento, o esquema de poda sem análise de sensibilidade foi suficiente.
 
 \subsection{Verificações de Integridade e Custo}\label{subsec:ft_verificacoes}
 
-Duas verificações confirmaram a correção do procedimento. A esparsidade das
-configurações de magnitude, medida ao final do treinamento, permaneceu em
-exatamente 30,0000\% e 50,0000\%, o que confirma que a máscara binária
-descrita na Seção~\ref{sec:finetuning} foi corretamente reaplicada após cada
-passo do otimizador e que o modelo não voltou a ser denso. As esparsidades
-reais das configurações com análise de sensibilidade, por sua vez, ficaram
-ligeiramente abaixo das taxas de poda (9,20\% e 29,01\% contra 9,90\% e 29,95\%
-das configurações com alocação não uniforme), diferença atribuível à granularidade discreta das
-estruturas removidas --- uma cabeça de atenção ou um neurônio do MLP são
-indivisíveis. A diferença favoreceu marginalmente a alocação com análise de
-sensibilidade e está registrada aqui por transparência, ainda que inferior a um ponto
-percentual.
+Esta subseção apresenta duas verificações do procedimento de retreinamento e o seu custo
+energético. A primeira verificação refere-se à preservação da esparsidade
+(Seção~\ref{subsec:ft_validade}). A esparsidade das configurações de poda por magnitude, medida
+ao final do treinamento, permaneceu em 30,0000\% e 50,0000\%. Esse resultado confirma que a
+máscara binária foi reaplicada corretamente após cada passo do otimizador. A segunda refere-se
+à esparsidade real das configurações de poda estruturada. Nas configurações com análise de
+sensibilidade, ela ficou ligeiramente abaixo da obtida com o esquema de poda não uniforme:
+9,20\% e 29,01\%, contra 9,90\% e 29,95\%. Essa diferença, inferior a um ponto percentual,
+decorre da remoção discreta das estruturas e favorece marginalmente o esquema de poda com
+análise de sensibilidade (Seção~\ref{sec:res_estruturada}).
 
-Quanto ao custo, o retreinamento consumiu 7,33~Wh no modelo base, contra
-1,59~Wh de uma avaliação completa do mesmo modelo --- aproximadamente 4,6
-vezes. Trata-se, porém, de um custo pago uma única vez, ao passo que a
-economia por inferência da poda estruturada se acumula a cada uso. A
-configuração estruturada a 30\% economizou 0,303~Wh por avaliação completa
-do conjunto de teste (1,285 contra 1,588~Wh), de modo que o custo de seu próprio
-retreinamento, 6,34~Wh, se amortiza em aproximadamente 21 avaliações equivalentes.
+Quanto ao custo, o retreinamento do modelo base consumiu 7,33~Wh, contra 1,59~Wh de uma
+avaliação completa do mesmo modelo, ou seja, aproximadamente 4,6 vezes. Esse custo, entretanto,
+ocorre uma única vez, enquanto a economia por inferência da poda estruturada se acumula a cada
+uso. A poda estruturada a 30\%, com esquema de poda não uniforme, economizou 0,303~Wh por
+avaliação completa do conjunto de teste (1,285 contra 1,588~Wh). Assim, o custo de seu próprio
+retreinamento, de 6,34~Wh, é compensado em aproximadamente 21 avaliações completas. A economia
+é expressa por avaliação completa, e não por janela, porque o consumo foi medido durante toda a
+avaliação de uma configuração (Seção~\ref{subsec:metrica_energia}), e o número de janelas de
+cada avaliação não foi registrado.
 % AJUSTE: 04/11 — a pedido do Enzo: eram "24 avaliações", calculadas com os 7,33 Wh do modelo
 % base; o retreinamento dessa configuração gastou 6,34 Wh (finetune_estruturada_s30).
-Cabe explicitar a unidade:
-o consumo foi medido em torno do bloco de avaliação inteiro, que percorre todo o
-conjunto de teste por janela deslizante, e não em torno de uma janela
-individual. Converter a economia para base por janela exigiria registrar o
-número de janelas de cada avaliação, o que não foi feito; a amortização fica,
-portanto, expressa na unidade efetivamente medida.
 
-A limitação principal desta etapa foi a quantidade de retreinamento: uma
-única época. Não é possível afirmar, a partir destes dados, se a redução da
-vantagem da alocação com análise de sensibilidade se estabiliza no patamar observado em
-30\% ou se prossegue com mais épocas até desaparecer também nessa taxa. Trata-se da
-verificação mais imediata que este trabalho deixa em aberto.
+A principal limitação desta etapa é a quantidade de retreinamento, de uma única época. Com
+esses resultados, não é possível afirmar se a redução da vantagem do esquema de poda com
+análise de sensibilidade se estabiliza no valor observado a 30\% ou se prossegue, com mais
+épocas, até desaparecer também nessa taxa. Essa é a verificação mais imediata que este trabalho
+deixa em aberto.
 
-\section{Compromisso entre Qualidade e Energia}\label{sec:res_tradeoff}
+\section{Compromisso entre Desempenho Preditivo e Energia}\label{sec:res_tradeoff}
 
-As seções anteriores trataram o custo e a qualidade separadamente. A
-Tabela~\ref{tab:tradeoff} combina as duas grandezas nos indicadores da
-Seção~\ref{sec:metodologia_metricas}.
+As seções anteriores trataram o custo e o desempenho preditivo separadamente. Esta seção
+combina as duas dimensões por meio dos indicadores definidos na
+Seção~\ref{sec:metodologia_metricas}, apresentados na Tabela~\ref{tab:tradeoff}, em que PPL
+corresponde à \textit{perplexity}. Sem retreinamento, cada linha corresponde ao resumo de uma
+varredura nas taxas de 10\% a 50\%, e o limite de 5\% do ponto de eficiência corresponde a uma
+\textit{perplexity} de 26,43. Após o \textit{fine-tuning}, cada linha corresponde a uma
+configuração, a referência é o modelo base retreinado, e o limite de 5\% corresponde a 19,62.
+% AJUSTE: 09/11 — regra das legendas do orientador (07/11, "Deixar na tabela apenas um
+% título, a explicação deve ficar no corpo do texto, fazer isso em todas as tabelas"): a
+% legenda fica só com o título, e a explicação vem para o parágrafo que apresenta a tabela.
 
 \begin{table}[htb]
 \centering
-\caption{Indicadores de compromisso entre qualidade e energia
-(Seção~\ref{sec:metodologia_metricas}). PPL é a \textit{perplexity}. Sem retreinamento, cada configuração é resumida
-pelas médias de 10\% a 50\% --- geométrica para a \textit{perplexity} e aritmética para
-$\Delta E$ ---, com $\eta$ calculado a partir delas; $S^*_E$ é a maior taxa com
-\textit{perplexity} até 5\% acima da do modelo base (26,43). Após o \textit{fine-tuning}, os
-valores são por configuração, e a referência é o modelo base retreinado; nenhuma
-configuração ficou dentro do limite de 5\% (19,62).}
+\caption{Indicadores de compromisso entre desempenho preditivo e energia.}
 \label{tab:tradeoff}
 \small
 \input{06_capitulo/tabelas/tradeoff}\\
 \textit{Fonte: Elaboração própria.}
 \end{table}
 
-O primeiro resultado foi que \textbf{nenhuma configuração podada superou o modelo base em
-eficiência relativa}: $\eta$ ficou abaixo de 1 em todas, com e sem retreinamento, porque a
-\textit{perplexity} cresceu mais depressa do que a energia caiu. Na poda estruturada sem
-retreinamento, a configuração de melhor resultado, com análise de sensibilidade e
-$\beta = 1{,}0$, economizou em média 18,0\% de energia ao preço de uma \textit{perplexity} 25
-vezes maior, e seu $\eta$ foi de 0,049. Após o \textit{fine-tuning}, o maior $\eta$ da poda
-estruturada foi o da alocação não uniforme a 10\% (0,773), que economizou 4,6\% de energia,
-valor abaixo do limiar de detecção, com \textit{perplexity} 36\% acima da do modelo base retreinado. Na
-poda por magnitude, os valores de $\eta$ foram mais altos, mas não por eficiência: como
+O primeiro resultado é que nenhuma varredura e nenhuma configuração retreinada superou o modelo
+base em eficiência relativa. O indicador $\eta$ ficou abaixo de 1 em todas as linhas da tabela,
+com e sem retreinamento, porque a \textit{perplexity} cresceu mais depressa do que a energia
+diminuiu. Na poda estruturada sem retreinamento, a varredura de melhor resultado, com análise
+de sensibilidade e $\beta = 1{,}0$, economizou em média 18,0\% de energia, com
+\textit{perplexity} 25 vezes maior que a do modelo base, e seu $\eta$ foi de 0,049. Após o
+\textit{fine-tuning}, o maior $\eta$ da poda estruturada foi o do esquema de poda não uniforme
+a 10\% (0,773). Essa configuração economizou 4,6\% de energia, valor abaixo do limiar de
+detecção, com \textit{perplexity} 36\% acima da do modelo base retreinado. Na poda por
+magnitude, os valores de $\eta$ foram mais altos, mas não em razão de maior eficiência: como
 $\Delta E$ ficou abaixo do limiar de detecção (Seção~\ref{sec:res_custo}), $\eta$ refletiu
 apenas a \textit{perplexity} e variações abaixo desse limiar.
 % AJUSTE: 04/11 — a pedido do Enzo, "e o ruído de medição" sai: o limiar de sec:res_custo
 % passou a ser critério declarado, e a causa da variação na magnitude é indeterminada.
 % Também a pedido dele, os 4,6% de energia ganham a ressalva de estar abaixo desse limiar.
 
-Dentro de cada estratégia, a alocação com análise de sensibilidade teve o maior $\eta$:
-0,470 contra 0,393 na poda por magnitude ($\beta = 0{,}5$ contra a uniforme) e 0,049
-contra 0,018 na estruturada ($\beta = 1{,}0$ contra a não uniforme). Como $\Delta E$ foi
-equivalente entre as alocações (Seção~\ref{sec:res_custo}), a diferença veio da
-\textit{perplexity}: \textbf{o ganho de qualidade da análise de sensibilidade não teve custo
-adicional de energia}. Após o \textit{fine-tuning}, a vantagem em $\eta$ se manteve a
-30\% (0,405 contra 0,220) e desapareceu a 10\% (0,744 contra 0,773), acompanhando a
-\textit{perplexity} (Seção~\ref{subsec:ft_corroi}).
+Em cada estratégia, o esquema de poda com análise de sensibilidade apresentou o maior $\eta$:
+0,470 contra 0,393 na poda por magnitude ($\beta = 0{,}5$ contra o esquema de poda uniforme) e
+0,049 contra 0,018 na poda estruturada ($\beta = 1{,}0$ contra o não uniforme). Como $\Delta E$
+foi equivalente entre os esquemas de poda (Seção~\ref{sec:res_custo}), essa diferença decorreu
+da \textit{perplexity}. Portanto, a redução da perda de desempenho preditivo obtida com a
+análise de sensibilidade não teve custo adicional de energia. Após o \textit{fine-tuning}, a
+vantagem em $\eta$ se manteve a 30\% (0,405 contra 0,220) e desapareceu a 10\% (0,744 contra
+0,773), acompanhando a \textit{perplexity} (Seção~\ref{subsec:ft_corroi}).
 
-O ponto de eficiência foi o indicador mais restritivo. Sem retreinamento, só a poda por
-magnitude teve $S^*_E$: 10\%, em todas as alocações; a 20\%, mesmo a melhor
+O ponto de eficiência foi o indicador mais restritivo. Sem retreinamento, apenas a poda por
+magnitude apresentou $S^*_E$, de 10\% em todos os esquemas de poda. A 20\%, mesmo a melhor
 configuração (26,57, com $\beta = 0{,}5$) excedeu o limite de 26,43. Na poda estruturada,
-nenhuma taxa ficou dentro do limite: a menor \textit{perplexity}, 124,29, foi quase cinco vezes a
-do modelo base (Seção~\ref{sec:res_estruturada}). Após o \textit{fine-tuning}, nenhuma
-configuração ficou dentro de 5\% do modelo base retreinado; a mais próxima, a magnitude a
-30\%, ficou 10\% acima (20,54 contra 18,68). Com o limite de 5\%, fixado antes da análise, o
-trabalho não identificou uma taxa de poda estruturada que preserve a qualidade; o que ele
-identificou foi quanto da qualidade a análise de sensibilidade preserva em cada taxa.
+nenhuma taxa ficou dentro do limite: a menor \textit{perplexity}, 124,29, foi quase cinco vezes
+a do modelo base (Seção~\ref{sec:res_estruturada}). Após o \textit{fine-tuning}, nenhuma
+configuração ficou dentro de 5\% do modelo base retreinado, e a mais próxima, a poda por
+magnitude a 30\%, ficou 10\% acima (20,54 contra 18,68). Portanto, com o limite de 5\%, mantido
+sem ajuste em função dos valores obtidos, o trabalho não identificou uma taxa de poda
+estruturada que preserve o desempenho preditivo. O que o trabalho identificou foi quanto desse
+desempenho a análise de sensibilidade preserva em cada taxa.
 
 \section{Síntese dos Resultados}\label{sec:res_sintese}
 
-Os experimentos permitem responder às duas perguntas que orientaram o
-trabalho.
+Esta seção sintetiza os resultados do capítulo em relação às perguntas (A) e (B), formuladas no
+Capítulo~\ref{chap:metodologia}.
 
 % AJUSTE: 04/11 — a pedido do Enzo, "qualquer efeito distinguível do ruído de medição do
 % próprio ambiente" passa a "qualquer efeito acima do limiar de detecção do protocolo",
 % conforme o critério declarado em sec:res_custo.
-À primeira --- se a redução teórica de parâmetros se converte em redução real
-de consumo --- a resposta é condicional à granularidade da poda. A poda não
-estruturada por magnitude reduziu em 61\% os parâmetros não nulos sem
-alterar o tamanho em memória nem os FLOPs, e sem produzir em tempo ou energia
-qualquer efeito acima do limiar de detecção do protocolo: na Tesla
-T4 utilizada, sem suporte de \textit{hardware} para esparsidade, o ganho apareceu apenas na
-contagem de parâmetros. A poda estruturada, ao remover
-fisicamente cabeças de atenção e neurônios do MLP, converteu a mesma redução de
-61\% em parâmetros em quedas de 56\% no tempo, 59\% na energia e 62\%
-nos FLOPs. Para o objetivo declarado deste trabalho --- redução do consumo de
-energia ---, entre as estratégias avaliadas, apenas a poda estruturada reduziu o consumo
-acima do limiar de detecção.
+Quanto à pergunta (A), a conversão da redução de parâmetros em redução de consumo dependeu da
+granularidade da poda. A poda por magnitude reduziu em 61\% os parâmetros não nulos sem alterar
+o tamanho em memória nem os FLOPs, e sem produzir, em tempo ou energia, efeito acima do limiar
+de detecção do protocolo. A poda estruturada, ao remover cabeças de atenção e neurônios do MLP,
+converteu a mesma redução de 61\% dos parâmetros em reduções de 56\% no tempo de inferência,
+59\% na energia e 62\% nos FLOPs. Portanto, na GPU Tesla T4 utilizada, entre as estratégias
+avaliadas, apenas a poda estruturada reduziu o consumo de energia acima do limiar de detecção.
 
-À segunda --- se a alocação com análise de sensibilidade melhora o compromisso entre
-compressão e qualidade --- a resposta é afirmativa, com escopo delimitado. As camadas do
-GPT-2 diferiram entre si por mais de uma ordem de grandeza no custo de serem
-podadas, com a camada 0 respondendo isoladamente por cerca de três quartos da
-degradação da poda estruturada uniforme a 50\%; essa informação, que nenhuma alocação sem análise de
-sensibilidade utiliza, converteu-se em ganho mensurável quando incorporada à distribuição
-da poda entre as camadas. Na poda estruturada --- a estratégia que efetivamente reduziu o
-consumo ---, a alocação com análise de sensibilidade obteve a menor \textit{perplexity} em todas as
-taxas de 10\% a 50\%: por fatores de 2,9 a 4 entre 10\% e 30\%, de 1,9 a 40\% e
-de forma marginal a 50\%; na média geométrica dessa faixa, por um fator de 2,5, sem
-diferença de energia distinguível da variação de medição. O escopo da conclusão é delimitado
-por três limites: a saturação da alocação em taxas de poda a partir de 60\%; o fato de
-que o perfil de sensibilidade precisa ser levantado separadamente para cada estratégia de
-poda, por não ser transferível entre elas; e, sobretudo, a quantidade de
-retreinamento disponível.
+Quanto à pergunta (B), a resposta é afirmativa, com alcance delimitado. As camadas do GPT-2
+\textit{small} diferiram entre si em mais de uma ordem de grandeza quanto à degradação causada
+por sua poda, e a camada 0 respondeu, isoladamente, por cerca de três quartos da degradação da
+poda estruturada com esquema de poda uniforme a 50\%. Essa informação, que os esquemas de poda
+sem análise de sensibilidade não utilizam, resultou em menor perda de desempenho preditivo
+quando incorporada à distribuição da poda entre as camadas. Na poda estruturada, a estratégia
+que reduziu o consumo, o esquema de poda com análise de sensibilidade obteve a menor
+\textit{perplexity} em todas as taxas de 10\% a 50\%: por fatores de 2,9 a 4 entre 10\% e 30\%,
+de 1,9 a 40\% e de forma marginal a 50\%. Na média geométrica dessa faixa, o fator foi de 2,5,
+sem diferença de energia distinguível da variação de medição. Três limites delimitam essa
+conclusão: o esquema de poda deixa de diferenciar as camadas em taxas de poda a partir de 60\%;
+o perfil de sensibilidade precisa ser medido separadamente para cada estratégia de poda; e a
+vantagem diminui com o retreinamento.
 
-Os indicadores combinados qualificam esse ganho. Nenhuma configuração podada superou o
-modelo base em eficiência relativa, e nenhuma configuração de poda estruturada ficou
-dentro de 5\% da \textit{perplexity} do modelo base, com ou sem retreinamento. A análise de
-sensibilidade não criou, portanto, uma região de poda estruturada sem perda; ela reduziu a
-perda nas taxas de 10\% a 50\%, o que a tornou a alocação de maior eficiência relativa em cada
+Os indicadores combinados delimitam esse resultado. Nenhuma varredura e nenhuma configuração
+retreinada superou o modelo base em eficiência relativa, e nenhuma configuração de poda
+estruturada ficou dentro de 5\% da \textit{perplexity} do modelo base, com ou sem
+retreinamento. Portanto, a análise de sensibilidade não produziu uma taxa de poda estruturada
+sem perda de desempenho preditivo. Ela reduziu essa perda nas taxas de 10\% a 50\%, o que
+tornou o esquema de poda com análise de sensibilidade o de maior eficiência relativa em cada
 estratégia.
 
-A quantidade de retreinamento é o limite que mais qualifica a contribuição. O
-\textit{fine-tuning} de recuperação (Seção~\ref{sec:res_finetune}) reduziu a vantagem da
-alocação com análise de sensibilidade: em 10\% de estruturas removidas, a vantagem
-desapareceu após uma época de retreinamento, e, em 30\%, ela se reduziu de um fator de 3,33 para 1,87. A análise de
-sensibilidade é, portanto, uma contribuição cujo valor depende da taxa de poda e diminuiu após uma época de
-retreinamento: sem retreinamento, a vantagem foi máxima entre 20\% e 30\% e marginal a
-50\%; após uma época, persistiu a 30\% e desapareceu a 10\%. Essa análise é útil,
-sobretudo, quando o retreinamento é caro ou indisponível, e dispensável a 10\% seguida de
-retreinamento.
+O retreinamento é o limite que mais condiciona a contribuição. O \textit{fine-tuning} de
+recuperação (Seção~\ref{sec:res_finetune}) reduziu a vantagem do esquema de poda com análise de
+sensibilidade: a 10\%, a vantagem desapareceu após uma época de retreinamento, e, a 30\%,
+reduziu-se de um fator de 3,33 para 1,87. Portanto, a utilidade da análise de sensibilidade
+depende da taxa de poda e da quantidade de retreinamento. Sem retreinamento, a vantagem foi
+máxima entre 20\% e 30\% e marginal a 50\%. Após uma época, manteve-se a 30\% e desapareceu a
+10\%. Assim, a análise é útil, sobretudo, quando o retreinamento é caro ou indisponível. Por
+fim, a leitura desses resultados depende do modelo base retreinado: o retreinamento do modelo
+sem poda reduziu a \textit{perplexity} de 25,17 para 18,68, e é em relação a esse valor, e não
+ao do modelo base original, que a recuperação deve ser avaliada.
 % AJUSTE: 04/11 — a pedido do Enzo (ESTILO, 3): "cujo valor cresce com a severidade da
 % compressão" contrariava os dados sem retreinamento (4,0; 3,3; 1,9; 1,03 a partir de 20%).
-A leitura de todos esses números depende ainda do modelo base retreinado: o
-mero retreinamento do modelo sem poda reduziu a \textit{perplexity} de 25,17 para 18,68,
-e é contra esse valor, não contra o modelo pré-treinado original, que qualquer
-recuperação deve ser medida.
