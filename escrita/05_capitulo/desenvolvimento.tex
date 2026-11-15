@@ -84,6 +84,10 @@ seleção do modelo (Seção~\ref{sec:modelo}), a seleção da base de dados
 % definição de "camada" foi para o Capítulo 2 (subsec:llm_gpt2), onde os 12 blocos do GPT-2
 % aparecem pela primeira vez ("Parece estranho apresentar uma definição de um termo que já
 % foi muito usado anteriormente"). Texto anterior na main (commit 1c735f0).
+% AJUSTE: 14/11 — citação só na primeira menção: com a Introdução escrita, o WikiText-2 passa
+% a ser citado lá (decisão do Enzo), e o \cite{Merity2017} que acompanhava a menção no
+% primeiro parágrafo desta subseção saiu. Continuam as citações de Merity2017 que sustentam
+% dado específico (Seção sec:dataset) e as das linhas de Fonte.
 % AJUSTE: 24/10 — "camada" e "bloco" alternavam para a mesma unidade (ex.: "primeira
 % camada" e "bloco 0" no mesmo parágrafo dos Resultados), e a Figura 8 numerava de 1 a 12
 % enquanto as tabelas usam 0 a 11. Define-se, uma vez, que cada bloco é uma camada,
@@ -98,7 +102,7 @@ distintas, incluídos para verificar os limites dos critérios: um codificador e
 bilhões de parâmetros. A Tabela~\ref{tab:candidatos_modelo} resume a verificação. As colunas
 C1 a C6 correspondem aos critérios de seleção do modelo, e a coluna D4, ao critério da base
 de dados que depende do modelo (Seção~\ref{subsec:metodologia_base}), verificado em relação
-ao WikiText-2 \cite{Merity2017}, já que a seleção é conjunta; o traço indica critério não
+ao WikiText-2, já que a seleção é conjunta; o traço indica critério não
 verificado, por ter sido o candidato eliminado por outro. A coluna Mem.\ FT traz a memória
 mínima para o \textit{fine-tuning} completo, a 16 bytes por parâmetro (critério C3), e a
 coluna Downl., os \textit{downloads} acumulados na plataforma Hugging Face, em milhões,

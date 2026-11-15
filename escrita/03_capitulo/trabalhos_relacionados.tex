@@ -6,6 +6,17 @@
 
 \adicionadomarcelo{Este capítulo apresenta trabalhos da literatura diretamente relacionados ao tema desta pesquisa, com foco em estratégias de poda neural e, em especial, naquelas que visam a redução do consumo energético de modelos de \textit{Deep Learning}. Para cada trabalho, são descritos os objetivos principais, a metodologia adotada e os principais resultados obtidos.}
 
+% AJUSTE: 14/11 — parágrafo acrescentado depois do texto do orientador, sem alterá-lo, para
+% anunciar as seções do capítulo (padrão das aberturas da Metodologia e dos Resultados) e a
+% relação com este trabalho que fecha cada resenha.
+As Seções~\ref{sec:han2015} e~\ref{sec:li2017} apresentam os trabalhos que originaram as duas
+estratégias de poda adotadas, e a Seção~\ref{sec:yang2017}, um trabalho de poda orientada pelo
+consumo de energia. As Seções~\ref{sec:frankle2019} e~\ref{sec:liu2019} apresentam trabalhos que
+investigam o papel dos pesos herdados e do retreinamento na poda, e a
+Seção~\ref{sec:blalock2020}, uma análise da forma como os métodos de poda são avaliados. Ao
+final de cada resenha, indica-se a relação do trabalho apresentado com este trabalho. Por fim, a
+Seção~\ref{sec:sintese_relacionados} sintetiza essas relações.
+
 % AJUSTE: 12/10 — resenhas de Han (2015) e Li (2017), pedidas no \todo do orientador.
 % Ordem cronológica (Han → Li → Yang), que é também a da narrativa: poda por magnitude,
 % poda estruturada como resposta a ela, poda orientada por energia. Números conferidos
@@ -98,4 +109,219 @@ o \textit{fine-tuning} de recuperação.
 
 \modificado{Os autores reportam redução de 3,7$\times$ no consumo de energia da AlexNet e 1,6$\times$ no da GoogLeNet, com perda de acurácia inferior a 1\%. O trabalho também demonstra empiricamente que as camadas convolucionais são as que mais consomem energia, principalmente devido ao volume de acessos à memória, e que a simples redução do número de classes tem impacto limitado na redução do consumo energético, uma vez que as camadas convolucionais não são significativamente afetadas.}
 
-\adicionadomarcelo{\todo[inline]{\textbf{A fazer:} adicionar resenhas de outros trabalhos fundamentais para esta pesquisa. Sugestões: \citeonline{Frankle2019} (Lottery Ticket Hypothesis); \citeonline{Blalock2020} (revisão crítica de métodos de poda); \citeonline{Liu2019} (\textit{Rethinking the Value of Network Pruning}). Para cada um, seguir o mesmo padrão de resenha: objetivo, método, resultados principais.}}
+% AJUSTE: 14/11 — parágrafo final acrescentado, sem alterar o texto acima, para que a resenha
+% de Yang2017 feche, como as de Han2015 e Li2017, com a relação com este trabalho.
+Este trabalho difere de \citeonline{Yang2017} quanto ao papel do consumo de energia. Em
+\citeonline{Yang2017}, o consumo é estimado por um modelo de custo e determina a ordem em que
+as camadas são podadas. Neste trabalho, a distribuição da poda entre as camadas é definida pela
+degradação do desempenho preditivo, registrada no perfil de sensibilidade
+(Seção~\ref{sec:metodologia_poda_com}). O consumo de energia, por sua vez, é medido durante a
+execução dos modelos podados, como resultado da poda (Seção~\ref{sec:metodologia_metricas}).
+Além disso, a poda é aplicada a um \textit{Transformer}, e não a redes convolucionais.
+
+% AJUSTE: 14/11 — resolvido o \todo do orientador, que pedia as resenhas de Frankle2019,
+% Blalock2020 e Liu2019 no padrão objetivo, método e resultados principais. Texto do \todo:
+% "adicionar resenhas de outros trabalhos fundamentais para esta pesquisa. Sugestões:
+% Frankle2019 (Lottery Ticket Hypothesis); Blalock2020 (revisão crítica de métodos de poda);
+% Liu2019 (Rethinking the Value of Network Pruning). Para cada um, seguir o mesmo padrão de
+% resenha: objetivo, método, resultados principais."
+% - Ordem cronológica, que continua a de Han2015, Li2017 e Yang2017: Frankle2019 e Liu2019
+%   (ICLR 2019; Liu2019 discute os resultados de Frankle2019) e Blalock2020 (MLSys 2020).
+% - Cada resenha fecha, como as de Han2015 e Li2017, com um parágrafo sobre a relação com
+%   este trabalho.
+% - Números conferidos nos artigos originais em 14/11/2026 (arXiv 1803.03635, 1810.05270 e
+%   2003.03033).
+\section{The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks}\label{sec:frankle2019}
+
+\citeonline{Frankle2019} partem de uma observação sobre o procedimento usual de poda. A poda
+reduz em mais de 90\% o número de parâmetros de redes já treinadas, sem perda de acurácia.
+Entretanto, as arquiteturas esparsas resultantes, quando treinadas a partir de pesos
+aleatórios, atingem acurácia inferior à da rede original. O objetivo dos autores é verificar se
+redes densas contêm sub-redes esparsas capazes de ser treinadas isoladamente a partir da
+inicialização.
+
+O método parte da poda por magnitude de \citeonline{Han2015}, com uma modificação. A rede é
+treinada, e os pesos de menor valor absoluto são removidos. Em seguida, os pesos remanescentes
+são restaurados aos valores que tinham na inicialização, antes do treinamento, e a sub-rede
+resultante é treinada novamente. Esse ciclo é repetido em várias rodadas, cada uma removendo
+uma fração dos pesos remanescentes, procedimento denominado poda iterativa. Denomina-se
+bilhete premiado (\textit{winning ticket}) a sub-rede que, treinada isoladamente a partir dessa
+inicialização, atinge acurácia de teste comparável à da rede original em um número igual ou
+menor de iterações. Como controle, as mesmas sub-redes foram treinadas com pesos reinicializados
+aleatoriamente. Os experimentos utilizaram uma rede totalmente conectada, a LeNet, na base
+MNIST, e redes convolucionais na base CIFAR-10, entre elas a VGG-19 e a ResNet-18. Nas redes
+menores, todas as camadas foram podadas à mesma taxa. Na VGG-19 e na ResNet-18, a poda foi
+global, ou seja, os pesos de menor valor absoluto foram selecionados em conjunto em todas as
+camadas convolucionais. Segundo os autores, nessas redes, a poda à mesma taxa impede a
+identificação das menores sub-redes, pois algumas camadas têm muito menos parâmetros que
+outras. Na VGG-19, por exemplo, a primeira camada convolucional tem 1.728 parâmetros, e a
+última, 2,35 milhões.
+
+Os autores encontraram bilhetes premiados com 10\% a 20\% do tamanho das redes originais, ou
+menos, em todas as arquiteturas avaliadas. Acima desse tamanho, essas sub-redes foram treinadas
+em menos iterações e atingiram acurácia de teste superior à da rede original. Na LeNet, por
+exemplo, a acurácia aumentou mais de 0,3 ponto percentual com 13,5\% dos pesos remanescentes.
+Quando reinicializadas aleatoriamente, as mesmas sub-redes exigiram mais iterações e atingiram
+acurácia inferior. Esse resultado indica que a inicialização, e não apenas a estrutura da
+sub-rede, determina o resultado. A poda iterativa encontrou sub-redes menores que a poda
+\textit{one-shot}, ao custo de treinar a rede 15 vezes ou mais. Por essa razão, os autores não
+avaliaram bases de dados maiores, como a ImageNet. Além disso, na VGG-19 e na ResNet-18, os
+bilhetes premiados só foram encontrados com o aumento gradual da taxa de aprendizado no início
+do treinamento (\textit{warmup}).
+
+Este trabalho não restaura os pesos à inicialização após a poda. A poda é aplicada uma única vez
+ao modelo pré-treinado, e o \textit{fine-tuning} de recuperação parte dos pesos remanescentes
+(Seção~\ref{sec:metodologia_finetuning}). Essa diferença decorre do custo. A poda iterativa de
+\citeonline{Frankle2019} exige treinar a rede repetidas vezes a partir da inicialização,
+enquanto o pré-treinamento do modelo está fora do escopo deste trabalho (critério C2,
+Seção~\ref{subsec:metodologia_selecao_modelo}). Por outro lado, os dois trabalhos tratam da
+distribuição da poda entre as camadas. Em \citeonline{Frankle2019}, a poda global, que
+corresponde ao esquema de poda não uniforme deste trabalho, foi preferida porque as camadas das
+redes profundas diferem em número de parâmetros. No GPT-2, as 12 camadas têm o mesmo tamanho
+(Seção~\ref{subsec:fase2}). Mesmo assim, a poda isolada da camada 0 degradou o modelo mais que a
+de qualquer outra camada (Seção~\ref{subsec:camada_zero}). Assim, neste trabalho, as camadas
+diferem quanto à sensibilidade à poda, e não quanto ao tamanho, e é essa diferença que o esquema
+de poda com análise de sensibilidade utiliza.
+
+\section{Rethinking the Value of Network Pruning}\label{sec:liu2019}
+
+\citeonline{Liu2019} reexaminam o procedimento usual de poda, composto por três etapas: o
+treinamento de um modelo grande, a remoção de pesos ou estruturas segundo um critério de poda e
+o \textit{fine-tuning} do modelo podado. Esse procedimento baseia-se em duas premissas. A primeira é que o treinamento de
+um modelo grande é necessário para obter um modelo menor de alta acurácia. A segunda é que os
+pesos preservados pela poda são importantes e devem ser herdados pelo modelo podado. O objetivo
+dos autores é verificar essas duas premissas.
+
+Para isso, os autores compararam duas formas de obter um modelo podado com a mesma arquitetura.
+Na primeira, o modelo podado herda os pesos do modelo grande e passa pelo \textit{fine-tuning}.
+Na segunda, o mesmo modelo é treinado a partir de pesos aleatórios, com duas quantidades de
+treinamento: o mesmo número de épocas do modelo grande ou a mesma quantidade de computação gasta
+no treinamento dele. Foram avaliados seis métodos de poda estruturada, entre eles a poda por
+norma $L_1$ de \citeonline{Li2017}, e a poda por magnitude de \citeonline{Han2015}, nas bases
+CIFAR-10, CIFAR-100 e ImageNet, com as redes VGG, ResNet e DenseNet. Nas bases CIFAR, cada
+experimento foi repetido com cinco sementes, e os autores reportaram a média e o desvio-padrão da
+acurácia. Os autores distinguem ainda dois tipos de método. No primeiro, a arquitetura final é
+definida previamente, por exemplo pela remoção de uma mesma fração de filtros em cada camada. No
+segundo, a arquitetura resulta do próprio algoritmo, que compara a importância das estruturas
+entre as camadas.
+
+Nos métodos de poda estruturada avaliados, o modelo treinado a partir de pesos aleatórios
+atingiu acurácia igual ou superior à do modelo obtido por \textit{fine-tuning}. Por essa razão,
+os autores concluem que, nesses métodos, o valor da poda está na arquitetura resultante, e não
+nos pesos herdados. Na maior parte dos métodos de poda de filtros, essa arquitetura corresponde
+ao número de filtros mantidos em cada camada. Em um experimento na base CIFAR-10, com a mesma
+quantidade de treinamento, as arquiteturas definidas por um algoritmo de poda atingiram a mesma
+acurácia que as obtidas pela remoção de uma mesma fração de filtros em todas as camadas com
+cinco vezes menos parâmetros. Na poda por magnitude, o treinamento a partir de pesos aleatórios
+atingiu acurácia comparável à do \textit{fine-tuning} nas bases CIFAR, mas não na ImageNet. Os
+autores ressalvam, por fim, que a poda seguida de \textit{fine-tuning} continua vantajosa quando
+um modelo pré-treinado já está disponível e a quantidade de treinamento disponível é pequena ou
+nula.
+
+Essa ressalva descreve as condições deste trabalho. O modelo base é o GPT-2 pré-treinado, e
+treinar o modelo podado a partir de pesos aleatórios equivaleria a repetir o pré-treinamento,
+que está fora do escopo deste trabalho (critério C2,
+Seção~\ref{subsec:metodologia_selecao_modelo}). Por essa razão, os modelos podados herdam os
+pesos do modelo base, e o \textit{fine-tuning} de recuperação é limitado a uma época
+(Seção~\ref{sec:finetuning}). Além disso, a conclusão de que a arquitetura resultante determina
+o valor da poda estruturada relaciona-se à hipótese deste trabalho
+(Seção~\ref{sec:metodologia_poda_com}). Na poda estruturada, o esquema de poda define quantas
+cabeças de atenção e quantos neurônios do MLP permanecem em cada camada, ou seja, a arquitetura
+do modelo podado. Diferentemente de \citeonline{Liu2019}, entretanto, essa arquitetura é
+avaliada com os pesos herdados, sem retreinamento e após o \textit{fine-tuning} de recuperação,
+e não após o treinamento completo a partir de pesos aleatórios.
+
+\section{What is the State of Neural Network Pruning?}\label{sec:blalock2020}
+
+\citeonline{Blalock2020} realizam uma meta-análise da literatura de poda neural. O objetivo dos
+autores é verificar quais métodos apresentam o melhor compromisso entre eficiência e acurácia e
+se os métodos publicados podem ser comparados entre si.
+
+Para isso, os autores reuniram os resultados reportados em 81 artigos, 79 deles publicados a
+partir de 2010, e identificaram as bases de dados, as arquiteturas, as métricas e as comparações
+utilizadas em cada um. Além disso, desenvolveram o ShrinkBench, uma biblioteca de código aberto
+baseada no PyTorch para a avaliação padronizada de métodos de poda. Com essa biblioteca,
+podaram mais de 800 redes em condições controladas. Nesses experimentos, compararam a poda por
+magnitude e a poda pelo produto entre o peso e o seu gradiente, cada uma aplicada de forma global
+e por camada, além da poda aleatória.
+
+O principal resultado é a falta de padronização na literatura. Os 81 artigos utilizaram 49
+bases de dados, 132 arquiteturas e 195 combinações entre elas. A combinação mais frequente, a
+VGG-16 na ImageNet, apareceu em apenas 22 artigos. Além disso, um quarto dos artigos não se
+comparou a nenhum outro método de poda, e metade se comparou a no máximo um. Os autores
+identificaram, entretanto, resultados consistentes. A poda por magnitude comprime as redes sem
+perda de acurácia, e a poda à mesma taxa em todas as camadas tende a apresentar resultado
+inferior ao das distribuições da poda que diferenciam as camadas. Os autores observam também que
+o número de parâmetros e o de FLOPs são aproximações imprecisas do tempo de inferência, da
+memória ocupada e do consumo de energia. Nos experimentos com o ShrinkBench, a ordenação entre os
+métodos variou com a métrica, a arquitetura e o modelo inicial. Na ResNet-18, por exemplo, a
+poda global obteve maior acurácia que a poda por camada para um mesmo tamanho de modelo, e o
+inverso ocorreu para uma mesma redução teórica de operações. Com base nesses resultados, os
+autores recomendam, entre outras práticas, identificar explicitamente as arquiteturas, as bases
+de dados e as métricas, reportar as métricas também para o modelo original, avaliar ao menos
+cinco taxas de compressão, utilizar ao menos três pares de base de dados e arquitetura e
+reportar médias e desvios-padrão.
+
+Este trabalho segue parte dessas recomendações. As estratégias e os esquemas de poda são
+avaliados com o mesmo modelo, na mesma base de dados, pelas mesmas métricas e no mesmo
+\textit{hardware} (Capítulo~\ref{chap:metodologia}). As métricas são reportadas também para o
+modelo base e para o modelo base retreinado, e cada varredura avalia dez taxas de poda. Além
+disso, o custo é medido em energia durante a execução, e não apenas estimado pelo número de
+parâmetros e de FLOPs. Outras recomendações não são atendidas. O trabalho utiliza um único par
+de modelo e base de dados, e o \textit{fine-tuning} de recuperação foi executado com uma única
+semente, sem estimativa de variância (Seção~\ref{sec:limitacoes}). Nas varreduras
+\textit{one-shot}, por sua vez, a avaliação é determinística, e a repetição não alteraria os
+resultados (Seção~\ref{sec:ambiente}). Por fim, a variação da ordenação entre métodos observada
+pelos autores também ocorreu neste trabalho. O esquema de poda uniforme superou o não uniforme
+entre 30\% e 70\% na poda por magnitude, e o inverso ocorreu na poda estruturada
+(Seção~\ref{sec:res_estruturada}).
+
+% AJUSTE: 14/11 — seção de síntese acrescentada para fechar o capítulo posicionando este
+% trabalho em relação aos anteriores (critério do ROADMAP para o capítulo). Cada célula da
+% tabela resume o que a resenha correspondente descreve.
+\section{Síntese dos Trabalhos Relacionados}\label{sec:sintese_relacionados}
+
+Esta seção sintetiza os trabalhos apresentados e posiciona este trabalho em relação a eles. A
+Tabela~\ref{tab:trabalhos_relacionados} compara os trabalhos quanto à arquitetura avaliada, à
+granularidade da poda, à forma de distribuir a poda entre as camadas, ao retreinamento após a
+poda e ao consumo de energia. Na linha de \citeonline{Blalock2020}, as colunas referem-se aos
+experimentos realizados com o ShrinkBench.
+
+\begin{table}[htb]
+\centering
+\caption{Comparação entre os trabalhos relacionados e este trabalho.}
+\label{tab:trabalhos_relacionados}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{>{\raggedright\arraybackslash}p{2.0cm} >{\raggedright\arraybackslash}p{2.2cm} >{\raggedright\arraybackslash}p{2.6cm} >{\raggedright\arraybackslash}p{2.8cm} >{\raggedright\arraybackslash}p{2.7cm} >{\raggedright\arraybackslash}p{2.0cm}}
+\hline
+\textbf{Trabalho} & \textbf{Arquitetura} & \textbf{Granularidade} & \textbf{Distribuição entre camadas} & \textbf{Retreinamento} & \textbf{Energia} \\
+\hline
+\citeonline{Han2015} & Convolucional (AlexNet, VGG-16) & Não estruturada & Limiar por camada, escolhido a partir da sensibilidade, sem regra descrita & Iterativo, após cada poda & Não medida \\
+\citeonline{Li2017} & Convolucional (VGG-16, ResNet) & Estruturada (filtros) & Taxa por estágio, escolhida a partir da sensibilidade & Único, após a poda & Não medida \\
+\citeonline{Yang2017} & Convolucional (AlexNet, GoogLeNet) & Não estruturada & Ordem das camadas definida pelo consumo estimado & Ajuste local por camada e \textit{fine-tuning} global & Estimada por modelo de custo \\
+\citeonline{Frankle2019} & Totalmente conectada e convolucional & Não estruturada & Mesma taxa em todas as camadas ou poda global & Novo treinamento a partir da inicialização & Não medida \\
+\citeonline{Liu2019} & Convolucional (VGG, ResNet, DenseNet) & Estruturada e não estruturada & Predefinida ou resultante do algoritmo & \textit{Fine-tuning} comparado ao treinamento a partir de pesos aleatórios & Não medida \\
+\citeonline{Blalock2020} & Convolucional (ResNet, VGG) & Não estruturada & Global ou por camada & \textit{Fine-tuning} & Não medida \\
+Este trabalho & \textit{Transformer} (GPT-2 \textit{small}) & Não estruturada e estruturada (cabeças e neurônios) & Regra explícita a partir do perfil de sensibilidade & Sem retreinamento e \textit{fine-tuning} de recuperação & Medida durante a execução \\
+\hline
+\end{tabular}\\
+\textit{Fonte: Elaboração própria.}
+\end{table}
+
+Dois aspectos distinguem este trabalho dos anteriores. O primeiro é a medição do consumo de
+energia. Entre os trabalhos apresentados, apenas \citeonline{Yang2017} quantificam o consumo,
+por meio de um modelo de custo. Os demais expressam a eficiência pelo número de parâmetros e de
+FLOPs, grandezas que \citeonline{Blalock2020} apontam como aproximações imprecisas do consumo.
+Neste trabalho, a energia é medida durante a execução dos modelos podados, em uma GPU de
+propósito geral.
+
+O segundo aspecto é a definição das taxas de poda por camada. \citeonline{Han2015} e
+\citeonline{Li2017} mediram a sensibilidade das camadas, mas não descreveram uma regra para
+convertê-la em taxas. Além disso, \citeonline{Frankle2019}, \citeonline{Liu2019} e
+\citeonline{Blalock2020} mostraram que a distribuição da poda entre as camadas afeta o
+resultado. Neste trabalho, as taxas são definidas por uma regra explícita a partir do perfil de
+sensibilidade e comparadas, para a mesma taxa de poda, aos esquemas de poda uniforme e não
+uniforme. Essa comparação é feita nas condições apontadas por \citeonline{Liu2019} para um
+modelo pré-treinado: os pesos são herdados do modelo base, e a quantidade de retreinamento é
+limitada. O capítulo seguinte apresenta a metodologia adotada para essa comparação.

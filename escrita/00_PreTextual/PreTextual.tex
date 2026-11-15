@@ -1,22 +1,6 @@
 % ---
-% Informações de dados para CAPA e FOLHA DE ROSTO
-% ---
-\titulo{[TO DO] Seu Título}
-\autor{[TO DO] Nome Completo}
-\local{Diamantina/MG}
-\data{2023}
-\orientador{Prof. Dr. Marcelo Ferreira Rego}
-%\coorientador{Equipe \abnTeX}
-\instituicao{%
-  UNIVERSIDADE FEDERAL DOS VALES DO JEQUITINHONHA E MUCURI
-  \par
-  Bacharelado em Sistemas de Informação 
-  }
-\tipotrabalho{Monografia (Graduação)}
-
-% O preambulo deve conter o tipo do trabalho, o objetivo, 
-% o nome da instituição e a área de concentração 
-\preambulo{Monografia apresentada ao Curso de Sistemas de Informação do Departamento de Computação da Universidade Federal dos Vales do Jequitinhonha e Mucuri como requisito parcial para obtenção do título de Bacharel em Sistemas de Informação.}
+% Os dados da CAPA e da FOLHA DE ROSTO (título, autor, data, orientador...)
+% ficam em 00_PreTextual/dados.tex, carregado no preâmbulo do principal.tex.
 % ---
 
 
@@ -131,45 +115,61 @@ Zootecnia, Universidade de São Paulo, São Paulo, 2011.
 %\includepdf[pages=-]{folhadeaprovacao.pdf}
 %
 
-%TODO Adicionar folha de aprovação
+% Antes da defesa: folha gerada pelo abnTeX2, em branco para a banca assinar.
+% Depois da defesa: salvar o PDF assinado como folhadeaprovacao.pdf nesta pasta
+% de compilação (escrita/) e trocar o bloco abaixo por:
+% \begin{folhadeaprovacao}
+% \includepdf[scale=0.9, pages=1-2, pagecommand={}]{folhadeaprovacao.pdf}
+% \end{folhadeaprovacao}
 \begin{folhadeaprovacao}
 
-\includepdf[scale=0.9, pages=1-2, pagecommand={}]{folhadeaprovacao.pdf}
-  
+  \begin{center}
+    {\ABNTEXchapterfont\large\imprimirautor}
+
+    \vspace*{\fill}\vspace*{\fill}
+    \begin{center}
+      \ABNTEXchapterfont\bfseries\Large\imprimirtitulo
+    \end{center}
+    \vspace*{\fill}
+
+    \hspace{.45\textwidth}
+    \begin{minipage}{.5\textwidth}
+        \imprimirpreambulo
+    \end{minipage}%
+    \vspace*{\fill}
+   \end{center}
+
+   Trabalho aprovado. \imprimirlocal, \rule{1cm}{0.4pt} de \rule{3.5cm}{0.4pt} de \imprimirdata.
+
+   % Linha de assinatura alargada de 8 cm (padrão do abnTeX2) para 11 cm, só nesta folha:
+   % com 8 cm, "Prof. Dr. Marcus Vinícius Carvalho Guelpeli" quebrava em duas linhas.
+   \setlength{\ABNTEXsignwidth}{11cm}
+   \assinatura{\textbf{\imprimirorientador} \\ Orientador}
+   % Banca, titulação (doutorado) e tratamento "Prof./Profa." informados pelo Enzo em
+   % 14/11/2026. A instituição de cada membro, pedida pelo manual de normalização da UFVJM
+   % (seção 4.5), fica para o ajuste do trabalho ao manual.
+   \assinatura{\textbf{Profa. Dra. Cinthya Rocha Tameirão} \\ Avaliadora}
+   \assinatura{\textbf{Prof. Dr. Marcus Vinícius Carvalho Guelpeli} \\ Avaliador}
+
+   \begin{center}
+    \vspace*{0.5cm}
+    {\large\imprimirlocal}
+    \par
+    {\large\imprimirdata}
+    \vspace*{1cm}
+  \end{center}
+
 \end{folhadeaprovacao}
 % ---
 
 % ---
-% Dedicatória (opcional)
+% Dedicatória, Agradecimentos e Epígrafe (opcionais)
 % ---
-% \begin{dedicatoria}
-%    \vspace*{\fill}
-%    \centering
-%    \noindent
-%    \textit{Dedico este trabalho à minha família...} \vspace*{\fill}
-% \end{dedicatoria}
-% ---
-
-% ---
-% Agradecimentos (opcional)
-% ---
-\begin{agradecimentos}
-
-%TODO
-[TO DO] Escreva seu agradecimento
-
-\end{agradecimentos}
-% ---
-
-% ---
-% Epígrafe (opcional)
-% ---
-\begin{epigrafe}
-    \vspace*{\fill}
-	\begin{flushright}
-		\textit{"A persistência é o caminho do êxito." (Charles Chaplin)}
-	\end{flushright}
-\end{epigrafe}
+% Retirados por decisão do Enzo em 14/11/2026: o trabalho não tem dedicatória,
+% agradecimentos nem epígrafe. Os blocos do template (ambientes dedicatoria,
+% agradecimentos e epigrafe) foram removidos, e não apenas comentados.
+% O ROADMAP previa, nos agradecimentos, a menção ao projeto FAPEMIG BIS-00587-25. Por
+% decisão do Enzo (14/11/2026), o trabalho não menciona a FAPEMIG.
 % ---
 
 % ---
@@ -178,25 +178,75 @@ Zootecnia, Universidade de São Paulo, São Paulo, 2011.
 
 % resumo em português
 % Resumo em língua vernácula (obrigatório)
+% ESCRITO: 14/11/2026 — depois da Introdução, a pedido do Enzo. Segue a ordem do ROADMAP:
+% contexto, problema, objetivo (o mesmo objetivo geral da Introdução), método, resultados
+% numéricos e conclusão, em parágrafo único de 150 a 300 palavras. Os números repetem os da
+% Síntese dos Resultados (Seção res_sintese): reconferir aqui se mudarem lá.
+% Palavras-chave anteriores, do template adaptado: "poda neural; eficiência energética;
+% compressão de modelo de IA; otimização estrutural de redes neurais". Trocadas porque
+% "otimização estrutural" não é termo do texto e faltavam a análise de sensibilidade e o
+% GPT-2. O rótulo passou de "Palavras-chaves" para "Palavras-chave" (ABNT NBR 6028).
 \begin{resumo}
-% TODO: escrever resumo do TCC (150-300 palavras) cobrindo: contexto, problema, objetivo, metodologia, resultados (quando houver), conclusao.
+\noindent
+Nos modelos de linguagem de grande escala, a inferência consome energia a cada requisição
+atendida. A poda neural reduz o número de parâmetros. Entretanto, essa redução não implica,
+necessariamente, redução do consumo, e a distribuição da poda entre as camadas afeta o
+desempenho preditivo. O objetivo deste trabalho é avaliar a poda do modelo de linguagem GPT-2
+como estratégia de redução do consumo de energia na inferência e verificar se um esquema de
+poda definido por uma análise de sensibilidade por camada reduz a perda de desempenho
+preditivo decorrente dessa poda. A poda por magnitude e a poda estruturada de cabeças de
+atenção e de neurônios do perceptron multicamadas foram aplicadas ao GPT-2 \textit{small} em
+taxas de poda de 10\% a 90\%. Os modelos podados foram avaliados na base de dados WikiText-2,
+em uma GPU Tesla T4, quanto à \textit{perplexity}, ao custo computacional e à energia medida
+durante a execução. A poda por magnitude reduziu em 61\% os parâmetros não nulos, sem redução
+de energia acima do limiar de detecção de 10\%. A poda estruturada converteu a mesma redução
+em reduções de 59\% na energia e de 56\% no tempo de inferência. Na poda estruturada, sem retreinamento, o
+esquema de poda com análise de sensibilidade obteve a menor \textit{perplexity} em todas as
+taxas de 10\% a 50\%, por um fator de 2,5 na média geométrica, sem diferença de energia. Após
+uma época de \textit{fine-tuning} de recuperação, essa vantagem diminuiu de 3,33 para 1,87
+vezes a 30\% e desapareceu a 10\%. Nenhuma configuração de poda estruturada ficou dentro de
+5\% da \textit{perplexity} do modelo base. Conclui-se que, no ambiente avaliado, apenas a poda
+estruturada reduziu o consumo de energia e que a análise de sensibilidade reduz a perda de
+desempenho preditivo dessa poda, sobretudo quando o retreinamento é limitado.
 
 \vspace{\onelineskip}
 \noindent
-\textbf{Palavras-chaves}: poda neural; eficiência energética; compressão de modelo de IA; otimização estrutural de redes neurais.
+\textbf{Palavras-chave}: poda de redes neurais; análise de sensibilidade; eficiência energética; modelos de linguagem; GPT-2.
 \end{resumo}
 
 % resumo em inglês
 % Resumo em língua estrangeira (obrigatório)
+% ESCRITO: 14/11/2026 — tradução do Resumo acima, frase a frase. Qualquer mudança no Resumo
+% tem de ser repetida aqui. O rótulo passou de "Key-words" para "Keywords".
 \begin{resumo}[\textbf{Abstract}]
  \begin{otherlanguage*}{english}
 
-[TO DO] Abstract em um parágrafo.
-    
+\noindent
+In large language models, inference consumes energy at every request served. Neural network
+pruning reduces the number of parameters. However, this reduction does not
+necessarily imply a reduction in consumption, and the distribution of pruning across the
+layers affects predictive performance. The objective of this work is to evaluate the pruning of the GPT-2 language model as a
+strategy for reducing energy consumption in inference and to verify whether a pruning scheme
+defined by a layer-wise sensitivity analysis reduces the loss of predictive performance caused
+by this pruning. Magnitude pruning and structured pruning of attention heads and multilayer
+perceptron neurons were applied to GPT-2 small at pruning rates from 10\% to 90\%. The pruned
+models were evaluated on the WikiText-2 dataset, on a Tesla T4 GPU, with respect to
+perplexity, computational cost, and energy measured during execution. Magnitude pruning
+reduced the nonzero parameters by 61\%, with no energy reduction above the 10\% detection
+threshold. Structured pruning converted the same reduction into reductions of 59\%
+in energy and 56\% in inference time. In structured pruning, without retraining, the pruning
+scheme with sensitivity analysis obtained the lowest perplexity at all rates from 10\% to
+50\%, by a factor of 2.5 in the geometric mean, with no difference in energy. After one epoch
+of recovery fine-tuning, this advantage decreased from 3.33 to 1.87 times at 30\% and
+disappeared at 10\%. No structured pruning configuration stayed within 5\% of the perplexity
+of the base model. It is concluded that, in the evaluated environment, only
+structured pruning reduced energy consumption and that the sensitivity analysis reduces the
+loss of predictive performance of this pruning, especially when retraining is limited.
+
    \vspace{\onelineskip}
- 
-   \noindent 
-   \textbf{Key-words}: [TO DO] Key-words separadas por ponto-e-vírgula
+
+   \noindent
+   \textbf{Keywords}: neural network pruning; sensitivity analysis; energy efficiency; language models; GPT-2.
  \end{otherlanguage*}
 \end{resumo}
 % ---
@@ -224,8 +274,18 @@ Zootecnia, Universidade de São Paulo, São Paulo, 2011.
 % Lista de abreviaturas (opcional)
 % Lista de siglas (opcional)
 % ---
+% Lista do ROADMAP, conferida contra o texto (KD não aparece no texto; T4 é nome
+% de produto, não sigla; GPU e FT entraram por aparecerem no texto).
 \begin{siglas}
-    \item [TO DO] {\em [TO DO]}
+    \item[FLOPs] Operações de ponto flutuante (\textit{floating-point operations})
+    \item[FT] Ajuste fino (\textit{fine-tuning})
+    \item[GPT] \textit{Generative Pre-trained Transformer}
+    \item[GPU] Unidade de processamento gráfico (\textit{Graphics Processing Unit})
+    \item[LLM] Grande modelo de linguagem (\textit{Large Language Model})
+    \item[LSTM] \textit{Long Short-Term Memory}
+    \item[MLP] Perceptron multicamadas (\textit{multilayer perceptron})
+    \item[PPL] Perplexidade (\textit{perplexity})
+    \item[RNN] Rede neural recorrente (\textit{Recurrent Neural Network})
  \end{siglas}
 % ---
 
@@ -248,9 +308,10 @@ Zootecnia, Universidade de São Paulo, São Paulo, 2011.
 % inserir lista de algoritmos lista os algoritimos automatico
 % Lista de algoritmos (opcional)
 % ---
-\pdfbookmark[0]{\listtablename}{loa}
-\listofcodes
-\cleardoublepage
+% Comentada: o texto não tem nenhum float do tipo code, então a lista sairia vazia.
+% \pdfbookmark[0]{Lista de Códigos}{loa}
+% \listofcodes
+% \cleardoublepage
 % ---
 
 

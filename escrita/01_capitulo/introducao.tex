@@ -1,22 +1,204 @@
 \chapter{Introdução}\label{capitulo1}
 
-[TODO] 
+% ESCRITA: 14/11/2026 — primeira versão completa do capítulo (antes, só [TODO]), a pedido do
+% Enzo, no padrão de escrita do orientador (ESTILO.md, seção 2.1).
+% Decisões de estrutura:
+% - O texto de abertura traz a contextualização e o problema de pesquisa. A justificativa e
+%   as contribuições ganharam seção própria (critérios do ROADMAP), ao lado das seções do
+%   template (Objetivos e Organização da monografia).
+% - O problema de pesquisa é uma única pergunta. As perguntas (A) e (B) continuam formuladas
+%   apenas na abertura da Metodologia (orientador, 07/11/2026) e são retomadas por referência.
+% - Dados de consumo conferidos nas fontes em 14/11/2026: Schwartz2020 (resumo do artigo),
+%   Patterson2021 (Seção 2) e Luccioni2022 (Tabela 1 e Seção 4.4).
+% - Os números de resultados repetem os do Capítulo 6 (Seções res_custo,
+%   perfil_sensibilidade, res_estruturada, ft_corroi e res_tradeoff): reconferir aqui sempre
+%   que mudarem lá.
+% - Vaswani2017, Radford2019, Merity2017, Han2015 e Li2017 têm aqui a primeira menção, e é
+%   aqui que ficam citados (decisão do Enzo, 14/11/2026). Nos capítulos seguintes, saiu a
+%   única citação que só acompanhava a primeira menção (Merity2017 em sec:modelo). As demais
+%   têm o autor como sujeito, sustentam dado específico da obra ou estão em linha de Fonte,
+%   casos que a regra do orientador mantém (ESTILO.md, seção 6).
 
+O desenvolvimento dos modelos de aprendizado profundo tem sido acompanhado pelo aumento do
+custo computacional. \citeonline{Schwartz2020} estimam que a quantidade de computação
+utilizada nas pesquisas da área aumentou cerca de 300.000 vezes entre 2012 e 2018. Esse custo
+é observado nos modelos de linguagem de grande escala (\textit{Large Language Models} ---
+LLMs), baseados na arquitetura \textit{Transformer} \cite{Vaswani2017}. O treinamento final do
+BLOOM, um LLM com 176 bilhões de parâmetros, consumiu 433.196~kWh de energia elétrica
+\cite{Luccioni2022}. Além disso, \citeonline{Strubell2019} estimaram que o treinamento de um
+modelo \textit{Transformer} com busca de arquitetura neural emite cerca de cinco vezes o
+dióxido de carbono emitido por um automóvel ao longo de sua vida útil
+(Seção~\ref{sec:consumo_energetico}).
 
+O consumo de energia não se restringe ao treinamento. Depois de treinado, o modelo é executado
+a cada requisição recebida, etapa denominada inferência. \citeonline{Patterson2021} relatam
+estimativas de empresas do setor segundo as quais de 80\% a 90\% da carga de trabalho de
+aprendizado de máquina corresponde à inferência. No caso do BLOOM, a disponibilização do
+modelo por uma interface de inferência consumiu 914~kWh em aproximadamente 18 dias, período em
+que foram atendidas 230.768 requisições \cite{Luccioni2022}. Por essa razão, este trabalho
+trata da redução do consumo de energia na inferência de modelos já treinados.
+
+Entre as técnicas de compressão de modelos, a poda neural consiste em remover os parâmetros
+que menos contribuem para a saída do modelo (Seção~\ref{sec:pruning}). Duas estratégias
+clássicas representam os extremos de granularidade dessa técnica. A poda não estruturada,
+representada pela poda por magnitude \cite{Han2015}, anula pesos individuais. A poda
+estruturada \cite{Li2017}, por sua vez, remove estruturas inteiras da rede. Na arquitetura
+\textit{Transformer}, essas estruturas correspondem às cabeças de atenção e aos neurônios do
+perceptron multicamadas (MLP).
+
+Dois aspectos dessas estratégias motivam este trabalho. O primeiro é a forma de avaliação.
+\citeonline{Han2015} e \citeonline{Li2017} avaliaram redes convolucionais e expressaram os
+resultados em número de parâmetros e de operações, sem medir o consumo de energia
+(Capítulo~\ref{chap:trabalhos_relacionados}). Entretanto, a redução do número de parâmetros
+não implica, necessariamente, redução do consumo. Na poda por magnitude, os pesos são
+anulados, e não removidos. Dessa forma, as matrizes conservam suas dimensões, e as operações
+executadas são as mesmas.
+
+O segundo aspecto é a distribuição da poda entre as camadas do modelo. A fração dos parâmetros
+podáveis a remover do modelo é denominada taxa de poda. Para uma mesma taxa de poda, é
+necessário determinar quanto remover de cada camada, e as camadas podem diferir quanto à
+tolerância à remoção de parâmetros. Os dois trabalhos citados mediram a sensibilidade de cada
+camada à poda. Entretanto, as taxas de poda por camada foram definidas de forma empírica, sem
+a descrição de uma regra.
+
+Diante desses dois aspectos, o problema de pesquisa deste trabalho é formulado na seguinte
+pergunta: em que medida a poda reduz o consumo de energia medido na inferência de um LLM, e em
+que medida um esquema de poda, isto é, um conjunto de taxas de poda por camada, definido por
+uma análise de sensibilidade por camada reduz a perda de desempenho preditivo decorrente dessa
+poda? Esse problema é desdobrado em duas perguntas, (A) e (B), formuladas no
+Capítulo~\ref{chap:metodologia}.
+
+Para responder a essa pergunta, as duas estratégias de poda são aplicadas ao modelo de
+linguagem GPT-2 \cite{Radford2019}, e o consumo de energia é medido durante a execução dos
+modelos podados. Além disso, propõe-se uma regra que define as taxas de poda por camada a
+partir de uma análise de sensibilidade por camada. O esquema de poda resultante é comparado a
+dois esquemas de poda que não utilizam essa análise (Seção~\ref{sec:metodologia_poda_sem}): o
+uniforme, que aplica a mesma taxa a todas as camadas, e o não uniforme, em que uma única
+ordenação dos elementos de todo o modelo determina os que são removidos. As seções a seguir
+apresentam a justificativa, os objetivos, as contribuições e a organização do trabalho.
+
+\section{Justificativa}\label{sec:justificativa}
+
+Esta seção apresenta as razões que justificam a medição direta do consumo de energia e o
+recorte experimental adotado.
+
+O consumo de energia é medido diretamente porque as grandezas calculadas a partir da
+arquitetura do modelo não o representam em todos os casos. O número de parâmetros, o tamanho
+em memória e as operações de ponto flutuante (FLOPs) são calculados a partir das dimensões das
+matrizes do modelo. A energia, por sua vez, é medida durante a execução. Os resultados deste
+trabalho mostram que essas grandezas podem divergir. A poda por magnitude reduziu em 61\% os
+parâmetros não nulos do modelo, mas não alterou o tamanho em memória nem os FLOPs. Além disso,
+a redução de energia não superou 10\%, valor adotado como limiar de detecção do protocolo
+(Seção~\ref{sec:res_custo}). Portanto, uma avaliação restrita ao número de parâmetros
+atribuiria a essa estratégia um ganho que não foi observado na GPU utilizada.
+
+O recorte experimental compreende um modelo, uma base de dados e um ambiente de execução. O
+modelo base é o GPT-2 \textit{small}, com 124 milhões de parâmetros, selecionado pela
+aplicação de seis critérios a nove candidatos (Seção~\ref{sec:modelo}). Esse modelo é um
+\textit{Transformer} exclusivamente decodificador, possui pesos pré-treinados públicos e tem
+\textit{perplexity} publicada por seus autores para a base de dados adotada. Além disso, é o
+candidato com o menor número de parâmetros entre os que atenderam a todos os critérios, o que
+reduziu o custo das 195 execuções completas de avaliação realizadas.
+
+A base de dados é o WikiText-2 \cite{Merity2017}, selecionada pela aplicação de quatro
+critérios a cinco candidatas (Seção~\ref{sec:dataset}). Essa base preserva as características
+do texto original, possui partições oficiais de treino, validação e teste e não integra os
+dados de pré-treinamento do GPT-2. O ambiente de execução é a plataforma Kaggle, que oferece
+acesso gratuito a uma GPU NVIDIA Tesla T4, com 16~GB de memória (Seção~\ref{sec:ambiente}).
+Essa capacidade de memória restringe o \textit{fine-tuning} completo a modelos com menos de
+aproximadamente 1 bilhão de parâmetros (Seção~\ref{subsec:metodologia_selecao_modelo}),
+condição atendida pelo modelo selecionado.
+
+Esse recorte delimita o alcance das conclusões. Os resultados referem-se a um único modelo, a
+uma única base de dados e a uma única GPU, limitações discutidas na
+Seção~\ref{sec:limitacoes}.
 
 \section{Objetivos}
 
-[TODO]
+Esta seção apresenta o objetivo geral e os objetivos específicos do trabalho.
 
 \subsection{Objetivo Geral}
 
-[TODO]
+O objetivo geral deste trabalho é avaliar a poda do modelo de linguagem GPT-2 como estratégia
+de redução do consumo de energia na inferência e verificar se um esquema de poda definido por
+uma análise de sensibilidade por camada reduz a perda de desempenho preditivo decorrente dessa
+poda.
 
 \subsection{Objetivos Específicos}
-    [TODO]
+
+Para alcançar o objetivo geral, foram definidos os objetivos específicos listados a seguir. Em
+cada um, as seções indicadas entre parênteses correspondem, nessa ordem, ao procedimento
+descrito na Metodologia e aos resultados obtidos.
+
+\begin{itemize}
+    \item Selecionar, por critérios explícitos, o modelo base, a base de dados e as métricas
+          de desempenho preditivo, de custo computacional e de consumo de energia, e medir o
+          modelo base segundo essas métricas (Seções~\ref{sec:metodologia_modelo}
+          e~\ref{sec:res_protocolo}).
+    \item Aplicar ao modelo base a poda por magnitude e a poda estruturada e medir em que
+          medida a redução de parâmetros se converte em redução de tempo de inferência e de
+          consumo de energia (Seções~\ref{sec:metodologia_poda_sem} e~\ref{sec:res_custo}).
+    \item Medir o perfil de sensibilidade por camada do modelo base para cada estratégia de
+          poda (Seções~\ref{sec:metodologia_poda_com} e~\ref{sec:perfil_sensibilidade}).
+    \item Definir, a partir desse perfil, um esquema de poda com análise de sensibilidade e
+          compará-lo, nas mesmas taxas de poda, aos esquemas de poda uniforme e não uniforme
+          (Seções~\ref{sec:metodologia_poda_com} e~\ref{sec:res_qualidade}).
+    \item Avaliar o efeito do \textit{fine-tuning} de recuperação sobre o desempenho preditivo
+          dos modelos podados (Seções~\ref{sec:metodologia_finetuning}
+          e~\ref{sec:res_finetune}).
+    \item Analisar o compromisso entre desempenho preditivo e consumo de energia dos modelos
+          podados (Seções~\ref{sec:metodologia_metricas} e~\ref{sec:res_tradeoff}).
+\end{itemize}
+
+\section{Contribuições}\label{sec:contribuicoes}
+
+Esta seção apresenta as contribuições do trabalho, que se referem ao recorte experimental
+descrito na Seção~\ref{sec:justificativa}.
+
+\begin{itemize}
+    \item Uma regra explícita que define as taxas de poda por camada a partir do perfil de
+          sensibilidade e mantém a taxa de poda do modelo (Seção~\ref{subsec:fase2}). Na poda
+          estruturada, sem retreinamento, o esquema de poda definido por essa regra obteve a
+          menor \textit{perplexity} em todas as taxas de poda de 10\% a 50\%. Na média
+          geométrica dessa faixa, a \textit{perplexity} foi 2,5 vezes menor que a do esquema
+          de poda não uniforme, sem diferença de energia distinguível da variação de medição
+          (Seção~\ref{sec:res_estruturada}).
+    \item O perfil de sensibilidade por camada do GPT-2 \textit{small} no WikiText-2, medido
+          para as duas estratégias de poda (Seção~\ref{sec:perfil_sensibilidade}). A camada
+          mais sensível degradou o modelo 11,3 vezes mais que a mais tolerante na poda por
+          magnitude e 42,9 vezes mais na poda estruturada. Além disso, os perfis das duas
+          estratégias diferiram entre si, com coeficiente de correlação de postos de Spearman
+          de 0,50, o que indica que o perfil deve ser medido para cada estratégia.
+    \item A medição do consumo de energia das duas estratégias de poda sob o mesmo protocolo
+          (Seção~\ref{sec:res_custo}). Na GPU utilizada, a poda por magnitude não reduziu o
+          consumo acima do limiar de detecção. A poda estruturada, por sua vez, converteu a
+          redução de 61\% dos parâmetros em reduções de 59\% na energia e de 56\% no tempo de
+          inferência.
+    \item A delimitação da utilidade da análise de sensibilidade em função do retreinamento
+          (Seção~\ref{subsec:ft_corroi}). Após uma época de \textit{fine-tuning} de
+          recuperação, a vantagem do esquema de poda com análise de sensibilidade diminuiu de
+          3,33 para 1,87 vezes à taxa de poda de 30\% e desapareceu à taxa de 10\%.
+\end{itemize}
+
+O trabalho não identificou uma taxa de poda estruturada que preserve o desempenho preditivo.
+Nenhuma configuração de poda estruturada, com ou sem retreinamento, manteve a
+\textit{perplexity} dentro de 5\% da \textit{perplexity} do modelo base
+(Seção~\ref{sec:res_tradeoff}). Portanto, as contribuições referem-se à redução dessa perda, e
+não à sua eliminação.
 
 \section{Organização da monografia}
 
-[TODO]
-
-Este trabalho é composto por XX capítulos. Neste Capítulo \ref{capitulo1}, proporcionamos uma introdução, justificativa e delineamos os objetivos...
+Este trabalho é composto por sete capítulos. O Capítulo~\ref{capitulo1} apresenta o contexto,
+o problema de pesquisa, a justificativa, os objetivos e as contribuições do trabalho. O
+Capítulo~\ref{chap:fundamentacao_teorica} apresenta os conceitos necessários à compreensão do
+trabalho: as redes neurais e seu treinamento, a arquitetura \textit{Transformer}, o consumo
+energético em redes neurais, a compressão de modelos e a poda neural. O
+Capítulo~\ref{chap:trabalhos_relacionados} descreve os trabalhos relacionados às estratégias
+de poda adotadas e à redução do consumo de energia por meio da poda. O
+Capítulo~\ref{chap:metodologia} apresenta a metodologia, organizada em quatro etapas: seleção
+do modelo base, da base de dados e das métricas, poda sem otimização, poda com otimização e
+\textit{fine-tuning} de recuperação. O Capítulo~\ref{chap:desenvolvimento} descreve a
+implementação dos experimentos e as decisões de implementação, segundo as mesmas quatro
+etapas. O Capítulo~\ref{chap:resultados} apresenta e discute os resultados obtidos. Por fim, o
+Capítulo~\ref{chap:consideracoes} apresenta as conclusões, as limitações do trabalho e os
+trabalhos futuros.

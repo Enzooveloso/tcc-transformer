@@ -1,2 +1,199 @@
 \chapter{Considerações Finais}\label{chap:consideracoes}
 
+% ESCRITA: 14/11/2026 — primeira versão do capítulo (antes, só o \chapter), a pedido do Enzo,
+% no padrão de escrita do orientador (ESTILO.md, seção 2.1).
+% Decisões de estrutura:
+% - Três seções: Conclusões, Limitações e Trabalhos Futuros, as mesmas anunciadas na
+%   Organização da monografia (Capítulo 1).
+% - As Conclusões respondem às perguntas (A) e (B) com número e tratam diretamente do efeito
+%   do fine-tuning sobre a contribuição central (critério do ROADMAP). Não repetem a Síntese
+%   dos Resultados (Seção res_sintese): retomam o objetivo geral, dão a resposta e apontam a
+%   seção em que cada resultado está.
+% - As contribuições não são listadas de novo: estão na Seção sec:contribuicoes, e aqui só são
+%   nomeadas em uma frase.
+% - As Limitações reúnem as das Seções sec:limitacoes e subsec:limitacoes_perfil pela conclusão
+%   que condicionam, na ordem das quatro etapas da metodologia. Os Trabalhos Futuros seguem a
+%   mesma ordem e decorrem delas, sem lista genérica.
+% - Todos os números repetem os do Capítulo 6 (texto e Tabelas tab:tradeoff e tab:finetune):
+%   reconferir aqui sempre que mudarem lá.
+
+Este capítulo apresenta as considerações finais do trabalho. A Seção~\ref{sec:conclusoes}
+retoma o objetivo geral e apresenta as conclusões obtidas para as perguntas (A) e (B). A
+Seção~\ref{sec:consideracoes_limitacoes} apresenta as limitações que delimitam essas
+conclusões. Por fim, a Seção~\ref{sec:trabalhos_futuros} indica os trabalhos futuros que
+decorrem dessas limitações.
+
+\section{Conclusões}\label{sec:conclusoes}
+
+Esta seção apresenta as conclusões do trabalho em relação ao problema de pesquisa e ao
+objetivo geral, formulados no Capítulo~\ref{capitulo1}.
+
+O objetivo geral consistiu em avaliar a poda do modelo de linguagem GPT-2 como estratégia de
+redução do consumo de energia na inferência e em verificar se um esquema de poda definido por
+uma análise de sensibilidade por camada reduz a perda de desempenho preditivo decorrente dessa
+poda. Para isso, a poda por magnitude e a poda estruturada de cabeças de atenção e de neurônios
+do MLP foram aplicadas ao GPT-2 \textit{small}, em taxas de poda de 10\% a 90\%. Os modelos
+podados foram avaliados na base de dados WikiText-2, em uma GPU NVIDIA Tesla T4, quanto ao
+desempenho preditivo, ao custo computacional e ao consumo de energia. O problema de pesquisa
+foi desdobrado nas perguntas (A) e (B), formuladas no Capítulo~\ref{chap:metodologia}, cujas
+respostas são apresentadas a seguir.
+
+Quanto à pergunta (A), conclui-se que a conversão da redução de parâmetros em redução de tempo
+de inferência e de consumo de energia dependeu da granularidade da poda. No ambiente avaliado,
+essa conversão só ocorreu quando a poda removeu estruturas inteiras da arquitetura. A poda por
+magnitude reduziu em 61\% os parâmetros não nulos, mas o tamanho em memória e os FLOPs
+permaneceram inalterados. Além disso, as reduções de energia medidas, de 1,7\% a 9,0\%, ficaram
+abaixo do limiar de detecção do protocolo, de cerca de 10\%. A poda estruturada, por sua vez,
+converteu a mesma redução de 61\% dos parâmetros em reduções de 59\% na energia e de 56\% no
+tempo de inferência (Seção~\ref{sec:res_custo}). Portanto, o número de parâmetros não nulos não
+indicou o consumo de energia, e a medição durante a execução foi necessária para distinguir as
+duas estratégias. Esse resultado é coerente com \citeonline{Han2015}, que direcionam a poda por
+magnitude a \textit{hardware} especializado em redes esparsas (Seção~\ref{sec:han2015}).
+
+Quanto à pergunta (B), conclui-se que o esquema de poda com análise de sensibilidade melhorou o
+compromisso entre compressão e qualidade em relação aos esquemas de poda uniforme e não
+uniforme, sem retreinamento e em taxas de poda de até 50\%. Para uma mesma taxa de poda, a
+perda de desempenho preditivo foi menor. O perfil de sensibilidade mostrou que as camadas
+diferem quanto à degradação causada por sua poda. A camada 0, a mais sensível nas duas
+estratégias, degradou o modelo 11,3 vezes mais que a camada mais tolerante na poda por
+magnitude e 42,9 vezes mais na poda estruturada (Seção~\ref{sec:perfil_sensibilidade}). Na poda
+estruturada, a utilização dessa informação resultou na menor \textit{perplexity} em todas as
+taxas de poda de 10\% a 50\%. Na média geométrica dessa faixa, a \textit{perplexity} foi 2,5
+vezes menor que a do esquema de poda não uniforme (Seção~\ref{sec:res_estruturada}). Na poda
+por magnitude, o esquema de poda com análise de sensibilidade obteve a menor
+\textit{perplexity} em sete das nove taxas de poda, consideradas as duas intensidades avaliadas
+(Seção~\ref{sec:res_magnitude}). Como os esquemas de poda diferem apenas na distribuição da
+poda entre as camadas, essa redução da perda não teve custo adicional de energia na inferência
+(Seção~\ref{sec:res_tradeoff}).
+
+Três condições delimitam a conclusão sobre a pergunta (B). A primeira é a faixa de taxas de
+poda. A partir de 60\%, um número crescente de camadas atinge o teto de 95\% da taxa de poda
+por camada, e o esquema de poda deixa de diferenciá-las (Seção~\ref{sec:res_estruturada}). A
+segunda é a dependência em relação à estratégia de poda. Os perfis das duas estratégias
+apresentaram correlação de postos de Spearman de 0,50 (Seção~\ref{subsec:perfis_divergem}).
+Além disso, o valor mais adequado do parâmetro de intensidade $\beta$ foi 1,0 na poda
+estruturada e 0,5 na poda por magnitude, entre 20\% e 50\% (Seção~\ref{subsec:ablacao_beta}).
+Portanto, o perfil e a intensidade devem ser determinados para cada estratégia. A terceira é o
+retreinamento, tratado a seguir.
+
+O retreinamento é a condição que mais restringe a contribuição central do trabalho. Na poda
+estruturada, após uma época de \textit{fine-tuning} de recuperação, a vantagem do esquema de
+poda com análise de sensibilidade diminuiu de 3,33 para 1,87 vezes à taxa de poda de 30\%. À
+taxa de 10\%, a vantagem desapareceu. Nessa taxa, a \textit{perplexity} foi de 25,96, contra
+25,33 do esquema de poda não uniforme (Seção~\ref{subsec:ft_corroi}). Uma interpretação
+compatível com esses resultados é que o esquema de poda com análise de sensibilidade reduz a
+degradação imediata causada pela poda, e o retreinamento recupera parte dessa mesma degradação.
+Portanto, a análise de sensibilidade não substitui o retreinamento. Com os resultados obtidos,
+ela é indicada quando o retreinamento é indisponível ou limitado. Após uma época de
+retreinamento, manteve vantagem à taxa de 30\%, mas não à de 10\%. Não é possível afirmar se
+essa vantagem se mantém com mais retreinamento, pois foram avaliadas apenas uma época, duas
+taxas de poda e uma semente (Seção~\ref{subsec:ft_verificacoes}).
+
+Os indicadores combinados delimitam o alcance prático desses resultados. O trabalho não
+identificou uma configuração de poda estruturada que reduza o consumo de energia sem perda de
+desempenho preditivo. Sem retreinamento, a menor \textit{perplexity} da poda estruturada foi de
+124,29, quase cinco vezes a do modelo base. Após uma época de retreinamento, a poda estruturada
+a 30\%, com esquema de poda não uniforme, reduziu a energia em 19,1\%, com \textit{perplexity}
+de 104,78. Na mesma taxa, o esquema de poda com análise de sensibilidade reduziu a energia em
+17,7\%, valor equivalente dentro da variação de medição, com \textit{perplexity} de 56,08. Nos
+dois casos, a \textit{perplexity} permaneceu acima dos 18,68 do modelo base retreinado. Além
+disso, a eficiência relativa $\eta$ ficou abaixo de 1 em todas as varreduras e em todas as
+configurações retreinadas (Seção~\ref{sec:res_tradeoff}). Portanto, a análise de sensibilidade
+reduziu a perda de desempenho preditivo da poda estruturada, mas não a eliminou.
+
+Em relação ao objetivo geral, conclui-se que a poda estruturada reduz o consumo de energia do
+GPT-2 \textit{small} na inferência em proporção próxima à dos parâmetros removidos. Essa
+redução é acompanhada de perda de desempenho preditivo, que a análise de sensibilidade reduz e
+que uma época de retreinamento recupera apenas em parte. Esses resultados sustentam as
+contribuições apresentadas na Seção~\ref{sec:contribuicoes}: a regra que define as taxas de
+poda por camada, o perfil de sensibilidade do GPT-2 \textit{small} para as duas estratégias de
+poda, a medição do consumo de energia das duas estratégias sob o mesmo protocolo e a
+delimitação da utilidade da análise de sensibilidade em função do retreinamento.
+
+\section{Limitações}\label{sec:consideracoes_limitacoes}
+
+Esta seção apresenta as limitações que delimitam as conclusões da seção anterior. As limitações
+do desenho experimental são descritas na Seção~\ref{sec:limitacoes}, e as da medição do perfil
+de sensibilidade, na Seção~\ref{subsec:limitacoes_perfil}. Nesta seção, elas são reunidas
+segundo a conclusão que condicionam, na ordem das etapas da metodologia.
+
+A primeira limitação refere-se ao recorte experimental. Os experimentos utilizaram um único
+modelo, o GPT-2 \textit{small}, com 124 milhões de parâmetros, uma única base de dados e uma
+única GPU. Assim, os resultados podem não se manter em modelos com mais parâmetros, em bases de
+dados de outra natureza ou em outro \textit{hardware}. Em particular, a conclusão sobre a
+pergunta (A) refere-se a uma GPU sem suporte a operações esparsas. Além disso, as medições de
+tempo e de energia variaram entre as sessões de execução, de modo que reduções de até cerca de
+10\% não puderam ser atribuídas à poda (Seção~\ref{sec:res_custo}).
+
+A segunda limitação refere-se às estratégias de poda. As duas estratégias avaliadas utilizam
+critérios de poda calculados exclusivamente a partir dos pesos. As estratégias que estimam a
+importância dos parâmetros com dados, como o SparseGPT e o Wanda, não foram avaliadas
+(Seção~\ref{subsec:selecao_estrategias}). Portanto, este trabalho não permite afirmar que a
+vantagem do esquema de poda com análise de sensibilidade se mantém nessas estratégias.
+
+A terceira limitação refere-se à medição do perfil de sensibilidade. O perfil mede a degradação
+de cada camada isoladamente e, portanto, não considera as interações entre as camadas. Na poda
+por magnitude, a soma das degradações individuais foi de 1,238, em escala logarítmica, enquanto
+a poda simultânea de todas as camadas a 50\% produziu degradação de 2,934. Por essa razão, o
+perfil corresponde a uma ordenação das camadas por sensibilidade, e não a uma estimativa do
+desempenho preditivo de um modelo podado. Além disso, o perfil foi medido em duas taxas-sonda,
+entre as quais a correlação de postos de Spearman foi de 0,944 na poda por magnitude e de 0,713
+na poda estruturada (Seção~\ref{subsec:robustez_sonda}). Por fim, o perfil foi medido em regime
+\textit{one-shot} e na mesma partição de teste utilizada na avaliação dos modelos podados.
+Dessa forma, parte da vantagem observada pode refletir ajuste a essa partição, o que não foi
+medido.
+
+A quarta limitação refere-se à regra que define o esquema de poda. A partir da taxa de poda de
+60\%, a regra deixa de diferenciar as camadas que atingem o teto. Além disso, o parâmetro de
+intensidade foi avaliado em apenas dois valores, e o mais adequado diferiu entre as
+estratégias. Assim, a intensidade ótima de cada estratégia não foi determinada
+(Seção~\ref{subsec:ablacao_beta}).
+
+A quinta limitação refere-se ao retreinamento. O \textit{fine-tuning} de recuperação foi
+realizado com uma única época e uma única semente, em sete configurações. A comparação entre os
+esquemas de poda com e sem análise de sensibilidade após o retreinamento abrangeu duas taxas de
+poda da poda estruturada. Portanto, as \textit{perplexities} obtidas após o retreinamento não
+têm estimativa de variância, e a diferença observada à taxa de 10\% não permite distinguir os
+dois esquemas de poda.
+
+\section{Trabalhos Futuros}\label{sec:trabalhos_futuros}
+
+Esta seção indica os trabalhos futuros. Cada um decorre de uma das limitações da
+Seção~\ref{sec:consideracoes_limitacoes}, e eles são apresentados na mesma ordem.
+
+Quanto ao recorte experimental, o trabalho futuro consiste em repetir o experimento com outros
+modelos e outras bases de dados. As variantes \textit{medium} e \textit{large} do GPT-2 e a base
+de dados WikiText-103 atenderam aos critérios de seleção (Seções~\ref{sec:modelo}
+e~\ref{sec:dataset}), e a implementação foi mantida parametrizável para viabilizar essa
+verificação (Seção~\ref{sec:limitacoes}). Além disso, a execução das taxas de poda em ordem
+diferente da crescente permitiria determinar a causa das reduções de energia de até 9,0\%
+observadas na poda por magnitude (Seção~\ref{sec:res_custo}). Por sua vez, a avaliação em
+\textit{hardware} com suporte a operações esparsas permitiria verificar se a poda por magnitude
+reduz o consumo de energia nessa condição.
+
+Quanto às estratégias de poda, o trabalho futuro consiste em aplicar o esquema de poda com
+análise de sensibilidade a estratégias que estimam a importância dos parâmetros com dados, como
+o SparseGPT e o Wanda.
+
+Quanto à medição do perfil de sensibilidade, três verificações decorrem das limitações. A
+primeira consiste em medir o perfil na partição de validação, o que permitiria separar a
+vantagem do esquema de poda do ajuste à partição de teste. A segunda consiste em medir o perfil
+em taxas-sonda menores que 30\% e maiores que 50\%. A terceira consiste em medir a degradação
+de grupos de camadas podadas em conjunto, de modo a considerar as interações que o perfil atual
+não registra.
+
+Quanto à regra que define o esquema de poda, o trabalho futuro consiste em avaliar outros
+valores do parâmetro de intensidade em cada estratégia, a fim de determinar a intensidade mais
+adequada a cada uma.
+
+Quanto ao retreinamento, o trabalho futuro mais imediato consiste em retreinar as mesmas
+configurações por mais épocas e com mais de uma semente. Essa verificação indicaria se a
+vantagem do esquema de poda com análise de sensibilidade à taxa de 30\% se estabiliza ou
+desaparece com mais retreinamento. Dois outros trabalhos decorrem das alternativas não adotadas
+neste trabalho (Tabela~\ref{tab:decisoes_metodologicas}). O primeiro é o regime iterativo, em
+que a poda e o retreinamento são alternados em ciclos. Nesse regime, o perfil de sensibilidade
+poderia ser medido novamente a cada ciclo, depois do retreinamento, e não apenas em regime
+\textit{one-shot}. O segundo é a destilação de conhecimento
+(Capítulo~\ref{chap:fundamentacao_teorica}), em que o modelo base orientaria o retreinamento do
+modelo podado. Essa alternativa é motivada pelo fato de nenhuma configuração retreinada ter
+ficado dentro de 5\% da \textit{perplexity} do modelo base retreinado.
