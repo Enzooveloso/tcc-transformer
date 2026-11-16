@@ -9,14 +9,66 @@
 % ---
 % Capa (Obrigatório)
 % ---
-\imprimircapa
+% NORMALIZAÇÃO (14/11/2026): capa conforme o item 4.1 do Manual de Normalização da UFVJM
+% (2025), em tamanho 12 e negrito, centralizada: nome da universidade (caixa alta), nome
+% do curso, autor, TÍTULO (caixa alta), local (cidade) e ano. Substitui o \imprimircapa
+% do abnTeX2, que não trazia universidade nem curso. O manual pede ainda o padrão gráfico
+% da UFVJM (arte da PRPPG), a incluir quando o modelo oficial estiver disponível.
+% AJUSTE (16/11/2026): faculdade e departamento entre a universidade e o curso, a pedido do
+% Enzo (macros em dados.tex), e folha em branco depois da capa, fora da contagem.
+% AJUSTE (16/11/2026): padrão gráfico da UFVJM no fundo da capa (item 4.1: "As capas devem
+% seguir o padrão da UFVJM"). A arte, figuras/capa-ufvjm.png, é a da Figura 13 do manual
+% (faixa azul e linhas verdes à esquerda) e tem a proporção do A4; vai atrás do texto, que
+% fica todo na área branca.
+\begingroup
+\renewcommand{\thepage}{capa}% a capa não é contada; nome próprio da página no PDF
+\begin{capa}
+  \AddToShipoutPictureBG*{\put(0,0){%
+    \includegraphics[width=\paperwidth,height=\paperheight]{figuras/capa-ufvjm.png}}}%
+  \centering
+  \bfseries
+  \imprimiruniversidade\par
+  \imprimirfaculdade\par
+  \imprimirdepartamento\par
+  \imprimircurso\par
+  \imprimirautor\par
+  \vfill
+  \MakeTextUppercase{\imprimirtitulo}\par
+  \vfill
+  \imprimirlocal\par
+  \imprimirdata\par
+\end{capa}
+\endgroup
+\folhaembrancosemcontagem{verso-capa}% folhas em branco: ver o preâmbulo do principal.tex
 % ---
 
 % ---
 % Folha de rosto (obrigatório)
-% (o * indica que haverá a ficha bibliográfica)
 % ---
-\imprimirfolhaderosto
+% NORMALIZAÇÃO (14/11/2026): folha de rosto conforme o item 4.2 do manual: autor (negrito,
+% centralizado) no alto; TÍTULO em caixa alta e negrito; nota de apresentação e
+% orientador em espaço simples, justificados, do meio da mancha gráfica até a margem
+% direita; local e ano em negrito, centralizados. Substitui o \imprimirfolhaderosto do
+% abnTeX2, que repetia universidade e curso fora da nota de apresentação.
+\begin{folhaderosto}
+  \centering
+  {\bfseries\imprimirautor\par}
+  \vspace*{\fill}
+  {\bfseries\MakeTextUppercase{\imprimirtitulo}\par}
+  \vspace*{\fill}
+  \begin{flushright}
+    \begin{minipage}{.5\textwidth}
+      \SingleSpacing
+      \imprimirpreambulo\par
+      \vspace{\baselineskip}
+      \imprimirorientadorRotulo~\imprimirorientador\par
+    \end{minipage}
+  \end{flushright}
+  \vspace*{\fill}
+  {\bfseries\imprimirlocal\par}
+  {\bfseries\imprimirdata\par}
+\end{folhaderosto}
+\folhaembrancosemcontagem{verso-rosto}% item 4.2: verso da folha de rosto não é contado
 % ---
 
 
@@ -121,45 +173,52 @@ Zootecnia, Universidade de São Paulo, São Paulo, 2011.
 % \begin{folhadeaprovacao}
 % \includepdf[scale=0.9, pages=1-2, pagecommand={}]{folhadeaprovacao.pdf}
 % \end{folhadeaprovacao}
+% NORMALIZAÇÃO (14/11/2026): folha de aprovação conforme o item 4.5 do manual (modelo da
+% Figura 17): autor; TÍTULO em caixa alta e negrito; natureza do trabalho recuada do meio
+% da mancha gráfica até a margem direita; orientador; data de aprovação; nome, titulação e
+% instituição de cada membro da banca, com linha para assinatura (orientador por último,
+% como no modelo); local. A folha não entra na contagem das páginas nem é numerada: o
+% \thepage provisório dá à página um nome próprio no PDF, e o contador é recuado depois.
+% Instituição dos dois avaliadores (UFVJM) informada pelo Enzo em 16/11/2026 (macros em
+% dados.tex); até então, "[TO DO] Instituição". Versão anterior: modelo
+% do abnTeX2 com "Trabalho aprovado. Diamantina/MG, __ de __ de 2026." e o orientador
+% como primeiro assinante.
+% Banca, titulação (doutorado) e tratamento "Prof./Profa." informados pelo Enzo em
+% 14/11/2026.
+\begingroup
+\renewcommand{\thepage}{aprovacao}%
 \begin{folhadeaprovacao}
-
-  \begin{center}
-    {\ABNTEXchapterfont\large\imprimirautor}
-
-    \vspace*{\fill}\vspace*{\fill}
-    \begin{center}
-      \ABNTEXchapterfont\bfseries\Large\imprimirtitulo
-    \end{center}
-    \vspace*{\fill}
-
-    \hspace{.45\textwidth}
+  \centering
+  {\bfseries\imprimirautor\par}
+  \vspace{\onelineskip}
+  {\bfseries\MakeTextUppercase{\imprimirtitulo}\par}
+  \vspace*{\fill}
+  \begin{flushright}
     \begin{minipage}{.5\textwidth}
-        \imprimirpreambulo
-    \end{minipage}%
-    \vspace*{\fill}
-   \end{center}
-
-   Trabalho aprovado. \imprimirlocal, \rule{1cm}{0.4pt} de \rule{3.5cm}{0.4pt} de \imprimirdata.
-
-   % Linha de assinatura alargada de 8 cm (padrão do abnTeX2) para 11 cm, só nesta folha:
-   % com 8 cm, "Prof. Dr. Marcus Vinícius Carvalho Guelpeli" quebrava em duas linhas.
-   \setlength{\ABNTEXsignwidth}{11cm}
-   \assinatura{\textbf{\imprimirorientador} \\ Orientador}
-   % Banca, titulação (doutorado) e tratamento "Prof./Profa." informados pelo Enzo em
-   % 14/11/2026. A instituição de cada membro, pedida pelo manual de normalização da UFVJM
-   % (seção 4.5), fica para o ajuste do trabalho ao manual.
-   \assinatura{\textbf{Profa. Dra. Cinthya Rocha Tameirão} \\ Avaliadora}
-   \assinatura{\textbf{Prof. Dr. Marcus Vinícius Carvalho Guelpeli} \\ Avaliador}
-
-   \begin{center}
-    \vspace*{0.5cm}
-    {\large\imprimirlocal}
-    \par
-    {\large\imprimirdata}
-    \vspace*{1cm}
-  \end{center}
-
+      \imprimirpreambulo\par
+      \vspace{\onelineskip}
+      \imprimirorientadorRotulo~\imprimirorientador\par
+      \vspace{\onelineskip}
+      Data de aprovação \rule{1cm}{0.4pt}/\rule{1cm}{0.4pt}/\rule{1.5cm}{0.4pt}.\par
+    \end{minipage}
+  \end{flushright}
+  \vspace*{\fill}
+  % Linha de assinatura de 11 cm (o padrão do abnTeX2 é 8 cm): com 8 cm, "Prof. Dr. Marcus
+  % Vinícius Carvalho Guelpeli" quebrava em duas linhas.
+  \setlength{\ABNTEXsignwidth}{11cm}
+  \assinatura{Profa. Dra. Cinthya Rocha Tameirão \\ \imprimirinstituicaobancaum}
+  \assinatura{Prof. Dr. Marcus Vinícius Carvalho Guelpeli \\ \imprimirinstituicaobancadois}
+  \assinatura{\imprimirorientador \\ \imprimirinstituicaoorientador}
+  \vspace*{\fill}
+  {\bfseries\imprimirlocal\par}
+  % AJUSTE (16/11/2026): a página fecha aqui, dentro do ambiente. Ao fechar o Spacing da
+  % classe, a memoir soma -3,5 pt de espaço depois da última linha (\baselineskip simples
+  % menos o de 1,5), o que levava "Diamantina" para 1,87 cm da borda, abaixo dos 2 cm. Com
+  % a página já fechada, esse espaço cai no topo da página seguinte e é descartado.
+  \clearpage
 \end{folhadeaprovacao}
+\endgroup
+\addtocounter{page}{-1}% folha de aprovação fora da contagem (manual, itens 2.3 e 4.5)
 % ---
 
 % ---
@@ -186,18 +245,25 @@ Zootecnia, Universidade de São Paulo, São Paulo, 2011.
 % compressão de modelo de IA; otimização estrutural de redes neurais". Trocadas porque
 % "otimização estrutural" não é termo do texto e faltavam a análise de sensibilidade e o
 % GPT-2. O rótulo passou de "Palavras-chaves" para "Palavras-chave" (ABNT NBR 6028).
+% NORMALIZAÇÃO (14/11/2026): título RESUMO em caixa alta e negrito (item 4.9.1); parágrafo
+% com o recuo do texto, como no modelo do manual (Figura 22), por isso saiu o \noindent;
+% "Palavras-chave:" sem destaque e linhas seguintes alinhadas com a primeira palavra-chave
+% (comando \palavraschave, no preâmbulo). O texto do resumo não mudou.
+% AJUSTE (16/11/2026), a pedido do Enzo, repetido no Abstract: (i) GPU com o nome por
+% extenso, por ser a primeira menção da sigla no documento (manual, item 2.5.1); antes,
+% "em uma GPU Tesla T4". (ii) GPT-2 e WikiText-2 em \mbox, para que a linha não quebre no
+% hífen ("GPT-" no fim de uma linha e "2" no início da seguinte, como acontecia).
 \begin{resumo}
-\noindent
 Nos modelos de linguagem de grande escala, a inferência consome energia a cada requisição
 atendida. A poda neural reduz o número de parâmetros. Entretanto, essa redução não implica,
 necessariamente, redução do consumo, e a distribuição da poda entre as camadas afeta o
-desempenho preditivo. O objetivo deste trabalho é avaliar a poda do modelo de linguagem GPT-2
+desempenho preditivo. O objetivo deste trabalho é avaliar a poda do modelo de linguagem \mbox{GPT-2}
 como estratégia de redução do consumo de energia na inferência e verificar se um esquema de
 poda definido por uma análise de sensibilidade por camada reduz a perda de desempenho
 preditivo decorrente dessa poda. A poda por magnitude e a poda estruturada de cabeças de
-atenção e de neurônios do perceptron multicamadas foram aplicadas ao GPT-2 \textit{small} em
-taxas de poda de 10\% a 90\%. Os modelos podados foram avaliados na base de dados WikiText-2,
-em uma GPU Tesla T4, quanto à \textit{perplexity}, ao custo computacional e à energia medida
+atenção e de neurônios do perceptron multicamadas foram aplicadas ao \mbox{GPT-2} \textit{small} em
+taxas de poda de 10\% a 90\%. Os modelos podados foram avaliados na base de dados \mbox{WikiText-2},
+em uma unidade de processamento gráfico (GPU) Tesla T4, quanto à \textit{perplexity}, ao custo computacional e à energia medida
 durante a execução. A poda por magnitude reduziu em 61\% os parâmetros não nulos, sem redução
 de energia acima do limiar de detecção de 10\%. A poda estruturada converteu a mesma redução
 em reduções de 59\% na energia e de 56\% no tempo de inferência. Na poda estruturada, sem retreinamento, o
@@ -210,27 +276,30 @@ estruturada reduziu o consumo de energia e que a análise de sensibilidade reduz
 desempenho preditivo dessa poda, sobretudo quando o retreinamento é limitado.
 
 \vspace{\onelineskip}
-\noindent
-\textbf{Palavras-chave}: poda de redes neurais; análise de sensibilidade; eficiência energética; modelos de linguagem; GPT-2.
+\palavraschave{Palavras-chave}{poda de redes neurais; análise de sensibilidade; eficiência energética; modelos de linguagem; \mbox{GPT-2}.}
 \end{resumo}
+\folhaembranco
 
 % resumo em inglês
 % Resumo em língua estrangeira (obrigatório)
 % ESCRITO: 14/11/2026 — tradução do Resumo acima, frase a frase. Qualquer mudança no Resumo
 % tem de ser repetida aqui. O rótulo passou de "Key-words" para "Keywords".
-\begin{resumo}[\textbf{Abstract}]
+% NORMALIZAÇÃO (14/11/2026): mesmas regras do Resumo (item 4.9.2); o título sai em caixa
+% alta e negrito pelo estilo das seções, sem o \textbf manual.
+% AJUSTE (16/11/2026): as mesmas duas mudanças do Resumo (GPU por extenso; GPT-2 e
+% WikiText-2 sem quebra no hífen). Antes, "on a Tesla T4 GPU".
+\begin{resumo}[Abstract]
  \begin{otherlanguage*}{english}
 
-\noindent
 In large language models, inference consumes energy at every request served. Neural network
 pruning reduces the number of parameters. However, this reduction does not
 necessarily imply a reduction in consumption, and the distribution of pruning across the
-layers affects predictive performance. The objective of this work is to evaluate the pruning of the GPT-2 language model as a
+layers affects predictive performance. The objective of this work is to evaluate the pruning of the \mbox{GPT-2} language model as a
 strategy for reducing energy consumption in inference and to verify whether a pruning scheme
 defined by a layer-wise sensitivity analysis reduces the loss of predictive performance caused
 by this pruning. Magnitude pruning and structured pruning of attention heads and multilayer
-perceptron neurons were applied to GPT-2 small at pruning rates from 10\% to 90\%. The pruned
-models were evaluated on the WikiText-2 dataset, on a Tesla T4 GPU, with respect to
+perceptron neurons were applied to \mbox{GPT-2} small at pruning rates from 10\% to 90\%. The pruned
+models were evaluated on the \mbox{WikiText-2} dataset, on a Tesla T4 graphics processing unit (GPU), with respect to
 perplexity, computational cost, and energy measured during execution. Magnitude pruning
 reduced the nonzero parameters by 61\%, with no energy reduction above the 10\% detection
 threshold. Structured pruning converted the same reduction into reductions of 59\%
@@ -244,9 +313,7 @@ structured pruning reduced energy consumption and that the sensitivity analysis 
 loss of predictive performance of this pruning, especially when retraining is limited.
 
    \vspace{\onelineskip}
-
-   \noindent
-   \textbf{Keywords}: neural network pruning; sensitivity analysis; energy efficiency; language models; GPT-2.
+   \palavraschave{Keywords}{neural network pruning; sensitivity analysis; energy efficiency; language models; \mbox{GPT-2}.}
  \end{otherlanguage*}
 \end{resumo}
 % ---
@@ -255,6 +322,7 @@ loss of predictive performance of this pruning, especially when retraining is li
 % inserir lista de ilustrações  essa lista é prenchida automatica  com as imagens inseridas no documento
 % Listas de ilustrações (opcional)
 % ---
+\folhaembranco
 \pdfbookmark[0]{\listfigurename}{lof}
 \listoffigures*
 \cleardoublepage
@@ -264,6 +332,7 @@ loss of predictive performance of this pruning, especially when retraining is li
 % inserir lista de tabelas é prenchida automatica  com as tabelas  inseridas no documento
 % Lista de tabelas (opcional)
 % ---
+\folhaembranco
 \pdfbookmark[0]{\listtablename}{lot}
 \listoftables*
 \cleardoublepage
@@ -276,16 +345,35 @@ loss of predictive performance of this pruning, especially when retraining is li
 % ---
 % Lista do ROADMAP, conferida contra o texto (KD não aparece no texto; T4 é nome
 % de produto, não sigla; GPU e FT entraram por aparecerem no texto).
+% NORMALIZAÇÃO (14/11/2026): o manual (item 4.13) pede a relação das siglas utilizadas no
+% texto, em ordem alfabética. Entraram as 12 que o texto usa e faltavam (BPE, CNN, CPU,
+% DRAM, FP16, FP32, GELU, IA, MAC, ReLU, TFLOPS, TPU); as nove anteriores ficaram como
+% estavam. Ficaram de fora nomes de modelos (BERT, OPT, VGG...), de bases de dados
+% (MNIST, CIFAR...), de empresas (NVIDIA, OpenAI) e unidades (GB, MB, Wh). O título passou
+% a "LISTA DE SIGLAS" e os itens, ao formato "SIGLA – extenso" (ambiente no preâmbulo).
+\folhaembranco
 \begin{siglas}
+    \item[BPE] Codificação por pares de bytes (\textit{Byte Pair Encoding})
+    \item[CNN] Rede neural convolucional (\textit{Convolutional Neural Network})
+    \item[CPU] Unidade central de processamento (\textit{Central Processing Unit})
+    \item[DRAM] Memória dinâmica de acesso aleatório (\textit{Dynamic Random-Access Memory})
     \item[FLOPs] Operações de ponto flutuante (\textit{floating-point operations})
+    \item[FP16] Ponto flutuante de 16 bits (\textit{16-bit floating point})
+    \item[FP32] Ponto flutuante de 32 bits (\textit{32-bit floating point})
     \item[FT] Ajuste fino (\textit{fine-tuning})
+    \item[GELU] Unidade linear de erro gaussiano (\textit{Gaussian Error Linear Unit})
     \item[GPT] \textit{Generative Pre-trained Transformer}
     \item[GPU] Unidade de processamento gráfico (\textit{Graphics Processing Unit})
+    \item[IA] Inteligência artificial
     \item[LLM] Grande modelo de linguagem (\textit{Large Language Model})
     \item[LSTM] \textit{Long Short-Term Memory}
+    \item[MAC] Multiplicação e acumulação (\textit{multiply-accumulate})
     \item[MLP] Perceptron multicamadas (\textit{multilayer perceptron})
     \item[PPL] Perplexidade (\textit{perplexity})
+    \item[ReLU] Unidade linear retificada (\textit{Rectified Linear Unit})
     \item[RNN] Rede neural recorrente (\textit{Recurrent Neural Network})
+    \item[TFLOPS] Trilhões de operações de ponto flutuante por segundo (\textit{tera floating-point operations per second})
+    \item[TPU] Unidade de processamento tensorial (\textit{Tensor Processing Unit})
  \end{siglas}
 % ---
 
@@ -319,7 +407,12 @@ loss of predictive performance of this pruning, especially when retraining is li
 % inserir o sumario é preenchido automatico de acordo que é criado no documento
 % Sumário (obrigatório)
 % ---
+% NORMALIZAÇÃO (14/11/2026): saiu o \textbf que envolvia o sumário e punha todas as
+% entradas em negrito; o destaque de cada nível agora repete o dos títulos no texto
+% (item 4.15).
+\folhaembranco
 \pdfbookmark[0]{\contentsname}{toc}
-\textbf{\tableofcontents*}
+\tableofcontents*
 \cleardoublepage
+\folhaembranco% antes da Introdução, primeira seção textual
 % ---

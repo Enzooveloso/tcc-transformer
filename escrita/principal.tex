@@ -5,7 +5,9 @@
 	oneside,			% para impressão em verso e anverso. Oposto a oneside
 	a4paper,			% tamanho do papel. 
 	% -- opções da classe abntex2 --
-	%chapter=TITLE,		% títulos de capítulos convertidos em letras maiúsculas
+	% NORMALIZAÇÃO (14/11/2026): seção primária em CAIXA ALTA no texto, como já sai no
+	% sumário (Manual de Normalização da UFVJM, 2025, itens 2.4 e 4.15).
+	chapter=TITLE,		% títulos de capítulos convertidos em letras maiúsculas
 	%section=TITLE,		% títulos de seções convertidos em letras maiúsculas
 	%subsection=TITLE,	% títulos de subseções convertidos em letras maiúsculas
 	%subsubsection=TITLE,% títulos de subsubseções convertidos em letras maiúsculas
@@ -33,16 +35,23 @@
 \usepackage{indentfirst}		% Indenta o primeiro parágrafo de cada seção.
 \usepackage{color}				% Controle das cores
 \usepackage{graphicx}			% Inclusão de gráficos
+\usepackage{eso-pic}			% Arte da UFVJM no fundo da capa (16/11/2026)
 
 
 \usepackage{multirow}
 \usepackage{array}
 \usepackage[table,xcdraw]{xcolor}
 \usepackage{longtable}
-\usepackage{amssymb}
+% NORMALIZAÇÃO (14/11/2026): amssymb saiu porque o newtxmath, carregado abaixo, já traz
+% os símbolos da AMS e entra em conflito com ele.
 \usepackage{amsmath}
 \usepackage{mathtools}
 \usepackage{nccmath}
+% NORMALIZAÇÃO (14/11/2026): fonte Times New Roman (clone newtx) no texto e na matemática.
+% O manual exige Carlito, Arial ou Times New Roman, tamanho 12, em todo o trabalho
+% (item 2.1); a Times foi escolhida por ter matemática compatível.
+\usepackage{newtxtext}
+\usepackage{newtxmath}
 \usepackage{multicol}
 \usepackage{booktabs}
 \usepackage{subcaption}
@@ -93,8 +102,22 @@
 % ---
 % Pacotes de citações
 % ---
-\usepackage[brazilian,hyperpageref]{backref}	 % Paginas com as citações na bibl
-\usepackage[alf]{abntex2cite}	% Citações padrão ABNT
+% NORMALIZAÇÃO (14/11/2026): saiu o pacote backref, que acrescentava "Citado na página N"
+% a cada referência; a NBR 6023:2018 não prevê esse elemento.
+% Opções do abntex2cite conforme o Manual de Normalização da UFVJM (2025):
+% - ufvjm-citacao-nbr10520-2023: sobrenome em caixa mista também entre parênteses,
+%   "(Han et al., 2015)", como exige a NBR 10520:2023 (manual, item 5.1). É uma entrada
+%   de opção definida no referencias.bib, porque a opção do pacote para isso
+%   (abnt-cite-style=AuthorYEAR) não funciona: colide com AUTHORYEAR no BibTeX;
+% - abnt-etal-text=it: et al. em itálico (manual, itens 2.5 e 5.3.3);
+% - abnt-emphasize=bf: título em negrito nas referências, como nos exemplos do manual (6.1).
+\usepackage[alf,ufvjm-citacao-nbr10520-2023,abnt-etal-text=it,abnt-emphasize=bf]{abntex2cite}
+% Endereço eletrônico sem os sinais < >: "Disponível em: https://..." (NBR 6023:2018).
+\renewcommand{\UrlLeft}{}
+\renewcommand{\UrlRight}{}
+% Estilo local com [S. l.: s. n.] e "In:" em itálico, autor entidade em caixa mista na
+% chamada e "Proceedings [...]" nos eventos (ver o cabeçalho do arquivo .bst).
+\bibliographystyle{abntex2-alf-ufvjm}
 \usepackage{lscape}
 
 \usepackage{pdfpages}
@@ -102,31 +125,56 @@
 
 
 
-%% Novo estilo
-\makepagestyle{estilo_pretextual} %%% escolha um nome
-  \makeevenhead{estilo_pretextual}{}{}{\ABNTEXfontereduzida \textbf \thepage}
-  \makeoddhead{estilo_pretextual}{}{}{\ABNTEXfontereduzida \textbf \thepage}
-
-%% Customiza comando \pretextual
-\renewcommand{\pretextual}{
-  \pagenumbering{roman} %%% ou \pagenumbering{Roman}
-  \aliaspagestyle{chapter}{estilo_pretextual}% customizing chapter pagestyle
-  \pagestyle{estilo_pretextual}
-  \aliaspagestyle{cleared}{empty}
-  \aliaspagestyle{part}{estilo_pretextual}
-}
+% ---
+% NORMALIZAÇÃO (16/11/2026): MARGEM INFERIOR (manual, item 2: inferior 2 cm)
+% A classe chama \checkandfixthelayout no modo "classic", que arredonda a altura da mancha
+% para um número inteiro de linhas e depois soma o \topskip: a mancha passava de 702,8 pt
+% para 708 pt, e a margem inferior caía para 1,82 cm (medido no PDF). O modo "fixed"
+% mantém a altura calculada a partir das margens, e a última linha de base fica a 2 cm da
+% borda. Efeito medido antes de aplicar: 126 para 128 páginas; seções 2 a 7 começam uma
+% página depois.
+% ---
+\setulmarginsandblock{3cm}{2cm}{*}
+\checkandfixthelayout[fixed]
+% ---
 
 % ---
-% Ajusta a marca \textual para que a numeração volte a ser arábica
-% nos elementos textuais
-\let\oldtextual\textual        % copia o comando \textual anterior para \oldtextual
-\newcounter{start}	%Contador para começar arábico considerando numeração romana
+% NORMALIZAÇÃO (14/11/2026): PAGINAÇÃO (Manual de Normalização da UFVJM, 2025, item 2.3)
+% Páginas pré-textuais contadas a partir da folha de rosto, mas não numeradas (o
+% \pretextual padrão do abnTeX2 usa estilo vazio). Número em algarismos arábicos a partir
+% da primeira página textual, no alto à direita, em tamanho 10, sem cabeçalho: o
+% cabeçalho "Capítulo N. Título" saiu porque o manual não prevê cabeçalho e diz que o
+% trabalho é organizado em seções, não em capítulos (item 3).
+% A numeração romana que havia aqui (estilo_pretextual) foi retirada.
+% ---
+\makepagestyle{ufvjm}
+  \makeoddhead{ufvjm}{}{}{\ABNTEXfontereduzida\thepage}
+  \makeevenhead{ufvjm}{}{}{\ABNTEXfontereduzida\thepage}
 \renewcommand{\textual}{%
-  \oldtextual%
-  \setcounter{start}{\value{page}}
-  \pagenumbering{arabic} % volta à numeração arábica
-  \setcounter{page}{\thestart{}}
+  \pagestyle{ufvjm}%
+  \aliaspagestyle{chapter}{ufvjm}% primeira página de cada seção primária também numerada
+  \nouppercaseheads%
+  \bookmarksetup{startatroot}%
 }
+% ---
+
+% ---
+% FOLHAS EM BRANCO (16/11/2026), a pedido do Enzo: uma folha em branco depois da capa, da
+% folha de rosto, do resumo, do abstract, de cada lista e do sumário. O manual não as veda.
+% \folhaembranco: página sem número que entra na contagem, como as demais pré-textuais
+% (item 2.3). \folhaembrancosemcontagem{nome}: versos da capa e da folha de rosto, fora da
+% contagem, que começa na folha de rosto (item 2.3) e não inclui o verso dela (item 4.2:
+% "não pode ser contado ou numerado"); o argumento é o nome da página no PDF, como na
+% capa e na folha de aprovação.
+% ---
+\newcommand{\folhaembranco}{\clearpage\thispagestyle{empty}\null\clearpage}
+\newcommand{\folhaembrancosemcontagem}[1]{%
+  \clearpage
+  \begingroup
+  \renewcommand{\thepage}{#1}%
+  \thispagestyle{empty}\null\clearpage
+  \endgroup
+  \addtocounter{page}{-1}}
 % ---
 
 
@@ -136,20 +184,8 @@
 % --- 
 
 % ---
-% Configurações do pacote backref
-% Usado sem a opção hyperpageref de backref
-\renewcommand{\backrefpagesname}{Citado na(s) página(s):~}
-% Texto padrão antes do número das páginas
-\renewcommand{\backref}{}
-% Define os textos da citação
-\renewcommand*{\backrefalt}[4]{
-	\ifcase #1 %
-		Nenhuma citação no texto.%
-	\or
-		Citado na página #2.%
-	\else
-		Citado #1 vezes nas páginas #2.%
-	\fi}%
+% NORMALIZAÇÃO (14/11/2026): a configuração do pacote backref ("Citado na página N")
+% saiu junto com o pacote (ver "Pacotes de citações").
 % ---
 
 \usepackage[colorinlistoftodos,prependcaption,textsize=tiny]{todonotes}
@@ -185,15 +221,143 @@
 \makeatother
 % --- 
 
-% --- 
-% Espaçamentos entre linhas e parágrafos 
-% --- 
+% ============================================================================
+% NORMALIZAÇÃO (14/11/2026): Manual de Normalização da UFVJM (Sisbi, 5. ed., 2025)
+% Só formatação: nenhum texto da monografia foi alterado por este bloco.
+% Margens (3 cm esquerda/superior, 2 cm direita/inferior), papel A4 e espaçamento 1,5
+% já são o padrão da classe abntex2.
+% ============================================================================
 
-% O tamanho do parágrafo é dado por:
-\setlength{\parindent}{1.5cm}
+% --- Parágrafos (item 2.2): recuo de 2 cm, sem espaço entre um parágrafo e outro.
+% Antes: recuo de 1,5 cm e 0,2 cm entre parágrafos.
+\setlength{\parindent}{2cm}
+\setlength{\parskip}{0pt}
 
-% Controle do espaçamento entre um parágrafo e outro:
-\setlength{\parskip}{0.2cm}  % tente também \onelineskip
+% --- Títulos das seções (itens 2.1, 2.4 e 4.15): fonte do texto, tamanho 12, com destaque
+% gradativo e idêntico no texto e no sumário:
+%   seção primária    NEGRITO E CAIXA ALTA (opção chapter=TITLE da classe)
+%   seção secundária  negrito
+%   seção terciária   itálico
+%   seção quaternária e quinária  sem destaque (redondo)
+% Antes: fonte sem serifa em 24,9 pt, 17,3 pt e 14,4 pt.
+\renewcommand{\ABNTEXchapterfont}{\rmfamily\bfseries}
+\renewcommand{\ABNTEXchapterfontsize}{\normalsize}
+\renewcommand{\ABNTEXpartfont}{\rmfamily\bfseries}
+\renewcommand{\ABNTEXpartfontsize}{\normalsize}
+\renewcommand{\ABNTEXsectionfont}{\rmfamily\bfseries}
+\renewcommand{\ABNTEXsectionfontsize}{\normalsize}
+\renewcommand{\ABNTEXsubsectionfont}{\rmfamily\itshape}
+\renewcommand{\ABNTEXsubsectionfontsize}{\normalsize}
+\renewcommand{\ABNTEXsubsubsectionfont}{\rmfamily}
+\renewcommand{\ABNTEXsubsubsectionfontsize}{\normalsize}
+\renewcommand{\ABNTEXsubsubsubsectionfont}{\rmfamily}
+\renewcommand{\ABNTEXsubsubsubsectionfontsize}{\normalsize}
+\setparaheadstyle{\ABNTEXsubsubsubsectionfont\ABNTEXsubsubsubsectionfontsize\raggedright}
+
+% Indicativo numérico separado do título por um espaço de caractere (item 2.4); o memoir
+% usava um espaço largo (\quad).
+\setsecnumformat{\csname the#1\endcsname\space}
+
+% Espaço entre título e texto e entre texto e título seguinte: uma linha em branco
+% (itens 2.2 e 2.4). A seção primária começa no alto da página.
+\setlength{\beforechapskip}{0pt}
+\setlength{\afterchapskip}{\onelineskip}
+\setbeforesecskip{\onelineskip}
+\setaftersecskip{\onelineskip}
+\setbeforesubsecskip{\onelineskip}
+\setaftersubsecskip{\onelineskip}
+\setbeforesubsubsecskip{\onelineskip}
+\setaftersubsubsecskip{\onelineskip}
+\setbeforeparaskip{\onelineskip}
+\setafterparaskip{\onelineskip}
+
+% Sumário: mesmo destaque dos títulos no texto e mesmo tamanho (12). A classe já põe a
+% seção primária em negrito e caixa alta; as terciárias e quaternárias saíam em tamanho
+% normal e reduzido, sem o destaque do texto.
+% A classe aplicava a fonte dos títulos (agora negrito) no início do sumário, fora do
+% grupo do título, e o negrito passava a todas as entradas; volta o início padrão do
+% memoir, e o título SUMÁRIO continua formatado como as demais seções sem número.
+\renewcommand{\tocheadstart}{\chapterheadstart}
+\renewcommand{\cftsubsectionfont}{\itshape}
+\renewcommand{\cftsubsectionpagefont}{\normalfont}
+\renewcommand{\cftsubsubsectionfont}{\normalfont}
+\renewcommand{\cftsubsubsectionpagefont}{\normalfont}
+\renewcommand{\cftparagraphfont}{\normalfont}
+\renewcommand{\cftparagraphpagefont}{\normalfont}
+% Espaço reservado ao número da página: evita que títulos longos encostem nele
+% (era o caso de "6.5.3 ... Sensibilidade103").
+\setpnumwidth{2.2em}
+\setrmarg{3.2em}
+
+% Listas de ilustrações e de tabelas sem linha em branco entre os grupos de cada seção,
+% como nos modelos do manual (itens 4.10 e 4.11). A classe já desativava esse espaço, mas
+% um pacote carregado depois o religava.
+\AtBeginDocument{\renewcommand*{\insertchapterspace}{}}
+
+% --- Equações (item 2.5.3): numeração sequencial em algarismos arábicos, (1), (2)...
+% Antes: numeração por seção primária, (4.1), (5.2)...
+\counterwithout{equation}{chapter}
+
+% --- Alíneas (item 2.4.1): indicadas por letras minúsculas seguidas de parêntese, a), b),
+% com a letra no recuo do parágrafo (2 cm) e a continuação alinhada sob a primeira letra
+% do texto da alínea, em espaço 1,5 e sem espaço extra entre elas. Os itens marcados com
+% "•" (itemize) passam a ser alíneas; listas dentro de alíneas viram subalíneas, com
+% travessão (item 2.4.2). As listas numeradas (enumerate) mantêm os números, porque o
+% texto se refere a elas pelo número (por exemplo, "passo 1"), e recebem o mesmo recuo.
+\setlist[alineas,1]{label={\alph*)},align=left,labelindent=\parindent,
+  labelwidth=\widthof{m)},labelsep=0.5em,leftmargin=!,
+  topsep=0pt,partopsep=0pt,itemsep=0pt,parsep=0pt}
+\setlist[alineas,2]{label={--},align=left,labelindent=0pt,
+  labelwidth=\widthof{--},labelsep=0.5em,leftmargin=!,
+  topsep=0pt,partopsep=0pt,itemsep=0pt,parsep=0pt}
+\renewenvironment{itemize}{\begin{alineas}}{\end{alineas}}
+\setlist[enumerate,1]{align=left,labelindent=\parindent,
+  labelwidth=\widthof{(B)},labelsep=0.5em,leftmargin=!,
+  topsep=0pt,partopsep=0pt,itemsep=0pt,parsep=0pt}
+
+% --- Texto em preto (item 2): os links internos e externos do PDF ficam sem moldura nem
+% cor. Metadados do PDF preenchidos com os dados da capa.
+\AtBeginDocument{\hypersetup{hidelinks,
+  pdftitle={\imprimirtitulo},
+  pdfauthor={\imprimirautor},
+  pdfsubject={\imprimirtipotrabalho}}}
+
+% --- Linhas que ultrapassavam a margem: folga extra de espaçamento entre palavras, só
+% usada quando o parágrafo não cabe de outro modo (não altera o texto).
+\setlength{\emergencystretch}{2em}
+
+% --- Lista de siglas (item 4.13): título "LISTA DE SIGLAS", porque a lista só tem siglas,
+% e itens no formato "SIGLA – expressão por extenso", um por linha, em espaço 1,5.
+\renewcommand{\listadesiglasname}{Lista de siglas}
+\renewenvironment{siglas}{%
+  \pretextualchapter{\listadesiglasname}%
+  \begin{list}{}{%
+    \setlength{\leftmargin}{0pt}\setlength{\labelwidth}{0pt}%
+    \setlength{\labelsep}{0pt}\setlength{\itemindent}{0pt}%
+    \setlength{\itemsep}{0pt}\setlength{\parsep}{0pt}\setlength{\topsep}{0pt}%
+    \renewcommand{\makelabel}[1]{##1~\textendash~}}%
+}{%
+  \end{list}%
+  \cleardoublepage%
+}
+
+% --- Palavras-chave (item 4.9): expressão "Palavras-chave:" sem destaque, como no modelo
+% do manual, e linhas seguintes alinhadas com o início da primeira palavra-chave.
+% Resumo e abstract com o recuo de parágrafo do texto, como no modelo do manual
+% (Figura 22); a classe zerava esse recuo.
+\AtBeginDocument{\setlength{\absparindent}{\parindent}}
+\newlength{\ufvjmrotulopalavras}
+% O resumo do memoir é uma lista, e dentro de listas o \hangindent é ignorado; por isso
+% o recuo da segunda linha em diante é feito com \parshape.
+\makeatletter
+\newcommand{\palavraschave}[2]{%
+  \par\noindent
+  \settowidth{\ufvjmrotulopalavras}{#1:\space}%
+  \parshape 2 \@totalleftmargin \linewidth
+    \dimexpr\@totalleftmargin+\ufvjmrotulopalavras\relax
+    \dimexpr\linewidth-\ufvjmrotulopalavras\relax
+  #1:\space#2\par}
+\makeatother
 
 % ---
 % compila o indice
@@ -238,16 +402,21 @@
 
 
 \bibliography{referencias}
-%\bibliographystyle{abnt-num}
-%\bibliographystyle{plainnat}
+% O estilo bibliográfico (abntex2-alf-ufvjm) é definido no preâmbulo.
 
-\chapter{Apêndice}
-
-\begin{apendicesenv}
-
-[TO DO]
-
-\end{apendicesenv}
+% NORMALIZAÇÃO (14/11/2026): o apêndice saía numerado como seção ("8 APÊNDICE") e só
+% continha [TO DO]. O manual (item 4.17) pede "APÊNDICE A – TÍTULO", sem número de seção,
+% e toda seção com conteúdo; por isso o bloco vazio foi desativado. Ao preencher, usar o
+% \chapter dentro do ambiente, que gera "APÊNDICE A – TÍTULO" no texto e no sumário:
+% \begin{apendicesenv}
+% \chapter{Título do apêndice}
+% ...
+% \end{apendicesenv}
+% Bloco anterior:
+% \chapter{Apêndice}
+% \begin{apendicesenv}
+% [TO DO]
+% \end{apendicesenv}
 
 \begin{comment}
 %\glossary

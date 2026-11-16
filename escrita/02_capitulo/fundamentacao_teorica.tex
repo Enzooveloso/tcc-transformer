@@ -250,7 +250,7 @@ vezes até que os ajustes se estabilizem.
     node[midway,below=6pt,font=\scriptsize,align=center]
     {cada valor desses vetores entra em um nó da camada de entrada};
 \end{tikzpicture}
-\fonte{.}
+\fonte{Elaboração própria.}
 \end{figure}
 
 \modificado{O ciclo de treinamento pode ser resumido nos seguintes passos \cite{Goodfellow2016}:}
@@ -357,7 +357,7 @@ conexões ou neurônios removidos e torna-se esparsa.
 \end{figure}
 
 \section{Poda Neural (Pruning)}\label{sec:pruning}
-\modificado{A poda neural é uma técnica de compressão que visa reduzir o tamanho do modelo e o custo computacional da inferência por meio da remoção de parâmetros que pouco contribuem para o resultado final. O processo mais comum parte de um modelo previamente treinado, cujo foco inicial foi exclusivamente a acurácia, e aplica a poda como uma etapa posterior \cite{Han2015,Blalock2020}.}
+\modificado{A poda neural é uma técnica de compressão que visa reduzir o tamanho do modelo e o custo computacional da inferência por meio da remoção de parâmetros que pouco contribuem para o resultado final. O processo mais comum parte de um modelo previamente treinado, cujo foco inicial foi exclusivamente a acurácia, e aplica a poda como uma etapa posterior \cite{Blalock2020,Han2015}.}
 
 % O termo é emprestado da jardinagem, e a metáfora é precisa: podar uma árvore consiste em
 % cortar os galhos que consomem seiva sem produzir frutos, de modo que a planta fique mais
@@ -412,7 +412,7 @@ conexões ou neurônios removidos e torna-se esparsa.
   \draw[-{Stealth},thick] (orig.north east) to[out=35,in=180] (ne.west);
   \draw[-{Stealth},thick] (orig.south east) to[out=-35,in=180] (es.west);
 \end{tikzpicture}
-% \fonte{Elaborada pelo autor.}
+\fonte{Elaboração própria.}
 \end{figure}
 
 % AJUSTE: 09/11 — regra das legendas do orientador (07/11): a segunda frase da legenda da
@@ -545,7 +545,7 @@ modelo, que é a média das taxas por camada nos dois casos.
     \node[below,align=center] at (1.5,-0.35) {\textbf{com análise de sensibilidade}\\ taxa proporcional à tolerância};
   \end{scope}
 \end{tikzpicture}
-% \fonte{Elaborada pelo autor.}
+\fonte{Elaboração própria.}
 \end{figure}
 
 A ideia de medir importância por degradação não é nova. Ela remonta ao \textit{Optimal

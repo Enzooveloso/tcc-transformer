@@ -7,16 +7,33 @@
 % projeto FAPEMIG ("Estudo e desenvolvimento de estratégias de compressão de redes neurais
 % para redução do consumo de energia em LLMs").
 \titulo{Poda Guiada por Sensibilidade para Eficiência Energética aplicada ao modelo de linguagem GPT-2}
-\autor{Enzo Veloso}
-\local{Diamantina/MG}
+% Nome completo a pedido do Enzo em 16/11/2026. Antes: "Enzo Veloso".
+\autor{Enzo Veloso Santos Costa}
+% NORMALIZAÇÃO (14/11/2026): o manual pede o local como cidade (itens 4.1 e 4.2; o modelo
+% da UFVJM traz "Diamantina"). Antes: "Diamantina/MG".
+\local{Diamantina}
 \data{2026}
 \orientador{Prof. Dr. Marcelo Ferreira Rego}
 %\coorientador{Equipe \abnTeX}
+% NORMALIZAÇÃO (14/11/2026): universidade e curso separados, porque a capa do manual
+% (item 4.1) os imprime em linhas e formatos próprios. Mesmos dizeres de antes.
+\newcommand{\imprimiruniversidade}{UNIVERSIDADE FEDERAL DOS VALES DO JEQUITINHONHA E MUCURI}
+\newcommand{\imprimircurso}{Bacharelado em Sistemas de Informação}
+% Faculdade e departamento, impressos na capa entre a universidade e o curso (a pedido do
+% Enzo em 16/11/2026). O item 4.1 do manual lista os elementos obrigatórios da capa e não
+% veda outros; as duas linhas seguem a formatação do curso.
+\newcommand{\imprimirfaculdade}{Faculdade de Ciências Exatas e Tecnológicas}
+\newcommand{\imprimirdepartamento}{Departamento de Computação}
 \instituicao{%
-  UNIVERSIDADE FEDERAL DOS VALES DO JEQUITINHONHA E MUCURI
+  \imprimiruniversidade
   \par
-  Bacharelado em Sistemas de Informação
+  \imprimircurso
   }
+% Instituição de cada membro da banca na folha de aprovação (manual, item 4.5).
+\newcommand{\imprimirinstituicaoorientador}{UFVJM}
+% Avaliadores: os dois da UFVJM, informado pelo Enzo em 16/11/2026 (antes, "[TO DO] Instituição").
+\newcommand{\imprimirinstituicaobancaum}{UFVJM}% Profa. Dra. Cinthya Rocha Tameirão
+\newcommand{\imprimirinstituicaobancadois}{UFVJM}% Prof. Dr. Marcus Vinícius Carvalho Guelpeli
 \tipotrabalho{Monografia (Graduação)}
 
 % O preambulo deve conter o tipo do trabalho, o objetivo,

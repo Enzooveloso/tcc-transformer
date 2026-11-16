@@ -3,13 +3,36 @@
 %% Tema: Poda neural para redução de consumo de energia
 %% =============================================================
 %% Formato: BibTeX compatível com o pacote abntex2cite
+%% Estilo: abntex2-alf-ufvjm.bst (cópia local de abntex2-alf ajustada ao Manual de
+%% Normalização da UFVJM, 2025: NBR 6023:2018 e NBR 10520:2023).
+%% Convenções adotadas em 14/11/2026 (normalização):
+%% - livros e documentos on-line: título em caixa de frase (manual, 6.3.1 b);
+%% - artigos e trabalhos em evento: o estilo põe o título em caixa de frase; a inicial
+%%   do subtítulo vai minúscula no próprio campo, e nomes próprios ficam entre chaves;
+%% - livros e documentos on-line com subtítulo: campo subtitle, que sai sem negrito;
+%% - autor entidade no campo organization (maiúsculas na lista, caixa mista na chamada);
+%% - trabalho em evento: organization (nome do evento), conference-number,
+%%   conference-year e conference-location, para gerar
+%%   "In: NOME DO EVENTO, n., ano, Cidade. Proceedings [...]" (manual, 6.6).
 %% =============================================================
+
+%% -------- Opção do estilo (não é referência) --------
+%% Chamada no texto em caixa mista também entre parênteses, "(Han et al., 2015)",
+%% como exige a NBR 10520:2023 (Manual de Normalização da UFVJM, 2025, item 5.1).
+%% Entrada própria porque a opção equivalente do abntex2-options.bib
+%% ("abnt-cite-style=AuthorYEAR") colide com "AUTHORYEAR": o BibTeX não distingue
+%% maiúsculas de minúsculas nas chaves e descarta a segunda. Ativada pela opção
+%% ufvjm-citacao-nbr10520-2023 do pacote abntex2cite, no principal.tex.
+@ABNT-options{ufvjm-citacao-nbr10520-2023,
+  key             = {ufvjm-citacao-nbr10520-2023},
+  abnt-cite-style = "(Author, YEAR)"
+}
 
 
 %% -------- Livros fundamentais --------
 
 @book{Goodfellow2016,
-    title     = {Deep Learning},
+    title     = {Deep learning},
     author    = {Goodfellow, Ian and Bengio, Yoshua and Courville, Aaron},
     publisher = {MIT Press},
     year      = {2016},
@@ -18,7 +41,7 @@
 }
 
 @book{NielsenNNDL2015,
-    title     = {Neural Networks and Deep Learning},
+    title     = {Neural networks and deep learning},
     author    = {Nielsen, Michael A.},
     publisher = {Determination Press},
     year      = {2015},
@@ -26,7 +49,8 @@
 }
 
 @book{Russell2021,
-    title     = {Artificial Intelligence: A Modern Approach},
+    title     = {Artificial intelligence},
+    subtitle  = {a modern approach},
     author    = {Russell, Stuart and Norvig, Peter},
     publisher = {Pearson},
     year      = {2021},
@@ -45,7 +69,7 @@
 }
 
 @book{Jurafsky2025,
-    title     = {Speech and Language Processing},
+    title     = {Speech and language processing},
     author    = {Jurafsky, Daniel and Martin, James H.},
     publisher = {Stanford University},
     year      = {2025},
@@ -54,7 +78,8 @@
 }
 
 @book{Timsina2024,
-    title     = {Building Transformer Models with PyTorch 2.0: NLP, computer vision, and speech processing with PyTorch and Hugging Face},
+    title     = {Building transformer models with {PyTorch} 2.0},
+    subtitle  = {{NLP}, computer vision, and speech processing with {PyTorch} and {Hugging Face}},
     author    = {Timsina, Prem},
     publisher = {BPB Publications},
     year      = {2024},
@@ -68,19 +93,29 @@
 @inproceedings{Han2015,
     title     = {Learning both Weights and Connections for Efficient Neural Networks},
     author    = {Han, Song and Pool, Jeff and Tran, John and Dally, William J.},
-    booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
-    year      = {2015}
+    booktitle = {Advances in Neural Information Processing Systems},
+    year      = {2015},
+    organization = {Conference on Neural Information Processing Systems},
+    conference-year = {2015},
+    conference-location = {Montreal},
+    conference-number = {29},
+    volume = {28},
+    publisher = {Curran Associates}
 }
 
 @inproceedings{Li2017,
-    title     = {Pruning Filters for Efficient ConvNets},
+    title     = {Pruning Filters for Efficient {ConvNets}},
     author    = {Li, Hao and Kadav, Asim and Durdanovic, Igor and Samet, Hanan and Graf, Hans Peter},
-    booktitle = {International Conference on Learning Representations (ICLR)},
-    year      = {2017}
+    booktitle = {Proceedings},
+    year      = {2017},
+    organization = {International Conference on Learning Representations},
+    conference-year = {2017},
+    conference-location = {Toulon},
+    conference-number = {5}
 }
 
 @article{Cheng2024,
-    title   = {A Survey on Deep Neural Network Pruning: Taxonomy, Comparison, Analysis, and Recommendations},
+    title   = {A Survey on Deep Neural Network Pruning: taxonomy, Comparison, Analysis, and Recommendations},
     author  = {Cheng, Hongrong and Zhang, Miao and Shi, Javen Qinfeng},
     journal = {IEEE Transactions on Pattern Analysis and Machine Intelligence},
     volume  = {46},
@@ -91,38 +126,57 @@
 }
 
 @article{Zhu2017,
-    title   = {To Prune, or Not to Prune: Exploring the Efficacy of Pruning for Model Compression},
+    title   = {To Prune, or Not to Prune: exploring the Efficacy of Pruning for Model Compression},
     author  = {Zhu, Michael and Gupta, Suyog},
     journal = {arXiv preprint arXiv:1710.01878},
     year    = {2017}
 }
 
 @inproceedings{Frankle2019,
-    title     = {The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks},
+    title     = {The Lottery Ticket Hypothesis: finding Sparse, Trainable Neural Networks},
     author    = {Frankle, Jonathan and Carbin, Michael},
-    booktitle = {International Conference on Learning Representations (ICLR)},
-    year      = {2019}
+    booktitle = {Proceedings},
+    year      = {2019},
+    organization = {International Conference on Learning Representations},
+    conference-year = {2019},
+    conference-location = {New Orleans},
+    conference-number = {7}
 }
 
 @inproceedings{Blalock2020,
     title     = {What is the State of Neural Network Pruning?},
     author    = {Blalock, Davis and Gonzalez Ortiz, Jose Javier and Frankle, Jonathan and Guttag, John},
-    booktitle = {Proceedings of Machine Learning and Systems (MLSys)},
-    year      = {2020}
+    booktitle = {Proceedings},
+    year      = {2020},
+    organization = {Conference on Machine Learning and Systems},
+    conference-year = {2020},
+    conference-location = {Austin},
+    conference-number = {3},
+    volume = {2}
 }
 
 @inproceedings{Liu2019,
     title     = {Rethinking the Value of Network Pruning},
     author    = {Liu, Zhuang and Sun, Mingjie and Zhou, Tinghui and Huang, Gao and Darrell, Trevor},
-    booktitle = {International Conference on Learning Representations (ICLR)},
-    year      = {2019}
+    booktitle = {Proceedings},
+    year      = {2019},
+    organization = {International Conference on Learning Representations},
+    conference-year = {2019},
+    conference-location = {New Orleans},
+    conference-number = {7}
 }
 
 @inproceedings{Denil2013,
     title     = {Predicting Parameters in Deep Learning},
     author    = {Denil, Misha and Shakibi, Babak and Dinh, Laurent and Ranzato, Marc'Aurelio and de Freitas, Nando},
-    booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
-    year      = {2013}
+    booktitle = {Advances in Neural Information Processing Systems},
+    year      = {2013},
+    organization = {Conference on Neural Information Processing Systems},
+    conference-year = {2013},
+    conference-location = {Lake Tahoe},
+    conference-number = {27},
+    volume = {26},
+    publisher = {Curran Associates}
 }
 
 
@@ -131,8 +185,12 @@
 @inproceedings{Jacob2018,
     title     = {Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference},
     author    = {Jacob, Benoit and Kligys, Skirmantas and Chen, Bo and Zhu, Menglong and Tang, Matthew and Howard, Andrew and Adam, Hartwig and Kalenichenko, Dmitry},
-    booktitle = {Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
-    year      = {2018}
+    booktitle = {Proceedings},
+    year      = {2018},
+    organization = {IEEE/CVF Conference on Computer Vision and Pattern Recognition},
+    conference-year = {2018},
+    conference-location = {Salt Lake City},
+    publisher = {IEEE}
 }
 
 @article{Hinton2015,
@@ -148,23 +206,37 @@
 @inproceedings{He2016,
     title     = {Deep Residual Learning for Image Recognition},
     author    = {He, Kaiming and Zhang, Xiangyu and Ren, Shaoqing and Sun, Jian},
-    booktitle = {Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
+    booktitle = {Proceedings},
     pages     = {770--778},
-    year      = {2016}
+    year      = {2016},
+    organization = {IEEE Conference on Computer Vision and Pattern Recognition},
+    conference-year = {2016},
+    conference-location = {Las Vegas},
+    publisher = {IEEE}
 }
 
 @inproceedings{Krizhevsky2012,
-    title     = {ImageNet Classification with Deep Convolutional Neural Networks},
+    title     = {{ImageNet} Classification with Deep Convolutional Neural Networks},
     author    = {Krizhevsky, Alex and Sutskever, Ilya and Hinton, Geoffrey E.},
-    booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
-    year      = {2012}
+    booktitle = {Advances in Neural Information Processing Systems},
+    year      = {2012},
+    organization = {Conference on Neural Information Processing Systems},
+    conference-year = {2012},
+    conference-location = {Lake Tahoe},
+    conference-number = {26},
+    volume = {25},
+    publisher = {Curran Associates}
 }
 
 @inproceedings{Nair2010,
     title     = {Rectified Linear Units Improve Restricted {B}oltzmann Machines},
     author    = {Nair, Vinod and Hinton, Geoffrey E.},
-    booktitle = {Proceedings of the 27th International Conference on Machine Learning (ICML)},
-    year      = {2010}
+    booktitle = {Proceedings},
+    year      = {2010},
+    organization = {International Conference on Machine Learning},
+    conference-year = {2010},
+    conference-location = {Haifa},
+    conference-number = {27}
 }
 
 
@@ -194,7 +266,7 @@
 %% -------- Datasets --------
 
 @techreport{Krizhevsky2009,
-    title       = {Learning Multiple Layers of Features from Tiny Images},
+    title       = {Learning multiple layers of features from tiny images},
     author      = {Krizhevsky, Alex},
     institution = {University of Toronto},
     year        = {2009}
@@ -203,19 +275,23 @@
 @inproceedings{Merity2017,
     title     = {Pointer Sentinel Mixture Models},
     author    = {Merity, Stephen and Xiong, Caiming and Bradbury, James and Socher, Richard},
-    booktitle = {International Conference on Learning Representations (ICLR)},
-    year      = {2017}
+    booktitle = {Proceedings},
+    year      = {2017},
+    organization = {International Conference on Learning Representations},
+    conference-year = {2017},
+    conference-location = {Toulon},
+    conference-number = {5}
 }
 
 @article{Gao2020,
-    title   = {The {Pile}: An 800{GB} Dataset of Diverse Text for Language Modeling},
+    title   = {The {Pile}: an 800{GB} Dataset of Diverse Text for Language Modeling},
     author  = {Gao, Leo and Biderman, Stella and Black, Sid and Golding, Laurence and Hoppe, Travis and Foster, Charles and Phang, Jason and He, Horace and Thite, Anish and Nabeshima, Noa and Presser, Shawn and Leahy, Connor},
     journal = {arXiv preprint arXiv:2101.00027},
     year    = {2020}
 }
 
 @misc{Gokaslan2019,
-    title        = {{OpenWebText} Corpus},
+    title        = {{OpenWebText} corpus},
     author       = {Gokaslan, Aaron and Cohen, Vanya},
     howpublished = {Dispon{\'i}vel em: \url{http://Skylion007.github.io/OpenWebTextCorpus}},
     year         = {2019},
@@ -226,10 +302,15 @@
 %% -------- Consumo energ{\'e}tico em Deep Learning --------
 
 @inproceedings{Strubell2019,
-    title     = {Energy and Policy Considerations for Deep Learning in NLP},
+    title     = {Energy and Policy Considerations for Deep Learning in {NLP}},
     author    = {Strubell, Emma and Ganesh, Ananya and McCallum, Andrew},
-    booktitle = {Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics (ACL)},
-    year      = {2019}
+    booktitle = {Proceedings},
+    year      = {2019},
+    organization = {Annual Meeting of the Association for Computational Linguistics},
+    conference-year = {2019},
+    conference-location = {Florence},
+    conference-number = {57},
+    publisher = {Association for Computational Linguistics}
 }
 
 @article{Schwartz2020,
@@ -272,7 +353,11 @@
     booktitle = {Advances in Neural Information Processing Systems},
     volume    = {32},
     year      = {2019},
-    publisher = {Curran Associates, Inc.}
+    publisher = {Curran Associates},
+    organization = {Conference on Neural Information Processing Systems},
+    conference-year = {2019},
+    conference-location = {Vancouver},
+    conference-number = {33}
 }
 
 @article{Sevilla2022,
@@ -288,73 +373,106 @@
 @inproceedings{Yang2017,
     title     = {Designing Energy-Efficient Convolutional Neural Networks Using Energy-Aware Pruning},
     author    = {Yang, Tien-Ju and Chen, Yu-Hsin and Sze, Vivienne},
-    booktitle = {Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
-    year      = {2017}
+    booktitle = {Proceedings},
+    year      = {2017},
+    organization = {IEEE Conference on Computer Vision and Pattern Recognition},
+    conference-year = {2017},
+    conference-location = {Honolulu},
+    publisher = {IEEE}
 }
 
 
 %% -------- Otimiza{\c{c}}{\~a}o e treinamento --------
 
 @inproceedings{Loshchilov2017,
-    title     = {{SGDR}: Stochastic Gradient Descent with Warm Restarts},
+    title     = {{SGDR}: stochastic Gradient Descent with Warm Restarts},
     author    = {Loshchilov, Ilya and Hutter, Frank},
-    booktitle = {International Conference on Learning Representations (ICLR)},
-    year      = {2017}
+    booktitle = {Proceedings},
+    year      = {2017},
+    organization = {International Conference on Learning Representations},
+    conference-year = {2017},
+    conference-location = {Toulon},
+    conference-number = {5}
 }
 
 @inproceedings{Loshchilov2019,
     title     = {Decoupled Weight Decay Regularization},
     author    = {Loshchilov, Ilya and Hutter, Frank},
-    booktitle = {International Conference on Learning Representations (ICLR)},
-    year      = {2019}
+    booktitle = {Proceedings},
+    year      = {2019},
+    organization = {International Conference on Learning Representations},
+    conference-year = {2019},
+    conference-location = {New Orleans},
+    conference-number = {7}
 }
 
 @inproceedings{Micikevicius2018,
     title     = {Mixed Precision Training},
     author    = {Micikevicius, Paulius and Narang, Sharan and Alben, Jonah and Diamos, Gregory and Elsen, Erich and Garcia, David and Ginsburg, Boris and Houston, Michael and Kuchaiev, Oleksii and Venkatesh, Ganesh and Wu, Hao},
-    booktitle = {International Conference on Learning Representations (ICLR)},
-    year      = {2018}
+    booktitle = {Proceedings},
+    year      = {2018},
+    organization = {International Conference on Learning Representations},
+    conference-year = {2018},
+    conference-location = {Vancouver},
+    conference-number = {6}
 }
 
 
 %% -------- Frameworks e bibliotecas --------
 
 @inproceedings{Paszke2019,
-    title     = {PyTorch: An Imperative Style, High-Performance Deep Learning Library},
+    title     = {{PyTorch}: an Imperative Style, High-Performance Deep Learning Library},
     author    = {Paszke, Adam and Gross, Sam and Massa, Francisco and Lerer, Adam and Bradbury, James and Chanan, Gregory and Killeen, Trevor and Lin, Zeming and Gimelshein, Natalia and Antiga, Luca and Desmaison, Alban and K{\"o}pf, Andreas and Yang, Edward and DeVito, Zachary and Raison, Martin and Tejani, Alykhan and Chilamkurthy, Sasank and Steiner, Benoit and Fang, Lu and Bai, Junjie and Chintala, Soumith},
-    booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
-    year      = {2019}
+    booktitle = {Advances in Neural Information Processing Systems},
+    year      = {2019},
+    organization = {Conference on Neural Information Processing Systems},
+    conference-year = {2019},
+    conference-location = {Vancouver},
+    conference-number = {33},
+    volume = {32},
+    publisher = {Curran Associates}
 }
 
 @inproceedings{Fang2023,
-    title     = {DepGraph: Towards Any Structural Pruning},
+    title     = {{DepGraph}: towards Any Structural Pruning},
     author    = {Fang, Gongfan and Ma, Xinyin and Song, Mingli and Mi, Michael Bi and Wang, Xinchao},
-    booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
-    year      = {2023}
+    booktitle = {Proceedings},
+    year      = {2023},
+    organization = {IEEE/CVF Conference on Computer Vision and Pattern Recognition},
+    conference-year = {2023},
+    conference-location = {Vancouver},
+    publisher = {IEEE}
 }
 
 @inproceedings{Wolf2020,
-    title     = {Transformers: State-of-the-Art Natural Language Processing},
+    title     = {Transformers: state-of-the-Art Natural Language Processing},
     author    = {Wolf, Thomas and Debut, Lysandre and Sanh, Victor and Chaumond, Julien and Delangue, Clement and Moi, Anthony and Cistac, Pierric and Rault, Tim and Louf, R{\'e}mi and Funtowicz, Morgan and Davison, Joe and Shleifer, Sam and von Platen, Patrick and Ma, Clara and Jernite, Yacine and Plu, Julien and Xu, Canwen and Le Scao, Teven and Gugger, Sylvain and Drame, Mariama and Lhoest, Quentin and Rush, Alexander M.},
-    booktitle = {Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing: System Demonstrations},
+    booktitle = {Proceedings},
     pages     = {38--45},
     year      = {2020},
     publisher = {Association for Computational Linguistics},
-    doi       = {10.18653/v1/2020.emnlp-demos.6}
+    doi       = {10.18653/v1/2020.emnlp-demos.6},
+    organization = {Conference on Empirical Methods in Natural Language Processing},
+    conference-year = {2020},
+    conference-location = {On-line}
 }
 
 @inproceedings{Rajbhandari2020,
-    title     = {{ZeRO}: Memory Optimizations Toward Training Trillion Parameter Models},
+    title     = {{ZeRO}: memory Optimizations Toward Training Trillion Parameter Models},
     author    = {Rajbhandari, Samyam and Rasley, Jeff and Ruwase, Olatunji and He, Yuxiong},
-    booktitle = {SC20: International Conference for High Performance Computing, Networking, Storage and Analysis},
+    booktitle = {Proceedings},
     pages     = {1--16},
     year      = {2020},
     publisher = {IEEE},
-    doi       = {10.1109/SC41405.2020.00024}
+    doi       = {10.1109/SC41405.2020.00024},
+    organization = {International Conference for High Performance Computing, Networking, Storage and Analysis},
+    conference-year = {2020},
+    conference-location = {On-line}
 }
 
 @misc{CodeCarbon2023,
-    title        = {{CodeCarbon}: estimate and track carbon emissions from your computing},
+    title        = {{CodeCarbon}},
+    subtitle     = {estimate and track carbon emissions from your computing},
     author       = {Courty, Benoit and Schmidt, Victor and Luccioni, Sasha and others},
     howpublished = {Dispon{\'i}vel em: \url{https://github.com/mlco2/codecarbon}},
     year         = {2023},
@@ -365,19 +483,20 @@
 %% -------- Hardware --------
 
 @misc{NVIDIA2020Ampere,
-    title        = {{NVIDIA A100 Tensor Core GPU Architecture}},
-    author       = {{NVIDIA Corporation}},
+    title        = {{NVIDIA A100 Tensor Core GPU} architecture},
     year         = {2020},
     howpublished = {White paper},
-    note         = {Descreve o suporte a esparsidade estruturada 2:4 na arquitetura Ampere.}
+    note         = {Descreve o suporte a esparsidade estruturada 2:4 na arquitetura Ampere.},
+    organization = {NVIDIA Corporation}
 }
 
 @misc{NVIDIA2019T4,
-    title        = {{NVIDIA T4 Tensor Core GPU}: Datasheet},
-    author       = {{NVIDIA Corporation}},
+    title        = {{NVIDIA T4 Tensor Core GPU}},
+    subtitle     = {datasheet},
     year         = {2019},
     howpublished = {Dispon{\'i}vel em: \url{https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/tesla-t4/t4-tensor-core-datasheet-951643.pdf}},
-    note         = {Acesso em: 28 set. 2026}
+    note         = {Acesso em: 28 set. 2026},
+    organization = {NVIDIA Corporation}
 }
 
 
@@ -386,9 +505,15 @@
 @inproceedings{Vaswani2017,
   author    = {Vaswani, Ashish and Shazeer, Noam and Parmar, Niki and Uszkoreit, Jakob and Jones, Llion and Gomez, Aidan N. and Kaiser, {\L}ukasz and Polosukhin, Illia},
   title     = {Attention is All You Need},
-  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  booktitle = {Advances in Neural Information Processing Systems},
   year      = {2017},
-  pages     = {5998--6008}
+  pages     = {5998--6008},
+  organization = {Conference on Neural Information Processing Systems},
+  conference-year = {2017},
+  conference-location = {Long Beach},
+  conference-number = {31},
+  volume = {30},
+  publisher = {Curran Associates}
 }
 
 @article{Radford2019,
@@ -407,36 +532,43 @@
 
 @article{Zhang2022,
   author  = {Zhang, Susan and Roller, Stephen and Goyal, Naman and Artetxe, Mikel and Chen, Moya and Chen, Shuohui and Dewan, Christopher and Diab, Mona and Li, Xian and Lin, Xi Victoria and Mihaylov, Todor and Ott, Myle and Shleifer, Sam and Shuster, Kurt and Simig, Daniel and Koura, Punit Singh and Sridhar, Anjali and Wang, Tianlu and Zettlemoyer, Luke},
-  title   = {{OPT}: Open Pre-trained Transformer Language Models},
+  title   = {{OPT}: open Pre-trained Transformer Language Models},
   journal = {arXiv preprint arXiv:2205.01068},
   year    = {2022}
 }
 
 @inproceedings{Biderman2023,
   author    = {Biderman, Stella and Schoelkopf, Hailey and Anthony, Quentin and Bradley, Herbie and O'Brien, Kyle and Hallahan, Eric and Khan, Mohammad Aflah and Purohit, Shivanshu and Prashanth, USVSN Sai and Raff, Edward and Skowron, Aviya and Sutawika, Lintang and van der Wal, Oskar},
-  title     = {Pythia: A Suite for Analyzing Large Language Models Across Training and Scaling},
-  booktitle = {Proceedings of the 40th International Conference on Machine Learning},
+  title     = {Pythia: a Suite for Analyzing Large Language Models Across Training and Scaling},
+  booktitle = {Proceedings},
   series    = {PMLR},
   volume    = {202},
   pages     = {2397--2430},
-  year      = {2023}
+  year      = {2023},
+  organization = {International Conference on Machine Learning},
+  conference-year = {2023},
+  conference-location = {Honolulu},
+  conference-number = {40}
 }
 
 @article{Touvron2023,
   author  = {Touvron, Hugo and Martin, Louis and Stone, Kevin and others},
-  title   = {Llama 2: Open Foundation and Fine-Tuned Chat Models},
+  title   = {Llama 2: open Foundation and Fine-Tuned Chat Models},
   journal = {arXiv preprint arXiv:2307.09288},
   year    = {2023}
 }
 
 @inproceedings{Devlin2019,
   author    = {Devlin, Jacob and Chang, Ming-Wei and Lee, Kenton and Toutanova, Kristina},
-  title     = {{BERT}: Pre-training of Deep Bidirectional Transformers for Language Understanding},
-  booktitle = {Proceedings of the 2019 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies},
+  title     = {{BERT}: pre-training of Deep Bidirectional Transformers for Language Understanding},
+  booktitle = {Proceedings},
   pages     = {4171--4186},
   year      = {2019},
   publisher = {Association for Computational Linguistics},
-  doi       = {10.18653/v1/N19-1423}
+  doi       = {10.18653/v1/N19-1423},
+  organization = {Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies},
+  conference-year = {2019},
+  conference-location = {Minneapolis}
 }
 
 @article{Hendrycks2016,
@@ -469,16 +601,23 @@
 @inproceedings{Bahdanau2015,
   author    = {Bahdanau, Dzmitry and Cho, Kyunghyun and Bengio, Yoshua},
   title     = {Neural Machine Translation by Jointly Learning to Align and Translate},
-  booktitle = {International Conference on Learning Representations (ICLR)},
-  year      = {2015}
+  booktitle = {Proceedings},
+  year      = {2015},
+  organization = {International Conference on Learning Representations},
+  conference-year = {2015},
+  conference-location = {San Diego},
+  conference-number = {3}
 }
 
 @inproceedings{Cho2014,
   author    = {Cho, Kyunghyun and van Merri{\"e}nboer, Bart and Gulcehre, Caglar and Bahdanau, Dzmitry and Bougares, Fethi and Schwenk, Holger and Bengio, Yoshua},
   title     = {Learning Phrase Representations using {RNN} Encoder--Decoder for Statistical Machine Translation},
-  booktitle = {Proceedings of the 2014 Conference on Empirical Methods in Natural Language Processing (EMNLP)},
+  booktitle = {Proceedings},
   year      = {2014},
-  pages     = {1724--1734}
+  pages     = {1724--1734},
+  organization = {Conference on Empirical Methods in Natural Language Processing},
+  conference-year = {2014},
+  conference-location = {Doha}
 }
 
 @article{Bergstra2012,
@@ -493,19 +632,29 @@
 @inproceedings{Snoek2012,
     title     = {Practical {B}ayesian Optimization of Machine Learning Algorithms},
     author    = {Snoek, Jasper and Larochelle, Hugo and Adams, Ryan P.},
-    booktitle = {Advances in Neural Information Processing Systems (NIPS)},
+    booktitle = {Advances in Neural Information Processing Systems},
     volume    = {25},
     pages     = {2951--2959},
-    year      = {2012}
+    year      = {2012},
+    organization = {Conference on Neural Information Processing Systems},
+    conference-year = {2012},
+    conference-location = {Lake Tahoe},
+    conference-number = {26},
+    publisher = {Curran Associates}
 }
 
 @inproceedings{Denton2014,
     title     = {Exploiting Linear Structure Within Convolutional Networks for Efficient Evaluation},
     author    = {Denton, Emily L. and Zaremba, Wojciech and Bruna, Joan and LeCun, Yann and Fergus, Rob},
-    booktitle = {Advances in Neural Information Processing Systems (NIPS)},
+    booktitle = {Advances in Neural Information Processing Systems},
     volume    = {27},
     pages     = {1269--1277},
-    year      = {2014}
+    year      = {2014},
+    organization = {Conference on Neural Information Processing Systems},
+    conference-year = {2014},
+    conference-location = {Montreal},
+    conference-number = {28},
+    publisher = {Curran Associates}
 }
 
 @inproceedings{LeCun1990,
@@ -515,65 +664,93 @@
     volume    = {2},
     pages     = {598--605},
     year      = {1990},
-    publisher = {Morgan Kaufmann}
+    publisher = {Morgan Kaufmann},
+    organization = {Conference on Neural Information Processing Systems},
+    conference-year = {1989},
+    conference-location = {Denver},
+    conference-number = {3}
 }
 
 @inproceedings{Frantar2023,
   author    = {Frantar, Elias and Alistarh, Dan},
-  title     = {{SparseGPT}: Massive Language Models Can Be Accurately Pruned in One-Shot},
-  booktitle = {Proceedings of the 40th International Conference on Machine Learning},
+  title     = {{SparseGPT}: massive Language Models Can Be Accurately Pruned in One-Shot},
+  booktitle = {Proceedings},
   series    = {PMLR},
   volume    = {202},
   pages     = {10323--10337},
-  year      = {2023}
+  year      = {2023},
+  organization = {International Conference on Machine Learning},
+  conference-year = {2023},
+  conference-location = {Honolulu},
+  conference-number = {40}
 }
 
 @inproceedings{Sun2024,
   author    = {Sun, Mingjie and Liu, Zhuang and Bair, Anna and Kolter, J. Zico},
   title     = {A Simple and Effective Pruning Approach for Large Language Models},
-  booktitle = {International Conference on Learning Representations (ICLR)},
-  year      = {2024}
+  booktitle = {Proceedings},
+  year      = {2024},
+  organization = {International Conference on Learning Representations},
+  conference-year = {2024},
+  conference-location = {Vienna},
+  conference-number = {12}
 }
 
 @inproceedings{Kovaleva2021,
   author    = {Kovaleva, Olga and Kulshreshtha, Saurabh and Rogers, Anna and Rumshisky, Anna},
-  title     = {{BERT} Busters: Outlier Dimensions that Disrupt Transformers},
+  title     = {{BERT} Busters: outlier Dimensions that Disrupt Transformers},
   booktitle = {Findings of the Association for Computational Linguistics: ACL-IJCNLP 2021},
   pages     = {3392--3405},
   year      = {2021},
-  publisher = {Association for Computational Linguistics}
+  publisher = {Association for Computational Linguistics},
+  organization = {Annual Meeting of the Association for Computational Linguistics},
+  conference-year = {2021},
+  conference-location = {On-line},
+  conference-number = {59}
 }
 
 @inproceedings{Lad2025,
   author    = {Lad, Vedang and Lee, Jin Hwa and Gurnee, Wes and Tegmark, Max},
-  title     = {Remarkable Robustness of {LLMs}: Stages of Inference?},
+  title     = {Remarkable Robustness of {LLMs}: stages of Inference?},
   booktitle = {Advances in Neural Information Processing Systems},
   volume    = {38},
   year      = {2025},
-  publisher = {Curran Associates, Inc.}
+  publisher = {Curran Associates},
+  organization = {Conference on Neural Information Processing Systems},
+  conference-year = {2025},
+  conference-location = {San Diego},
+  conference-number = {39}
 }
 
 @inproceedings{Sanh2020,
   author    = {Sanh, Victor and Wolf, Thomas and Rush, Alexander M.},
-  title     = {Movement Pruning: Adaptive Sparsity by Fine-Tuning},
+  title     = {Movement Pruning: adaptive Sparsity by Fine-Tuning},
   booktitle = {Advances in Neural Information Processing Systems},
   volume    = {33},
   pages     = {20378--20389},
   year      = {2020},
-  publisher = {Curran Associates, Inc.}
+  publisher = {Curran Associates},
+  organization = {Conference on Neural Information Processing Systems},
+  conference-year = {2020},
+  conference-location = {On-line},
+  conference-number = {34}
 }
 
 @inproceedings{Lhoest2021,
   author    = {Lhoest, Quentin and Villanova del Moral, Albert and Jernite, Yacine and Thakur, Abhishek and von Platen, Patrick and others},
-  title     = {Datasets: A Community Library for Natural Language Processing},
-  booktitle = {Proceedings of the 2021 Conference on Empirical Methods in Natural Language Processing: System Demonstrations},
+  title     = {Datasets: a Community Library for Natural Language Processing},
+  booktitle = {Proceedings},
   pages     = {175--184},
   year      = {2021},
-  publisher = {Association for Computational Linguistics}
+  publisher = {Association for Computational Linguistics},
+  organization = {Conference on Empirical Methods in Natural Language Processing},
+  conference-year = {2021},
+  conference-location = {Punta Cana}
 }
 
 @misc{Zhu2022,
-  title        = {{THOP}: {PyTorch-OpCounter}},
+  title        = {{THOP}},
+  subtitle     = {{PyTorch-OpCounter}},
   author       = {Zhu, Ligeng},
   howpublished = {Biblioteca Python \texttt{thop}, vers{\~a}o 0.1.1. Dispon{\'i}vel em: \url{https://github.com/Lyken17/pytorch-OpCounter}},
   year         = {2022},
@@ -582,27 +759,31 @@
 
 @inproceedings{Gururangan2020,
   author    = {Gururangan, Suchin and Marasovi{\'c}, Ana and Swayamdipta, Swabha and Lo, Kyle and Beltagy, Iz and Downey, Doug and Smith, Noah A.},
-  title     = {Don't Stop Pretraining: Adapt Language Models to Domains and Tasks},
-  booktitle = {Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics},
+  title     = {Don't Stop Pretraining: adapt Language Models to Domains and Tasks},
+  booktitle = {Proceedings},
   pages     = {8342--8360},
   year      = {2020},
-  publisher = {Association for Computational Linguistics}
+  publisher = {Association for Computational Linguistics},
+  organization = {Annual Meeting of the Association for Computational Linguistics},
+  conference-year = {2020},
+  conference-location = {On-line},
+  conference-number = {58}
 }
 
 @misc{HuggingFacePerplexity,
   title        = {Perplexity of fixed-length models},
-  author       = {{Hugging Face}},
   howpublished = {Documenta{\c c}{\~a}o da biblioteca \texttt{transformers}. Dispon{\'i}vel em: \url{https://huggingface.co/docs/transformers/perplexity}},
   year         = {2026},
-  note         = {Acesso em: 30 set. 2026}
+  note         = {Acesso em: 30 set. 2026},
+  organization = {Hugging Face}
 }
 
 @misc{HuggingFaceCLM,
   title        = {Causal language modeling},
-  author       = {{Hugging Face}},
   howpublished = {Documenta{\c c}{\~a}o da biblioteca \texttt{transformers}. Dispon{\'i}vel em: \url{https://huggingface.co/docs/transformers/tasks/language_modeling}},
   year         = {2026},
-  note         = {Acesso em: 26 out. 2026}
+  note         = {Acesso em: 26 out. 2026},
+  organization = {Hugging Face}
 }
 
 @article{Gregersen2024,

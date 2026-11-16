@@ -131,8 +131,7 @@ BERT-base             & 110M  & 1,8   & 3.246,2 & $\times$   & \checkmark & \che
 Llama 2 7B            & 6,74B & 107,8 & 34,6    & \checkmark & $\times$   & $\times$   & \checkmark & \checkmark & \checkmark & ---        \\
 \hline
 \end{tabular}
-\par\smallskip
-\textit{Fonte: Elaboração própria, com dados de \citeonline{Radford2019},
+\fonte{Elaboração própria, com dados de \citeonline{Radford2019},
 \citeonline{Rajbhandari2020}, \citeonline{Frantar2023}, \citeonline{Sun2024},
 \citeonline{Gao2020} e da plataforma Hugging Face (acesso em 28 set. 2026).}
 \end{table}
@@ -226,8 +225,8 @@ Tamanho em memória & 474,70 MB \\
 FLOPs por janela de 512 \textit{tokens} & 126,6 G \\
 Perplexity no WikiText-2 (teste) & 25,17 \\
 \hline
-\end{tabular}\\
-\textit{Fonte: Elaboração própria.}
+\end{tabular}
+\fonte{Elaboração própria.}
 \end{table}
 
 \subsection{Seleção da Base de Dados}\label{sec:dataset}
@@ -266,8 +265,7 @@ OpenWebText   & 39,8 GB                  & ---        & \checkmark & $\times$   
 The Pile      & 825 GiB                  & \checkmark & \checkmark & \checkmark & $\times$   \\
 \hline
 \end{tabular}
-\par\smallskip
-\textit{Fonte: Elaboração própria, com dados de \citeonline{Merity2017},
+\fonte{Elaboração própria, com dados de \citeonline{Merity2017},
 \citeonline{Radford2019}, \citeonline{Gao2020} e da plataforma Hugging Face (acesso em 28
 set. 2026).}
 \end{table}
@@ -457,13 +455,15 @@ uma mede, a unidade em que é reportada e a ferramenta empregada na medição.
 \caption{Métricas de avaliação coletadas para cada configuração.}
 \label{tab:metricas}
 \small
-\begin{tabular}{p{3.2cm} p{6.1cm} p{1.7cm} p{2.2cm}}
+% NORMALIZAÇÃO (14/11/2026): última coluna de 2,2 para 2,5 cm e segunda de 6,1 para
+% 5,8 cm: \texttt{perf\_counter} ultrapassava a margem da coluna.
+\begin{tabular}{p{3.2cm} p{5.8cm} p{1.7cm} p{2.5cm}}
 \hline
 \textbf{Métrica} & \textbf{O que mede} & \textbf{Unidade} & \textbf{Ferramenta} \\
 \hline
 \multicolumn{4}{l}{\textit{Desempenho preditivo (Seção~\ref{subsec:metrica_perplexity})}} \\
 Perplexity & Qualidade da modelagem da linguagem; quanto menor, melhor & --- & PyTorch \\
-\hline
+\addlinespace
 \multicolumn{4}{l}{\textit{Custo computacional (Seção~\ref{subsec:metrica_custo})}} \\
 Parâmetros totais & Parâmetros existentes na arquitetura & unidades & PyTorch \\
 Parâmetros não nulos & Parâmetros efetivamente diferentes de zero & unidades & PyTorch \\
@@ -471,15 +471,15 @@ Esparsidade real & Fração de parâmetros podáveis eliminados & \% & PyTorch \
 Tamanho do modelo & Memória ocupada pelos parâmetros & MB & PyTorch \\
 FLOPs & Operações de ponto flutuante por inferência & FLOPs & \texttt{thop} \\
 Tempo de inferência & Tempo médio de uma passagem direta & ms & \texttt{perf\_counter} \\
-\hline
+\addlinespace
 \multicolumn{4}{l}{\textit{Consumo de energia (Seção~\ref{subsec:metrica_energia})}} \\
 Energia consumida & Energia gasta durante a avaliação & Wh & \texttt{CodeCarbon} \\
 % AJUSTE: 04/11 — a pedido do Enzo, as emissões saem das métricas de avaliação (razão em
 % sec:metodologia_metricas e subsec:metrica_energia). Linha anterior:
 % Emissões de $\text{CO}_2$ & Emissões equivalentes ao consumo & kg & \texttt{CodeCarbon} \\
 \hline
-\end{tabular}\\
-\textit{Fonte: Elaboração própria.}
+\end{tabular}
+\fonte{Elaboração própria.}
 \end{table}
 
 \section{Poda sem Otimização}\label{sec:metodos_poda}
@@ -544,8 +544,7 @@ Wanda                      & fina   & $|w|$ $\times$ norma das ativações      
 Cabeças por gradiente      & grossa & gradiente da perda em relação à máscara     & 2019 & 1.513 & $\times$   & \checkmark \\
 \hline
 \end{tabular}
-\par\smallskip
-\textit{Fonte: Elaboração própria, com base em \citeonline{Han2015}, \citeonline{Li2017},
+\fonte{Elaboração própria, com base em \citeonline{Han2015}, \citeonline{Li2017},
 \citeonline{Frantar2023}, \citeonline{Sun2024}, \citeonline{Sanh2020} e
 \citeonline{Michel2019}, e com dados da base Semantic Scholar (acesso em 3 out. 2026).}
 \end{table}
@@ -771,6 +770,7 @@ consome. A poda estruturada remove a fatia inteira, nas duas matrizes. No modelo
         minimum width=0.5cm,minimum height=0.3cm] (lg2) at (4.7,-8.25) {};
   \node[right=3pt of lg2] {fora da poda};
 \end{tikzpicture}
+\fonte{Elaboração própria.}
 \end{figure}
 
 A implementação preserva a característica essencial do método: os pesos são
@@ -1156,6 +1156,7 @@ $\boldsymbol{\beta}$ & \textbf{Fator} & \textbf{Camada 0} & \textbf{Camada 1} &
 0   & 0,300 & 30,0\% & 30,0\% & 30,0\% & 30,0\% & 30\% \\
 \hline
 \end{tabular}
+\fonte{Elaboração própria.}
 \end{table}
 
 No GPT-2, com $\beta = 1$, a camada mais tolerante recebe uma taxa 42,9 vezes maior que a da
@@ -1284,7 +1285,7 @@ observado tanto sobre um dano moderado quanto sobre um dano severo.
 Cada configuração passou pelo mesmo procedimento, implementado no módulo
 \texttt{finetune} (Tabela~\ref{tab:modulos}):
 
-\begin{enumerate}
+\begin{alineas}
     \item o modelo base foi recarregado a partir dos pesos pré-treinados e podado
           pelas mesmas funções das Etapas 2 e 3, de modo que o modelo retreinado fosse
           idêntico ao avaliado em regime \textit{one-shot};
@@ -1301,7 +1302,7 @@ Cada configuração passou pelo mesmo procedimento, implementado no módulo
     \item o modelo retreinado foi avaliado na partição de teste por todas as métricas da
           Etapa 1 (Tabela~\ref{tab:metricas}), pelo mesmo procedimento aplicado aos
           modelos não retreinados.
-\end{enumerate}
+\end{alineas}
 
 % AJUSTE: 24/10 (3) — pedido do Enzo: o porquê de retreinar todos os parâmetros. Conferido
 % em finetune.py: nenhum parâmetro é congelado; o AdamW recebe todos (_param_groups), e
@@ -1474,8 +1475,8 @@ Limite da norma do gradiente & 1,0 \\
 Precisão numérica & mista (FP16 e FP32) \\
 Semente aleatória & 42 \\
 \hline
-\end{tabular}\\
-\textit{Fonte: Elaboração própria.}
+\end{tabular}
+\fonte{Elaboração própria.}
 \end{table}
 
 Os gradientes de quatro lotes consecutivos, de quatro blocos cada, foram acumulados antes
@@ -1656,8 +1657,8 @@ de avaliação, o que garante que todas as configurações sejam medidas da mesm
 % AJUSTE: 02/11 — sai a linha do gerar_tabelas (entrara em 26/10): só servia à
 % rastreabilidade, retirada da Seção sec:ambiente.
 \hline
-\end{tabular}\\
-\textit{Fonte: Elaboração própria.}
+\end{tabular}
+\fonte{Elaboração própria.}
 \end{table}
 
 \begin{figure}[htb]
@@ -1835,8 +1836,8 @@ Ambiente
 & Acesso gratuito a GPU dedicada com sessões longas o bastante para as varreduras
   completas. \\
 \hline
-\end{tabular}\\
-\textit{Fonte: Elaboração própria.}
+\end{tabular}
+\fonte{Elaboração própria.}
 \end{table}
 
 % AJUSTE: 30/10 — \clearpage segura a tabela da síntese antes das Limitações; sem ele, o

@@ -32,7 +32,7 @@ Este capítulo se limita à descrição metodológica das estratégias adotadas,
 % referir às etapas deste capítulo.
 A metodologia foi definida para responder a duas perguntas de natureza empírica e
 comparativa. Não se pretende demonstrar que a poda comprime modelos, resultado já
-consolidado pela literatura \cite{Han2015, Li2017, Blalock2020}, mas responder, sob
+consolidado pela literatura \cite{Blalock2020, Han2015, Li2017}, mas responder, sob
 condições controladas e reprodutíveis, às seguintes questões:
 
 \begin{enumerate}
@@ -94,7 +94,7 @@ Para a seleção do modelo base, foram adotados os seguintes critérios:
           decodificador, treinado de forma autorregressiva para predizer o próximo
           \textit{token}. Esse critério delimita a classe arquitetural de interesse,
           representada por modelos generativos de pesos abertos, como OPT e Llama 2
-          \cite{Zhang2022,Touvron2023}. Além disso, essa arquitetura deve ser compatível
+          \cite{Touvron2023,Zhang2022}. Além disso, essa arquitetura deve ser compatível
           com a métrica \textit{perplexity}.
     \item \textbf{C2 --- Disponibilidade de pesos pré-treinados:} disponibilização de pesos
           pré-treinados para \textit{download} direto, sob licença que permita o uso
@@ -1059,12 +1059,13 @@ hipotético.}
 \hline
 Degradação (passo 1) & 0,50 & 0,20 & 1,00 & 0,25 & --- \\
 Tolerância (passo 2) & 2 & 5 & 1 & 4 & 3 \\
-\hline
+\addlinespace
 \multicolumn{6}{l}{\textit{Taxa de poda por camada, por esquema de poda (passo 3)}} \\
 Uniforme & 30\% & 30\% & 30\% & 30\% & 30\% \\
 Com análise de sensibilidade & 20\% & 50\% & 10\% & 40\% & 30\% \\
 \hline
 \end{tabular}
+\fonte{Elaboração própria.}
 \end{table}
 
 

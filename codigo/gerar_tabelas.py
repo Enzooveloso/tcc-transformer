@@ -138,8 +138,10 @@ linhas = [r"\setlength{\tabcolsep}{5pt}",
           r"\begin{tabular}{p{2.8cm} l " + "r" * 9 + "}", r"\hline",
           r"& & \multicolumn{9}{c}{\textbf{Taxa de poda}} \\", r"\cline{3-11}",
           r"\textbf{Análise} & \makecell{\textbf{Esquema}\\ \textbf{de poda}} & " + " & ".join(pct(t) for t in TAXAS[1:]) + r" \\"]
-for estrategia, nome in (("mag", "Poda por magnitude"), ("est", "Poda estruturada")):
-    linhas += [r"\hline", rf"\multicolumn{{11}}{{l}}{{\textit{{{nome}}}}} \\"]
+# Normalização (Manual da UFVJM, item 2.7): o corpo da tabela não é separado por traços.
+# O primeiro \hline fecha o cabeçalho; entre os grupos do corpo vai só um espaço.
+for k, (estrategia, nome) in enumerate((("mag", "Poda por magnitude"), ("est", "Poda estruturada"))):
+    linhas += [r"\hline" if k == 0 else r"\addlinespace", rf"\multicolumn{{11}}{{l}}{{\textit{{{nome}}}}} \\"]
     for i, a in enumerate(ALOCACOES):
         grupo = ""
         if i == 0:
@@ -173,7 +175,8 @@ pcol = [postos(c) for c in colunas]
 for camada in range(12):
     linhas.append(f"{camada} & " + " & ".join(f"{br(c[camada], 3)} ({p[camada]})"
                                               for c, p in zip(colunas, pcol)) + r" \\")
-linhas += [r"\hline", r"\textbf{Razão máx./mín.} & "
+# Normalização (item 2.7): espaço, e não traço, antes da linha-resumo do corpo.
+linhas += [r"\addlinespace", r"\textbf{Razão máx./mín.} & "
            + " & ".join(f"{br(max(c) / min(c), 1)}$\\times$" for c in colunas) + r" \\",
            r"\hline", r"\end{tabular}"]
 escrever("perfil", linhas)
@@ -217,7 +220,8 @@ linhas = [r"\begin{tabular}{l rrr rrr}", r"\hline",
           r"\textbf{Configuração}" + r" & \textbf{\textit{One-shot}} & \textbf{Pós-FT} & \textbf{Razão}" * 2
           + r" \\", r"\hline",
           rf"Modelo base & \multicolumn{{6}}{{c}}{{{br(float(denso_ft['perplexity_pre']))}"
-          rf" \textit{{one-shot}}; {br(PPL0_FT)} pós-FT (referência da razão)}} \\", r"\hline"]
+          rf" \textit{{one-shot}}; {br(PPL0_FT)} pós-FT (referência da razão)}} \\",
+          r"\addlinespace"]  # normalização (item 2.7): sem traço no corpo da tabela
 for rot, sem, com, t in LINHAS_FT:
     linhas.append(f"{rot} {pct(t)} & " + " & ".join(celulas_ft(sem, t) + celulas_ft(com, t)) + r" \\")
 linhas += [r"\hline", r"\end{tabular}"]
@@ -255,7 +259,8 @@ for estrategia, nome in (("mag", "Poda por magnitude"), ("est", "Poda estruturad
         eta = (PPL0 / geo) / (1 - de / 100)
         linhas.append(rf"\qquad {NOME_ALOC[a]} & {br(geo)} & {br(de, 1)} & {br(eta, 3)}"
                       rf" & {ponto_eficiencia(s)} \\")
-linhas += [r"\hline", r"\multicolumn{5}{l}{\textbf{Após o \textit{fine-tuning} de recuperação}} \\",
+# Normalização (item 2.7): espaço, e não traço, entre os dois blocos do corpo.
+linhas += [r"\addlinespace", r"\multicolumn{5}{l}{\textbf{Após o \textit{fine-tuning} de recuperação}} \\",
            rf"Modelo base retreinado & {br(PPL0_FT)} & 0,0 & 1,000 & --- \\"]
 CONFIGS_FT = [("Poda por magnitude", "magnitude", "uniforme", 30),
               ("Poda por magnitude", "magnitude", "uniforme", 50),
