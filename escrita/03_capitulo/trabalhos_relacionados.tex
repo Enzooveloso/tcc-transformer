@@ -281,13 +281,15 @@ entre 30\% e 70\% na poda por magnitude, e o inverso ocorreu na poda estruturada
 % tabela resume o que a resenha correspondente descreve.
 \section{Síntese dos Trabalhos Relacionados}\label{sec:sintese_relacionados}
 
-Esta seção sintetiza os trabalhos apresentados e posiciona este trabalho em relação a eles. A
-Tabela~\ref{tab:trabalhos_relacionados} compara os trabalhos quanto à arquitetura avaliada, à
+Esta seção sintetiza os trabalhos apresentados e posiciona este trabalho em relação a eles. O
+Quadro~\ref{tab:trabalhos_relacionados} compara os trabalhos quanto à arquitetura avaliada, à
 granularidade da poda, à forma de distribuir a poda entre as camadas, ao retreinamento após a
 poda e ao consumo de energia. Na linha de \citeonline{Blalock2020}, as colunas referem-se aos
 experimentos realizados com o ShrinkBench.
 
-\begin{table}[htb]
+% AJUSTE (16/11/2026): de Tabela para Quadro (manual, item 2.6: conteúdo textual é quadro;
+% tabela é para dado numérico). As citações no texto mudaram junto, com o artigo (o Quadro).
+\begin{quadro}[htb]
 \centering
 \caption{Comparação entre os trabalhos relacionados e este trabalho.}
 \label{tab:trabalhos_relacionados}
@@ -307,7 +309,7 @@ Este trabalho & \textit{Transformer} (GPT-2 \textit{small}) & Não estruturada e
 \hline
 \end{tabular}
 \fonte{Elaboração própria.}
-\end{table}
+\end{quadro}
 
 Dois aspectos distinguem este trabalho dos anteriores. O primeiro é a medição do consumo de
 energia. Entre os trabalhos apresentados, apenas \citeonline{Yang2017} quantificam o consumo,

@@ -13,6 +13,11 @@
 %%      de [...], como em "Anais [...]" (manual, seções 6.5 e 6.6), e [S. l.: s. n.]
 %%      quando falta a editora (o nome do evento não conta como editora);
 %%   5. letra de desambiguação do ano (2026a, 2026b) também na lista de referências.
+%%   6. intervalo de páginas com hífen (p. 157-166), como nos exemplos do manual
+%%      (seções 6.4.2 e 6.6), e não com travessão (16/11/2026);
+%%   7. [S. l.] também em documento com URL: o original omitia o local quando havia
+%%      endereço eletrônico, mas o local é elemento essencial (manual, 6.1.4 e 6.2.1)
+%%      (16/11/2026).
 %% ============================================================================
 %% abntex2-alf.bst, v-1.9.7 laurocesar
 %% Copyright 2012-2018 by abnTeX2 group at http://www.abntex.net.br/ 
@@ -736,22 +741,16 @@ FUNCTION {format.title}
 }
 
 FUNCTION {n.dashify}
-{
+{ % UFVJM: hífen simples no intervalo de páginas (exemplos do manual, 6.4.2 e 6.6);
+  % o original trocava "-" por "--" (travessão). Sequências de hífens viram um só.
   't :=
   ""
     { t empty$ not }
     { t #1 #1 substring$ "-" =
-        { t #1 #2 substring$ "--" = not
-            { "--" *
-              t #2 global.max$ substring$ 't :=
-            }
-            {   { t #1 #1 substring$ "-" = }
-                { "-" *
-                  t #2 global.max$ substring$ 't :=
-                }
-              while$
-            }
-          if$
+        { "-" *
+            { t #1 #1 substring$ "-" = }
+            { t #2 global.max$ substring$ 't := }
+          while$
         }
         { t #1 #1 substring$ *
           t #2 global.max$ substring$ 't :=
@@ -1140,11 +1139,12 @@ FUNCTION {organization.not.publisher}
 
 FUNCTION {format.field.address}
 { 't :=
-  address empty$ organization.not.publisher and url empty$ and t empty$ and
+  % UFVJM: [S. l.] também quando há URL (o original omitia o local nesse caso);
+  % o local é elemento essencial (manual, 6.1.4 e 6.2.1).
+  address empty$ organization.not.publisher and t empty$ and
     {bbl.no.address.no.publisher}
     {address empty$
-      %if an url is present we don't give a missing address "[s.l.]" notice
-      {url empty$  {bbl.no.address ": "} {"" ""} if$}
+      {bbl.no.address ": "}
       {address ": "}
     if$
     t empty$

@@ -313,12 +313,12 @@ Seção~\ref{subsec:fase1}, e o esquema de poda que dele resulta.
 % AJUSTE: 09/11 — regra das legendas do orientador (07/11, "Deixar na tabela apenas um
 % título, a explicação deve ficar no corpo do texto, fazer isso em todas as tabelas"): a
 % legenda fica só com o título, e a explicação vem para o parágrafo que apresenta a tabela.
-A Tabela~\ref{tab:perfil_sensibilidade} apresenta os perfis das duas taxas-sonda, e a
-Figura~\ref{fig:perfil_sensibilidade} representa graficamente o de 50\%, do qual derivam os
+A Tabela~\ref{tab:perfil_sensibilidade} apresenta os perfis das duas taxas-sonda, e o
+Gráfico~\ref{fig:perfil_sensibilidade} representa o de 50\%, do qual derivam os
 esquemas de poda. Na tabela, cada valor corresponde à degradação $\Delta_{\ell}$
 (Equação~\ref{eq:delta_perfil}) da camada indicada. Entre parênteses, consta o posto da camada
-na ordenação de sensibilidade, em que 1 indica a mais sensível. Na figura, as escalas verticais
-diferem entre os dois gráficos. Além disso, na poda estruturada, a barra da camada 0 excede o
+na ordenação de sensibilidade, em que 1 indica a mais sensível. No gráfico, as escalas verticais
+diferem entre os dois painéis. Além disso, na poda estruturada, a barra da camada 0 excede o
 eixo e está truncada.
 
 \begin{table}[htb]
@@ -331,7 +331,10 @@ taxas-sonda.}
 \fonte{Elaboração própria.}
 \end{table}
 
-\begin{figure}[htb]
+% AJUSTE (16/11/2026): de Figura para Gráfico (manual, item 2.6). No parágrafo acima, "e a
+% Figura [...] representa graficamente" passou a "e o Gráfico [...] representa" (o advérbio
+% ficaria redundante), "Na figura" a "No gráfico" e "os dois gráficos" a "os dois painéis".
+\begin{grafico}[htb]
 \centering
 \caption{Degradação causada pela poda isolada de cada camada, à taxa-sonda de 50\%.}
 \label{fig:perfil_sensibilidade}
@@ -377,7 +380,7 @@ taxas-sonda.}
 
 \end{tikzpicture}
 \fonte{Elaboração própria.}
-\end{figure}
+\end{grafico}
 
 % AJUSTE: 26/10 — "robusta(s)"/"robustez" passam a "tolerante(s)"/"tolerância" em todo o
 % capítulo (motivo no comentário da definição, na Metodologia). Ficam "Robustez do Perfil

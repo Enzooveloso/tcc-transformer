@@ -446,11 +446,13 @@ fosse o mesmo.
 % 5.1.3.1 a 5.1.3.3 antes de elas aparecerem. Passa ao fim da Seção 5.1, depois das três
 % subseções que resume, e a frase que a apresentava na abertura veio para cá. O conteúdo da
 % tabela não mudou.
-A Tabela~\ref{tab:metricas} sintetiza as métricas das três dimensões tratadas na
+O Quadro~\ref{tab:metricas} sintetiza as métricas das três dimensões tratadas na
 Seção~\ref{sec:metricas}: relaciona, para cada dimensão, as métricas coletadas, o que cada
 uma mede, a unidade em que é reportada e a ferramenta empregada na medição.
 
-\begin{table}[htb]
+% AJUSTE (16/11/2026): de Tabela para Quadro (manual, item 2.6: conteúdo textual é quadro;
+% tabela é para dado numérico). As citações no texto mudaram junto, com o artigo (o Quadro).
+\begin{quadro}[htb]
 \centering
 \caption{Métricas de avaliação coletadas para cada configuração.}
 \label{tab:metricas}
@@ -480,7 +482,7 @@ Energia consumida & Energia gasta durante a avaliação & Wh & \texttt{CodeCarbo
 \hline
 \end{tabular}
 \fonte{Elaboração própria.}
-\end{table}
+\end{quadro}
 
 \section{Poda sem Otimização}\label{sec:metodos_poda}
 
@@ -1283,7 +1285,7 @@ observado tanto sobre um dano moderado quanto sobre um dano severo.
 \subsection{Procedimento}\label{subsec:ft_procedimento}
 
 Cada configuração passou pelo mesmo procedimento, implementado no módulo
-\texttt{finetune} (Tabela~\ref{tab:modulos}):
+\texttt{finetune} (Quadro~\ref{tab:modulos}):
 
 \begin{alineas}
     \item o modelo base foi recarregado a partir dos pesos pré-treinados e podado
@@ -1300,7 +1302,7 @@ Cada configuração passou pelo mesmo procedimento, implementado no módulo
     \item o modelo foi retreinado sobre a partição de treino do WikiText-2, com os
           parâmetros da Tabela~\ref{tab:finetune_protocolo};
     \item o modelo retreinado foi avaliado na partição de teste por todas as métricas da
-          Etapa 1 (Tabela~\ref{tab:metricas}), pelo mesmo procedimento aplicado aos
+          Etapa 1 (Quadro~\ref{tab:metricas}), pelo mesmo procedimento aplicado aos
           modelos não retreinados.
 \end{alineas}
 
@@ -1628,12 +1630,14 @@ podados em zero após um passo do otimizador (Seção~\ref{subsec:ft_validade}).
 O código está organizado em módulos, cada um responsável por uma única etapa do
 experimento, o que permite que todas as estratégias de poda reutilizem exatamente a mesma
 rotina de avaliação. Essa é a condição para que as diferenças medidas entre as
-configurações se devam à poda, e não a diferenças na forma de medir. A
-Tabela~\ref{tab:modulos} descreve os módulos e a Figura~\ref{fig:pipeline_experimental}
+configurações se devam à poda, e não a diferenças na forma de medir. O
+Quadro~\ref{tab:modulos} descreve os módulos e a Figura~\ref{fig:pipeline_experimental}
 representa o fluxo experimental, no qual todas as estratégias convergem para a mesma rotina
 de avaliação, o que garante que todas as configurações sejam medidas da mesma forma.
 
-\begin{table}[htb]
+% AJUSTE (16/11/2026): de Tabela para Quadro (manual, item 2.6: conteúdo textual é quadro;
+% tabela é para dado numérico). As citações no texto mudaram junto, com o artigo (o Quadro).
+\begin{quadro}[htb]
 \centering
 \caption{Organização modular da implementação.}
 \label{tab:modulos}
@@ -1659,7 +1663,7 @@ de avaliação, o que garante que todas as configurações sejam medidas da mesm
 \hline
 \end{tabular}
 \fonte{Elaboração própria.}
-\end{table}
+\end{quadro}
 
 \begin{figure}[htb]
 \centering
@@ -1731,7 +1735,7 @@ nos resultados, o dano causado pela poda daquilo que o retreinamento consegue re
 % tabelas do Capítulo 6 são \input de arquivos gerados).
 Os experimentos foram executados na plataforma Kaggle, escolhida por oferecer acesso
 gratuito a GPU dedicada, com sessões longas o bastante para as varreduras completas
-(Tabela~\ref{tab:decisoes_metodologicas}). Todas as sessões usaram uma GPU NVIDIA Tesla
+(Quadro~\ref{tab:decisoes_metodologicas}). Todas as sessões usaram uma GPU NVIDIA Tesla
 T4, com 16 GB de memória \cite{NVIDIA2019T4}. A implementação detecta automaticamente o
 dispositivo disponível, o que permite executar o código localmente, em CPU, para testes
 rápidos, sem alteração de código.
@@ -1772,11 +1776,13 @@ absolutos.
 % escolhas detalhadas neste capítulo (modelo, base de dados, configurações de poda).
 \section{Síntese das Decisões de Implementação}\label{sec:sintese_decisoes}
 
-Todo desenho experimental implica escolhas que condicionam o escopo dos resultados. A
-Tabela~\ref{tab:decisoes_metodologicas} sintetiza as principais decisões adotadas ao longo
+Todo desenho experimental implica escolhas que condicionam o escopo dos resultados. O
+Quadro~\ref{tab:decisoes_metodologicas} sintetiza as principais decisões adotadas ao longo
 deste capítulo, as alternativas consideradas e a justificativa de cada uma.
 
-\begin{table}[htbp]
+% AJUSTE (16/11/2026): de Tabela para Quadro (manual, item 2.6: conteúdo textual é quadro;
+% tabela é para dado numérico). As citações no texto mudaram junto, com o artigo (o Quadro).
+\begin{quadro}[htbp]
 \centering
 \caption{Síntese das principais decisões de implementação do trabalho.}
 \label{tab:decisoes_metodologicas}
@@ -1838,7 +1844,7 @@ Ambiente
 \hline
 \end{tabular}
 \fonte{Elaboração própria.}
-\end{table}
+\end{quadro}
 
 % AJUSTE: 30/10 — \clearpage segura a tabela da síntese antes das Limitações; sem ele, o
 % float (quase uma página) caía no meio da seção seguinte.

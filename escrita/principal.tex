@@ -118,6 +118,11 @@
 % Estilo local com [S. l.: s. n.] e "In:" em itálico, autor entidade em caixa mista na
 % chamada e "Proceedings [...]" nos eventos (ver o cabeçalho do arquivo .bst).
 \bibliographystyle{abntex2-alf-ufvjm}
+% Referências separadas por uma linha em branco de espaço simples (manual, 6.1): 14,5 pt,
+% a entrelinha simples da fonte 12. Antes (16/11/2026), \bibitemsep da classe (4,8 pt) mais
+% \parsep davam 9,5 pt, e o intervalo entre as referências era de 24 pt, não de 29 pt.
+\setlength{\bibitemsep}{14.5pt plus 2pt}
+\renewcommand{\biblistextra}{\setlength{\itemsep}{\bibitemsep}\setlength{\parsep}{0pt}}
 \usepackage{lscape}
 
 \usepackage{pdfpages}
@@ -340,6 +345,33 @@
   \end{list}%
   \cleardoublepage%
 }
+
+% --- Quadros e gráficos (16/11/2026; manual, itens 2.6 e 2.7): "Figura" vale para as
+% ilustrações em geral, exceto quadros, gráficos, mapas e tabelas; tabela é para dado
+% numérico, e conteúdo textual é quadro. Ambientes quadro e grafico (floats da memoir,
+% numeração contínua, legenda e \fonte como nas tabelas). Na Lista de ilustrações, os tipos
+% vêm agrupados, na ordem Figuras, Gráficos, Quadros, sob um único título, como no modelo
+% do manual (Figura 27): \ilustracoesdemaistipos imprime, logo depois das figuras, as
+% entradas dos arquivos .lgr e .loq com a formatação das figuras.
+\newfloat{quadro}{loq}{Quadro}
+\newlistentry{quadro}{loq}{0}
+\newfloat{grafico}{lgr}{Gráfico}
+\newlistentry{grafico}{lgr}{0}
+\renewcommand{\cftquadroname}{Quadro\space}
+\renewcommand*{\cftquadroaftersnum}{\hfill\textendash\hfill}
+\renewcommand{\cftgraficoname}{Gráfico\space}
+\renewcommand*{\cftgraficoaftersnum}{\hfill\textendash\hfill}
+\AtBeginDocument{%
+  \setlength{\cftquadroindent}{\cftfigureindent}%
+  \setlength{\cftquadronumwidth}{\cftfigurenumwidth}%
+  \setlength{\cftbeforequadroskip}{\cftbeforefigureskip}%
+  \setlength{\cftgraficoindent}{\cftfigureindent}%
+  \setlength{\cftgraficonumwidth}{\cftfigurenumwidth}%
+  \setlength{\cftbeforegraficoskip}{\cftbeforefigureskip}}
+\makeatletter
+\newcommand{\ilustracoesdemaistipos}{%
+  \begingroup\parskip\cftparskip\@starttoc{lgr}\@starttoc{loq}\endgroup}
+\makeatother
 
 % --- Palavras-chave (item 4.9): expressão "Palavras-chave:" sem destaque, como no modelo
 % do manual, e linhas seguintes alinhadas com o início da primeira palavra-chave.
