@@ -187,6 +187,19 @@ do modelo --- no GPT-2 \textit{small}, a dimensão do modelo é 768 e a dimensã
 intermediária é 3.072 --- o que confere ao bloco grande capacidade de representação antes
 de comprimir novamente a informação.
 
+% AJUSTE: 20/11/2026 — volta, em versão curta, a parte do bloco comentado abaixo sobre a conexão
+% residual e a normalização de camada: a Metodologia (parâmetros podáveis e não podáveis) e o
+% Desenvolvimento usam "normalização de camada", que não estava definida. Fica de fora a
+% comparação com a ResNet (He2016), que levava a conversa para redes convolucionais. O
+% empilhamento dos blocos e os alvos da poda estruturada continuam comentados (pendência do
+% ROADMAP).
+Na arquitetura proposta por \citeonline{Vaswani2017}, cada um desses dois componentes é
+acompanhado por dois mecanismos que facilitam o treinamento de redes profundas. O primeiro é a
+conexão residual, que soma a entrada do componente à sua saída e cria um atalho para o
+gradiente durante o \textit{backpropagation}. O segundo é a normalização de camada
+(\textit{layer normalization}), que normaliza as ativações de cada posição por meio de
+parâmetros aprendidos e estabiliza o treinamento.
+
 % Cada um dos dois sub-módulos é envolvido por dois mecanismos que facilitam o treinamento
 % de modelos profundos. O primeiro é a conexão residual (\textit{residual connection}),
 % idêntica em conceito à utilizada nas redes ResNet \cite{He2016}: a entrada do
@@ -260,21 +273,15 @@ atenção por bloco, dimensão de modelo igual a 768 e aproximadamente 124 milh�
 parâmetros treináveis. Ao longo deste trabalho, cada um desses blocos é denominado
 \textbf{camada}, e as camadas são numeradas de 0 a 11, na ordem em que processam a entrada,
 conforme a indexação adotada na implementação; é nessa unidade que se definem a análise de
-sensibilidade por camada e as taxas de poda por camada. Apesar de ser a menor variante da família GPT-2, esse número de
-parâmetros é cerca de cinco vezes maior do que o de uma ResNet-50 (25 milhões de
-parâmetros), arquitetura de referência nos estudos clássicos de poda --- e as variantes
-maiores da própria família GPT-2 chegam a 1,5 bilhão de parâmetros, o que ilustra a escala
-característica dos modelos baseados em \textit{Transformer}.
-
-O crescimento em escala dos LLMs ao longo dos anos seguintes foi vertiginoso: o GPT-3,
-publicado em 2020, possui 175 bilhões de parâmetros; o PaLM, do Google, chega a 540
-bilhões. Mesmo modelos de médio porte como o GPT-2 impõem custos energéticos e
-computacionais consideráveis em ambientes de produção, onde a inferência é executada
-milhares ou milhões de vezes por dia. A poda estruturada surge, nesse contexto, como uma
-estratégia concreta para reduzir esses custos: a remoção de cabeças de atenção
-redundantes e de neurônios MLP de baixa importância pode diminuir substancialmente a
-contagem de operações por inferência, com impacto controlado sobre a qualidade das
-predições \cite{Patterson2021}. 
+sensibilidade por camada e as taxas de poda por camada. As variantes maiores da família GPT-2
+chegam a 1,5 bilhão de parâmetros.
+% AJUSTE: 20/11/2026 — sai a comparação com a ResNet-50 ("cerca de cinco vezes maior [...],
+% arquitetura de referência nos estudos clássicos de poda"), que levava a conversa para redes
+% convolucionais; fica a escala da família. Sai também o parágrafo seguinte ("O crescimento em
+% escala dos LLMs [...]"): GPT-3 e PaLM vinham sem citação, a afirmação sobre a poda de cabeças
+% e de neurônios do MLP estava apoiada em Patterson2021, que trata das emissões do treinamento
+% de grandes modelos e não de poda, e o custo da inferência repetia a Seção
+% sec:consumo_energetico.
 % Esse potencial de redução do consumo energético via poda
 % estruturada em modelos \textit{Transformer} é o foco central dos experimentos conduzidos
 % neste trabalho.
