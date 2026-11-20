@@ -11,6 +11,8 @@
 %   seção em que cada resultado está.
 % - As contribuições não são listadas de novo: estão na Seção sec:contribuicoes, e aqui só são
 %   nomeadas em uma frase.
+%   AJUSTE (16/11/2026): a Seção sec:contribuicoes saiu da Introdução (pedido do Enzo); a
+%   frase das Conclusões passa a ser o único lugar em que as contribuições são nomeadas.
 % - As Limitações reúnem as das Seções sec:limitacoes e subsec:limitacoes_perfil pela conclusão
 %   que condicionam, na ordem das quatro etapas da metodologia. Os Trabalhos Futuros seguem a
 %   mesma ordem e decorrem delas, sem lista genérica.
@@ -28,15 +30,30 @@ decorrem dessas limitações.
 Esta seção apresenta as conclusões do trabalho em relação ao problema de pesquisa e ao
 objetivo geral, formulados no Capítulo~\ref{capitulo1}.
 
-O objetivo geral consistiu em avaliar a poda do modelo de linguagem GPT-2 como estratégia de
-redução do consumo de energia na inferência e em verificar se um esquema de poda definido por
-uma análise de sensibilidade por camada reduz a perda de desempenho preditivo decorrente dessa
-poda. Para isso, a poda por magnitude e a poda estruturada de cabeças de atenção e de neurônios
-do MLP foram aplicadas ao GPT-2 \textit{small}, em taxas de poda de 10\% a 90\%. Os modelos
+% AJUSTE: 20/11/2026 — o objetivo geral mudou na Introdução (revisão do orientador): passou a
+% falar de um modelo baseado na arquitetura Transformer e de esquemas de poda alternativos aos
+% tradicionais, sem nomear o GPT-2 nem a análise de sensibilidade. A primeira frase retoma a
+% nova redação; a seguinte continua concreta, e entra uma frase que liga as categorias da
+% Introdução aos esquemas avaliados (com análise de sensibilidade; uniforme e não uniforme),
+% nomes usados nas respostas abaixo. Texto anterior da primeira frase: "O objetivo geral
+% consistiu em avaliar a poda do modelo de linguagem GPT-2 como estratégia de redução do
+% consumo de energia na inferência e em verificar se um esquema de poda definido por uma
+% análise de sensibilidade por camada reduz a perda de desempenho preditivo decorrente dessa
+% poda."
+O objetivo geral consistiu em avaliar a poda de um modelo de linguagem baseado na arquitetura
+\textit{Transformer} como estratégia de redução do consumo de energia na inferência e em
+verificar se esquemas de poda alternativos aos tradicionais reduzem a perda de desempenho
+preditivo decorrente dessa poda. Para isso, a poda por magnitude e a poda estruturada de
+cabeças de atenção e de neurônios do MLP foram aplicadas ao GPT-2 \textit{small}, em taxas de
+poda de 10\% a 90\%. Os esquemas de poda alternativos foram definidos por uma análise de
+sensibilidade por camada e comparados aos esquemas de poda tradicionais, o uniforme e o não
+uniforme. Os modelos
 podados foram avaliados na base de dados WikiText-2, em uma GPU NVIDIA Tesla T4, quanto ao
 desempenho preditivo, ao custo computacional e ao consumo de energia. O problema de pesquisa
-foi desdobrado nas perguntas (A) e (B), formuladas no Capítulo~\ref{chap:metodologia}, cujas
-respostas são apresentadas a seguir.
+foi desdobrado nas perguntas (A) e (B), cujas respostas são apresentadas a seguir.
+% AJUSTE: 20/11/2026 — as perguntas (A) e (B) foram para a Introdução. Sai "formuladas no
+% Capítulo~\ref{chap:metodologia}": a abertura desta seção já remete ao capitulo1, onde agora
+% estão o problema de pesquisa e as duas perguntas.
 
 Quanto à pergunta (A), conclui-se que a conversão da redução de parâmetros em redução de tempo
 de inferência e de consumo de energia dependeu da granularidade da poda. No ambiente avaliado,
@@ -105,7 +122,7 @@ Em relação ao objetivo geral, conclui-se que a poda estruturada reduz o consum
 GPT-2 \textit{small} na inferência em proporção próxima à dos parâmetros removidos. Essa
 redução é acompanhada de perda de desempenho preditivo, que a análise de sensibilidade reduz e
 que uma época de retreinamento recupera apenas em parte. Esses resultados sustentam as
-contribuições apresentadas na Seção~\ref{sec:contribuicoes}: a regra que define as taxas de
+contribuições deste trabalho: a regra que define as taxas de
 poda por camada, o perfil de sensibilidade do GPT-2 \textit{small} para as duas estratégias de
 poda, a medição do consumo de energia das duas estratégias sob o mesmo protocolo e a
 delimitação da utilidade da análise de sensibilidade em função do retreinamento.

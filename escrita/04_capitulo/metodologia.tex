@@ -30,22 +30,19 @@ Este capítulo se limita à descrição metodológica das estratégias adotadas,
 % simetria de avaliação vêm para cá. Mudanças na vinda: "alocação" passa a "esquema de poda"
 % (termo adotado pelo orientador na Seção sec:metodologia_poda_com) e a frase final passa a se
 % referir às etapas deste capítulo.
-A metodologia foi definida para responder a duas perguntas de natureza empírica e
-comparativa. Não se pretende demonstrar que a poda comprime modelos, resultado já
-consolidado pela literatura \cite{Blalock2020, Han2015, Li2017}, mas responder, sob
-condições controladas e reprodutíveis, às seguintes questões:
-
-\begin{enumerate}
-    \item[(A)] Em que medida a redução \textit{teórica} de parâmetros se converte em
-          redução \textit{real} de tempo de inferência e de consumo de energia, e como
-          essa conversão depende da granularidade da poda?
-    \item[(B)] Um esquema de poda, isto é, um conjunto de taxas de poda por camada, definido
-          por uma análise de sensibilidade por camada melhora o compromisso entre compressão
-          e qualidade em relação aos esquemas de poda sem análise de sensibilidade?
-\end{enumerate}
-
-Responder a essas duas perguntas exige que modelos comprimidos por estratégias distintas
-sejam avaliados exatamente pelo mesmo conjunto de métricas, na mesma base de dados e no mesmo
+% AJUSTE: 20/11/2026 — anotação do Enzo com o orientador: as perguntas (A) e (B) passam para a
+% Introdução (capitulo1), logo após o problema de pesquisa, e saem deste capítulo. Fica o
+% parágrafo da simetria de avaliação, que é metodológico, com a remissão às perguntas na
+% Introdução. Texto que saiu (a frase de abertura e a citação foram para a Introdução):
+% "A metodologia foi definida para responder a duas perguntas de natureza empírica e
+% comparativa. Não se pretende demonstrar que a poda comprime modelos, resultado já
+% consolidado pela literatura \cite{Blalock2020, Han2015, Li2017}, mas responder, sob
+% condições controladas e reprodutíveis, às seguintes questões:" seguido da lista com (A) e
+% (B); e "Responder a essas duas perguntas exige [...]".
+A metodologia foi definida para responder às perguntas (A) e (B), formuladas no
+Capítulo~\ref{capitulo1}. Responder a essas perguntas exige que modelos comprimidos por
+estratégias distintas sejam avaliados exatamente pelo mesmo conjunto de métricas, na mesma
+base de dados e no mesmo
 \textit{hardware}. Essa simetria de avaliação é condição necessária para que qualquer
 comparação seja interpretável e orienta todas as etapas descritas a seguir.
 
@@ -734,7 +731,9 @@ Portanto, enquanto a primeira tende a preservar melhor o desempenho preditivo, a
 permite converter a compressão em economia efetiva de tempo e energia. Avaliar ambas sob as
 mesmas condições permite quantificar essa relação de compromisso (\textit{trade-off}), que
 não poderia ser caracterizada pela análise isolada de cada granularidade e constitui uma das
-questões centrais deste trabalho, a pergunta (A), apresentada no início deste capítulo.
+questões centrais deste trabalho, a pergunta (A), formulada no Capítulo~\ref{capitulo1}.
+% AJUSTE: 20/11/2026 — "apresentada no início deste capítulo" passa a "formulada no
+% Capítulo~\ref{capitulo1}": as perguntas (A) e (B) foram para a Introdução.
 
 % Como indicador complementar de representatividade, registra-se para cada estratégia
 % candidata o número de citações do artigo que a propôs, na base Semantic Scholar. O

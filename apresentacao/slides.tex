@@ -23,6 +23,8 @@
 \usepackage{pgfplots}
 \usepgfplotslibrary{groupplots}
 \pgfplotsset{compat=1.18}
+\usetikzlibrary{arrows.meta}   % setas dos diagramas
+\usetikzlibrary{matrix}        % matrizes de pesos do slide de poda (Fundamentação)
 
 % ----------------------------------------------------------------------------
 % Cores
@@ -148,12 +150,51 @@
 \tikzset{rotulo/.style={font=\fontsize{7}{8}\selectfont, text=tinta, inner sep=1.5pt},
          rotuloSec/.style={font=\fontsize{7}{8}\selectfont, text=tintaSec, inner sep=1.5pt}}
 
+% ----------------------------------------------------------------------------
+% Macros compartilhadas pelos blocos (antes no bloco de Metodologia; vieram para
+% cá porque os blocos de Introdução e Fundamentação, que vêm antes, também as usam)
+% ----------------------------------------------------------------------------
+% Rótulo pequeno em azul acima de um bloco de texto.
+\newcommand{\rotuloMet}[1]{{\fontsize{8}{9.5}\selectfont\color{destaque}\textbf{#1}\par}\vspace{1.2mm}}
+
+% Linha de tabela em destaque (candidato escolhido, este trabalho): azul e negrito.
+% \leavevmode: sem ele, \color no início de uma célula p{} abre uma linha em branco.
+\newcommand{\escolhido}[1]{{\leavevmode\color{destaque}\bfseries #1}}
+% Linha de tabela de candidato excluído ou termo de comparação: cinza.
+\newcommand{\excluido}[1]{{\leavevmode\color{tintaSec}#1}}
+
+% Legenda de gráfico de barras com um quadrado por série. Fica fora do frame,
+% onde o "#1" não precisa ser duplicado.
+\pgfplotsset{legendaQuadrado/.style={
+  legend image code/.code={\fill[#1] (0mm,-0.9mm) rectangle (1.8mm,0.9mm);}}}
+
+% Diagramas: caixa neutra (cinza) e caixa em destaque (azul), setas e anotações.
+\tikzset{
+  caixaMet/.style={rectangle, rounded corners=1.5pt, draw=eixo, line width=0.6pt,
+    fill=white, align=flush left, inner sep=1.6mm, text=tinta,
+    font=\fontsize{8}{9.8}\selectfont},
+  caixaMetDest/.style={caixaMet, draw=destaque, line width=0.9pt, fill=destaque!7},
+  setaMet/.style={-{Stealth[length=1.7mm, width=1.5mm]}, eixo, line width=0.8pt},
+  setaMetDest/.style={setaMet, destaque},
+  anotMet/.style={font=\fontsize{7}{8.6}\selectfont, text=tintaSec, align=flush left,
+    inner sep=0pt, anchor=north west},
+}
+
 % =============================================================================
 \begin{document}
 
-% (a fazer, nesta ordem de construção: Metodologia, Fundamentação, Introdução)
-
-\input{blocos/resultados}
-\input{blocos/conclusoes}
+% Ordem de apresentação (20 slides; INSTRUCOES.md, seção 7).
+% Roteiro de fala, dados e conceitos para a arguição: material_apoio.tex (PDF A4).
+% Os slides de apoio saíram em 18/11/2026, a pedido do Enzo: o conteúdo deles foi
+% para o material de apoio.
+% A ordem de construção foi a inversa: Resultados e Conclusões primeiro.
+\input{blocos/abertura}       % 1     capa
+\input{blocos/introducao}     % 2     contexto
+\input{blocos/fundamentacao}  % 3-4   poda neural; GPT-2
+\input{blocos/objetivo}       % 5     objetivo
+\input{blocos/metodologia}    % 6-11
+\input{blocos/resultados}     % 12-17
+\input{blocos/conclusoes}     % 18
+\input{blocos/encerramento}   % 19-20 contribuições e trabalhos futuros; encerramento
 
 \end{document}

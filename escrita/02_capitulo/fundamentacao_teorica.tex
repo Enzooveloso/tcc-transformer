@@ -376,37 +376,52 @@ conexões ou neurônios removidos e torna-se esparsa.
 \centering
 \caption{\adicionadomarcelo{As duas categorias de poda aplicadas à mesma matriz de pesos.}}
 \label{fig:nao_estruturada_vs_estruturada}
-\begin{tikzpicture}[font=\scriptsize]
+\begin{tikzpicture}[font=\scriptsize,
+    mat/.style={matrix of math nodes, left delimiter={[}, right delimiter={]},
+                column sep=1pt, row sep=-1pt,
+                nodes={minimum width=2.4em, inner ysep=1.5pt}}]
+  % AJUSTE (16/11/2026), a pedido do Enzo: a poda estruturada da figura passa a seguir o
+  % critério do trabalho (norma L1 por coluna, Desenvolvimento, subsec:metodo_estruturado).
+  % Antes, saíam as colunas 2 e 4, e a coluna 2 era a de MAIOR norma (1,55). Agora a figura
+  % mostra a norma de cada coluna e remove as duas menores, 3 (1,17) e 4 (1,37). A poda não
+  % estruturada já estava certa: os oito zeros são os oito menores |w|. As três matrizes
+  % passaram a usar o mesmo estilo (matrix do TikZ), para numerar e anotar as colunas.
   % ---------- matriz original ----------
-  \node (orig) at (0,0) {$\begin{bmatrix}
+  \matrix (orig) [mat] at (0,0) {
      0{,}82 & -0{,}03 &  0{,}61 &  0{,}04 \\
     -0{,}07 &  0{,}75 & -0{,}02 & -0{,}58 \\
      0{,}49 &  0{,}06 & -0{,}01 &  0{,}67 \\
-     0{,}05 & -0{,}71 &  0{,}53 & -0{,}08
-  \end{bmatrix}$};
-  \node[below=5pt of orig,align=center] {\textbf{matriz original}\\ $4\times4$ --- 16 pesos};
+     0{,}05 & -0{,}71 &  0{,}53 & -0{,}08 \\
+  };
+  \foreach \j in {1,...,4} \node[gray,above=0pt] at (orig-1-\j.north) {\j};
+  \foreach \j/\v in {1/1{,}43, 2/1{,}55, 3/\mathbf{1{,}17}, 4/\mathbf{1{,}37}}
+    \node[below=3pt] (l\j) at (orig-4-\j.south) {$\v$};
+  \node[anchor=east] at ([xshift=-6pt]l1.west) {$\Sigma|w|$:};
+  \node[below=14pt of orig,align=center] {\textbf{matriz original}\\ $4\times4$ --- 16 pesos};
 
   % ---------- poda não estruturada ----------
-  \node (ne) at (6.6,2.15) {$\begin{bmatrix}
+  \matrix (ne) [mat] at (6.6,2.15) {
      0{,}82 & \mathbf{0} &  0{,}61 & \mathbf{0} \\
     \mathbf{0} &  0{,}75 & \mathbf{0} & -0{,}58 \\
      0{,}49 & \mathbf{0} & \mathbf{0} &  0{,}67 \\
-    \mathbf{0} & -0{,}71 &  0{,}53 & \mathbf{0}
-  \end{bmatrix}$};
+    \mathbf{0} & -0{,}71 &  0{,}53 & \mathbf{0} \\
+  };
   \node[below=1pt of ne,align=center]
     {\textbf{não estruturada} --- continua $4\times4$\\
-     os zeros ficam espalhados e o \textit{hardware}\\ convencional segue multiplicando por eles};
+     zeram-se os oito menores $|w|$; os zeros ficam espalhados\\ e o \textit{hardware}
+     convencional segue multiplicando por eles};
 
   % ---------- poda estruturada ----------
-  \node (es) at (6.6,-2.6) {$\begin{bmatrix}
-     0{,}82 &  0{,}61 \\
-    -0{,}07 & -0{,}02 \\
-     0{,}49 & -0{,}01 \\
-     0{,}05 &  0{,}53
-  \end{bmatrix}$};
+  \matrix (es) [mat] at (6.6,-2.6) {
+     0{,}82 & -0{,}03 \\
+    -0{,}07 &  0{,}75 \\
+     0{,}49 &  0{,}06 \\
+     0{,}05 & -0{,}71 \\
+  };
+  \foreach \j in {1,2} \node[gray,above=0pt] at (es-1-\j.north) {\j};
   \node[below=1pt of es,align=center]
     {\textbf{estruturada} --- vira $4\times2$\\
-     duas colunas inteiras saem da matriz,\\ e o custo de multiplicá-la cai de verdade};
+     saem inteiras as colunas 3 e 4, as de menor $\Sigma|w|$,\\ e o custo de multiplicá-la cai de verdade};
 
   % saem dos cantos (e não do centro) para não cruzar o rótulo da matriz
   \draw[-{Stealth},thick] (orig.north east) to[out=35,in=180] (ne.west);
@@ -417,10 +432,17 @@ conexões ou neurônios removidos e torna-se esparsa.
 
 % AJUSTE: 09/11 — regra das legendas do orientador (07/11): a segunda frase da legenda da
 % Figura fig:nao_estruturada_vs_estruturada vem para o texto, que passa a citar a figura.
+% AJUSTE: 16/11/2026 — a pedido do Enzo, com a correção da figura: o parágrafo passa a dizer
+% o critério de cada categoria. Antes: "Na poda não estruturada, os pesos removidos são
+% apenas zerados, e a matriz conserva suas dimensões; na poda estruturada, colunas inteiras
+% são eliminadas, e a matriz encolhe de fato."
 Na Figura~\ref{fig:nao_estruturada_vs_estruturada}, as duas categorias são aplicadas à mesma
-matriz de pesos. Na poda não estruturada, os pesos removidos são apenas zerados, e a matriz
-conserva suas dimensões; na poda estruturada, colunas inteiras são eliminadas, e a matriz
-encolhe de fato.
+matriz de pesos, à taxa de poda de 50\%. Na poda não estruturada, são zerados os oito pesos de
+menor valor absoluto, e a matriz conserva suas dimensões. Na poda estruturada, cada coluna
+recebe como pontuação a soma dos valores absolutos de seus pesos ($\Sigma|w|$), denominada
+norma $L_1$. As duas colunas de menor norma, 3 e 4, são eliminadas, e a matriz encolhe de
+fato. As colunas eliminadas contêm pesos de valor absoluto elevado, como 0,61 e 0,67, porque
+o critério avalia a coluna inteira, e não cada peso isoladamente.
 
 A distinção entre as duas categorias é o que separa um ganho real de um ganho apenas
 contábil, e uma analogia com um livro a torna evidente. A poda não estruturada equivale a

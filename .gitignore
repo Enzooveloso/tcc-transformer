@@ -52,5 +52,13 @@ escrita/ESTILO.md
 apresentacao/INSTRUCOES.md
 graphify-out/
 
+# Apresentação: slides e material de apoio ficam fora do repositório (Enzo, 18/11/2026)
+apresentacao/slides.tex
+apresentacao/slides.pdf
+apresentacao/blocos/
+apresentacao/material_apoio.tex
+apresentacao/material_apoio.pdf
+apresentacao/material/
+
 # Material de referência local (manual de normalização do Sisbi/UFVJM)
 manual_normalizacao_2025.pdf
