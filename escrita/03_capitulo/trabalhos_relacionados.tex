@@ -9,6 +9,11 @@
 % AJUSTE: 14/11 — parágrafo acrescentado depois do texto do orientador, sem alterá-lo, para
 % anunciar as seções do capítulo (padrão das aberturas da Metodologia e dos Resultados) e a
 % relação com este trabalho que fecha cada resenha.
+% AJUSTE: 20/11/2026 — revisão do orientador: excesso de remissões a outras partes do texto
+% (ESTILO.md, seção 6). Este parágrafo fica como está, porque a abertura que apresenta o
+% capítulo seção a seção segue o padrão do texto do próprio orientador na Metodologia. Nas
+% resenhas, saem as remissões ao método deste trabalho e as repetidas; ficam as que apontam o
+% resultado que sustenta uma afirmação.
 As Seções~\ref{sec:han2015} e~\ref{sec:li2017} apresentam os trabalhos que originaram as duas
 estratégias de poda adotadas, e a Seção~\ref{sec:yang2017}, um trabalho de poda orientada pelo
 consumo de energia. As Seções~\ref{sec:frankle2019} e~\ref{sec:liu2019} apresentam trabalhos que
@@ -51,15 +56,15 @@ expressos em parâmetros e operações, e os autores direcionam o método a \tex
 especializado em redes esparsas, dada a limitação do \textit{hardware} de propósito geral
 na computação esparsa.
 
-Este trabalho adota o critério de \citeonline{Han2015} como primeira estratégia de poda
-(Seção~\ref{subsec:metodo_magnitude}), com três diferenças. A poda é aplicada a um
+Este trabalho adota o critério de \citeonline{Han2015} como primeira estratégia de poda,
+com três diferenças. A poda é aplicada a um
 \textit{Transformer}, e não a redes convolucionais. A energia é medida, o que permitiu
 verificar que, em \textit{hardware} de propósito geral, a poda por magnitude não reduz o
 consumo de forma detectável (Seção~\ref{sec:res_custo}), como antecipavam os próprios
 autores. E a análise de sensibilidade por camada, que em \citeonline{Han2015} orienta os
 limiares sem que uma regra seja descrita, torna-se aqui uma regra explícita de definição
 das taxas por camada, comparada aos esquemas de poda sem análise de sensibilidade sob a mesma taxa
-de poda (Seção~\ref{sec:metodologia_poda_com}). Também no GPT-2 a camada mais sensível é a
+de poda. Também no GPT-2 a camada mais sensível é a
 primeira (Seção~\ref{subsec:camada_zero}).
 
 \section{Pruning Filters for Efficient ConvNets}\label{sec:li2017}
@@ -94,7 +99,7 @@ medido.
 
 Este trabalho adapta o método de \citeonline{Li2017} ao \textit{Transformer} como segunda
 estratégia de poda: as unidades estruturais passam a ser as cabeças de atenção e os
-neurônios do MLP, ordenados pela norma $L_1$ (Seção~\ref{subsec:metodo_estruturado}). Como
+neurônios do MLP, ordenados pela norma $L_1$. Como
 em \citeonline{Li2017}, a sensibilidade de cada camada é medida podando-a isoladamente; o
 perfil obtido, porém, define as taxas por camada por meio de uma regra explícita, que
 preserva a taxa de poda do modelo e substitui a escolha empírica por estágio. Além disso, o
@@ -114,9 +119,9 @@ o \textit{fine-tuning} de recuperação.
 Este trabalho difere de \citeonline{Yang2017} quanto ao papel do consumo de energia. Em
 \citeonline{Yang2017}, o consumo é estimado por um modelo de custo e determina a ordem em que
 as camadas são podadas. Neste trabalho, a distribuição da poda entre as camadas é definida pela
-degradação do desempenho preditivo, registrada no perfil de sensibilidade
-(Seção~\ref{sec:metodologia_poda_com}). O consumo de energia, por sua vez, é medido durante a
-execução dos modelos podados, como resultado da poda (Seção~\ref{sec:metodologia_metricas}).
+degradação do desempenho preditivo, registrada no perfil de sensibilidade.
+O consumo de energia, por sua vez, é medido durante a execução dos modelos podados, como
+resultado da poda.
 Além disso, a poda é aplicada a um \textit{Transformer}, e não a redes convolucionais.
 
 % AJUSTE: 14/11 — resolvido o \todo do orientador, que pedia as resenhas de Frankle2019,
@@ -170,16 +175,16 @@ bilhetes premiados só foram encontrados com o aumento gradual da taxa de aprend
 do treinamento (\textit{warmup}).
 
 Este trabalho não restaura os pesos à inicialização após a poda. A poda é aplicada uma única vez
-ao modelo pré-treinado, e o \textit{fine-tuning} de recuperação parte dos pesos remanescentes
-(Seção~\ref{sec:metodologia_finetuning}). Essa diferença decorre do custo. A poda iterativa de
+ao modelo pré-treinado, e o \textit{fine-tuning} de recuperação parte dos pesos remanescentes.
+Essa diferença decorre do custo. A poda iterativa de
 \citeonline{Frankle2019} exige treinar a rede repetidas vezes a partir da inicialização,
-enquanto o pré-treinamento do modelo está fora do escopo deste trabalho (critério C2,
-Seção~\ref{subsec:metodologia_selecao_modelo}). Por outro lado, os dois trabalhos tratam da
+enquanto o pré-treinamento do modelo está fora do escopo deste trabalho.
+Por outro lado, os dois trabalhos tratam da
 distribuição da poda entre as camadas. Em \citeonline{Frankle2019}, a poda global, que
 corresponde ao esquema de poda não uniforme deste trabalho, foi preferida porque as camadas das
-redes profundas diferem em número de parâmetros. No GPT-2, as 12 camadas têm o mesmo tamanho
-(Seção~\ref{subsec:fase2}). Mesmo assim, a poda isolada da camada 0 degradou o modelo mais que a
-de qualquer outra camada (Seção~\ref{subsec:camada_zero}). Assim, neste trabalho, as camadas
+redes profundas diferem em número de parâmetros. No GPT-2, as 12 camadas têm o mesmo tamanho.
+Mesmo assim, a poda isolada da camada 0 degradou o modelo mais que a de qualquer outra camada.
+Assim, neste trabalho, as camadas
 diferem quanto à sensibilidade à poda, e não quanto ao tamanho, e é essa diferença que o esquema
 de poda com análise de sensibilidade utiliza.
 
@@ -220,12 +225,11 @@ nula.
 
 Essa ressalva descreve as condições deste trabalho. O modelo base é o GPT-2 pré-treinado, e
 treinar o modelo podado a partir de pesos aleatórios equivaleria a repetir o pré-treinamento,
-que está fora do escopo deste trabalho (critério C2,
-Seção~\ref{subsec:metodologia_selecao_modelo}). Por essa razão, os modelos podados herdam os
-pesos do modelo base, e o \textit{fine-tuning} de recuperação é limitado a uma época
-(Seção~\ref{sec:finetuning}). Além disso, a conclusão de que a arquitetura resultante determina
-o valor da poda estruturada relaciona-se à hipótese deste trabalho
-(Seção~\ref{sec:metodologia_poda_com}). Na poda estruturada, o esquema de poda define quantas
+que está fora do escopo deste trabalho. Por essa razão, os modelos podados herdam os
+pesos do modelo base, e o \textit{fine-tuning} de recuperação é limitado a uma época.
+Além disso, a conclusão de que a arquitetura resultante determina
+o valor da poda estruturada relaciona-se à hipótese deste trabalho.
+Na poda estruturada, o esquema de poda define quantas
 cabeças de atenção e quantos neurônios do MLP permanecem em cada camada, ou seja, a arquitetura
 do modelo podado. Diferentemente de \citeonline{Liu2019}, entretanto, essa arquitetura é
 avaliada com os pesos herdados, sem retreinamento e após o \textit{fine-tuning} de recuperação,
@@ -264,12 +268,12 @@ reportar médias e desvios-padrão.
 
 Este trabalho segue parte dessas recomendações. As estratégias e os esquemas de poda são
 avaliados com o mesmo modelo, na mesma base de dados, pelas mesmas métricas e no mesmo
-\textit{hardware} (Capítulo~\ref{chap:metodologia}). As métricas são reportadas também para o
+\textit{hardware}. As métricas são reportadas também para o
 modelo base e para o modelo base retreinado, e cada varredura avalia dez taxas de poda. Além
 disso, o custo é medido em energia durante a execução, e não apenas estimado pelo número de
 parâmetros e de FLOPs. Outras recomendações não são atendidas. O trabalho utiliza um único par
 de modelo e base de dados, e o \textit{fine-tuning} de recuperação foi executado com uma única
-semente, sem estimativa de variância (Seção~\ref{sec:limitacoes}). Nas varreduras
+semente, sem estimativa de variância. Nas varreduras
 \textit{one-shot}, por sua vez, a avaliação é determinística, e a repetição não alteraria os
 resultados (Seção~\ref{sec:ambiente}). Por fim, a variação da ordenação entre métodos observada
 pelos autores também ocorreu neste trabalho. O esquema de poda uniforme superou o não uniforme

@@ -43,8 +43,10 @@ LLMs), baseados na arquitetura \textit{Transformer} \cite{Vaswani2017}. O treina
 BLOOM, um LLM com 176 bilhões de parâmetros, consumiu 433.196~kWh de energia elétrica
 \cite{Luccioni2022}. Além disso, \citeonline{Strubell2019} estimaram que o treinamento de um
 modelo \textit{Transformer} com busca de arquitetura neural emite cerca de cinco vezes o
-dióxido de carbono emitido por um automóvel ao longo de sua vida útil
-(Seção~\ref{sec:consumo_energetico}).
+dióxido de carbono emitido por um automóvel ao longo de sua vida útil.
+% AJUSTE: 20/11/2026 — revisão do orientador: excesso de remissões a outras partes do texto
+% (ESTILO.md, seção 6). Saem as remissões à Fundamentação e aos Trabalhos Relacionados neste
+% parágrafo, no da poda neural e no dos dois aspectos; fica o parágrafo de organização.
 
 O consumo de energia não se restringe ao treinamento. Depois de treinado, o modelo é executado
 a cada requisição recebida, etapa denominada inferência. \citeonline{Patterson2021} relatam
@@ -65,7 +67,7 @@ trata da redução do consumo de energia na inferência de modelos já treinados
 % \cite{Han2015}, anula pesos individuais." passa a "A poda não estruturada \cite{Han2015}
 % anula pesos individuais."
 Entre as técnicas de compressão de modelos, a poda neural consiste em remover os parâmetros
-que menos contribuem para a saída do modelo (Seção~\ref{sec:pruning}). Duas estratégias
+que menos contribuem para a saída do modelo. Duas estratégias
 clássicas representam os extremos de granularidade dessa técnica. A poda não estruturada
 \cite{Han2015} anula pesos individuais. A poda estruturada \cite{Li2017}, por sua vez, remove
 estruturas inteiras da rede. Na arquitetura
@@ -74,8 +76,8 @@ perceptron multicamadas (MLP).
 
 Dois aspectos dessas estratégias motivam este trabalho. O primeiro é a forma de avaliação.
 \citeonline{Han2015} e \citeonline{Li2017} avaliaram redes convolucionais e expressaram os
-resultados em número de parâmetros e de operações, sem medir o consumo de energia
-(Capítulo~\ref{chap:trabalhos_relacionados}). Entretanto, a redução do número de parâmetros
+resultados em número de parâmetros e de operações, sem medir o consumo de energia.
+Entretanto, a redução do número de parâmetros
 não implica, necessariamente, redução do consumo. Na poda não estruturada, os pesos são
 anulados, e não removidos. Dessa forma, as matrizes conservam suas dimensões.
 % AJUSTE: 20/11/2026 — "Na poda por magnitude" passa a "Na poda não estruturada": a Introdução
